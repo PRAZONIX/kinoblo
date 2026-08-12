@@ -35,9 +35,10 @@
     font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
     overscroll-behavior-y:none;
+    overflow:hidden;
   }
   svg{display:block;flex-shrink:0;}
-  #app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:110px;position:relative;}
+  #app{max-width:520px;margin:0 auto;height:100vh;overflow-y:auto;padding-bottom:160px;position:relative;-webkit-overflow-scrolling:touch;}
   ::-webkit-scrollbar{display:none;}
   a{color:inherit;text-decoration:none;}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;-webkit-tap-highlight-color:transparent;}
@@ -57,7 +58,6 @@
   .display{font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.03em;font-weight:400;}
   .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-faint);}
 
-  /* ---- glass primitives ---- */
   .glass{
     background:linear-gradient(155deg, rgba(255,255,255,.09), rgba(255,255,255,.02));
     backdrop-filter:blur(22px) saturate(150%);
@@ -93,10 +93,9 @@
 
   .row-scroll{display:flex;gap:13px;overflow-x:auto;padding:2px 20px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;animation:rowIn .4s ease both;}
   @keyframes rowIn{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
-  .card{flex:0 0 134px;scroll-snap-align:start;border-radius:var(--radius-sm);overflow:visible;position:relative;transition:transform .18s ease;}
+  .card{flex:0 0 134px;scroll-snap-align:start;border-radius:var(--radius-sm);overflow:visible;position:relative;transition:transform .18s ease;cursor:pointer;}
   .card:active{transform:scale(.95);}
 
-  /* poster tier frames: 1-3 "poop" (brown), 4-6 "pee", 7-9 green, 10 fire */
   .poster-frame{border-radius:var(--radius-sm);overflow:hidden;position:relative;}
   .poster-frame.tier-none{padding:0;}
   .poster-frame.tier-poop{padding:3px;background:linear-gradient(135deg,#a9723e,#5b3a1c);box-shadow:0 0 16px rgba(139,94,46,.48);}
@@ -137,6 +136,28 @@
   .search-bar-inner input{background:transparent;border:none;padding:2px 0;font-size:15.5px;backdrop-filter:none;-webkit-backdrop-filter:none;}
   .search-bar-inner input:focus{border:none;background:transparent;}
   .search-bar-inner .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);background:rgba(255,255,255,.08);}
+  
+  .search-results-dropdown {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 152px;
+    max-width: 488px;
+    margin: 0 auto;
+    max-height: 50vh;
+    overflow-y: auto;
+    z-index: 38;
+    background: rgba(14, 14, 17, 0.75);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
   .discover-scroll-pad{height:2px;}
 
   .field label{display:block;font-size:11.5px;color:var(--ink-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:7px;}
@@ -151,33 +172,105 @@
   .icon-btn svg{width:18px;height:18px;}
   .subtitle{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.6px;}
 
-  /* ---- Detail page (swipe-to-close sheet) ---- */
-  .detail-page{position:relative;z-index:1;animation:pageIn .34s cubic-bezier(.2,.8,.2,1) both;touch-action:pan-y;}
+  .detail-page{position:relative;z-index:1;animation:pageIn .34s cubic-bezier(.2,.8,.2,1) both;touch-action:pan-y;min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;background:#07070a;}
   @keyframes pageIn{0%{opacity:0;transform:translateY(30px) scale(.98);}100%{opacity:1;transform:translateY(0) scale(1);}}
-  .swipe-handle{display:flex;justify-content:center;padding:9px 0 3px;}
-  .swipe-handle span{width:38px;height:4px;border-radius:3px;background:rgba(255,255,255,.22);}
+  
+  .detail-hero-bg{position:absolute;inset:0;height:70vh;z-index:0;overflow:hidden;}
+  .detail-hero-bg img{width:100%;height:100%;object-fit:cover;}
+  .detail-hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg, rgba(7,7,10,0.2) 0%, rgba(7,7,10,0.75) 50%, #07070a 100%);}
+  
+  .detail-top-controls{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:20px;}
+  
+  .detail-content{position:relative;z-index:5;padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:auto;}
+  .detail-title{font-family:'Bebas Neue',sans-serif;font-size:46px;line-height:1;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.8);}
+  
+  .detail-overview{font-size:13.5px;line-height:1.5;color:rgba(255,255,255,0.85);margin-bottom:20px;max-width:400px;text-align:center;}
+  .read-more-btn {
+    color: var(--accent-2);
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 13.5px;
+    margin-left: 4px;
+    display: inline;
+  }
+  .read-more-btn:active {
+    opacity: 0.7;
+  }
+  
+  .detail-meta-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);margin-bottom:28px;}
+  
+  .detail-action-area{position:relative;z-index:5;padding:0 20px 30px;width:100%;}
+  
+  /* Стили для горизонтальной галереи кадров внизу фильма */
+  .movie-screenshots-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  .movie-screenshot-item {
+    flex: 0 0 160px;
+    height: 96px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    scroll-snap-align: start;
+    cursor: pointer;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    transition: transform .15s ease;
+  }
+  .movie-screenshot-item:active {
+    transform: scale(0.96);
+  }
+  .movie-screenshot-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
-  .hero-wrap{position:relative;padding:0 14px 0;}
-  .hero{position:relative;height:360px;overflow:hidden;background:linear-gradient(160deg,#232228,#0c0c0f);border-radius:26px;box-shadow:0 22px 50px rgba(0,0,0,.55);transition:box-shadow .3s ease;}
-  .hero img{width:100%;height:100%;object-fit:cover;animation:heroImgIn .6s ease both;}
-  @keyframes heroImgIn{0%{opacity:0;transform:scale(1.08);}100%{opacity:1;transform:scale(1);}}
-  .hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,7,10,0) 28%,rgba(7,7,10,.7) 80%,rgba(7,7,10,.92) 100%);}
-  .hero.tier-poop{box-shadow:inset 0 0 0 4px rgba(169,114,62,.72), 0 22px 50px rgba(139,94,46,.4);}
-  .hero.tier-pee{box-shadow:inset 0 0 0 3px rgba(216,180,40,.6), 0 22px 50px rgba(216,180,40,.32);}
-  .hero.tier-green{box-shadow:inset 0 0 0 3px rgba(52,211,153,.6), 0 22px 50px rgba(52,211,153,.35);}
-  .hero.tier-fire{animation:heroFire 2.6s ease-in-out infinite;}
-  @keyframes heroFire{0%,100%{box-shadow:inset 0 0 0 3px rgba(255,209,102,.7),0 22px 50px rgba(255,140,20,.5);}50%{box-shadow:inset 0 0 0 3px rgba(255,58,44,.75),0 22px 58px rgba(255,60,20,.65);}}
-  .hero-controls{position:absolute;top:26px;left:30px;right:30px;display:flex;justify-content:space-between;z-index:4;animation:fadeIn .4s ease .1s both;}
-  @keyframes fadeIn{0%{opacity:0;}100%{opacity:1;}}
-  .hero-controls .icon-btn{background:rgba(9,9,11,.45);backdrop-filter:blur(14px) saturate(150%);border:1px solid rgba(255,255,255,.14);}
-  .hero-card{position:relative;z-index:2;margin:-56px 2px 0;padding:18px 20px 20px;border-radius:var(--radius);animation:heroCardIn .5s ease .05s both;}
-  @keyframes heroCardIn{0%{opacity:0;transform:translateY(16px);}100%{opacity:1;transform:translateY(0);}}
-  .hero-title{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1.05;letter-spacing:.4px;}
-  .hero-meta{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
-  .tag-pill{font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-dim);background:rgba(255,255,255,.07);padding:5px 11px;border-radius:var(--radius-pill);border:1px solid var(--glass-border-soft);}
-  .detail-body{padding:20px 20px 30px;display:flex;flex-direction:column;gap:16px;}
+  /* Модальное окно полного экрана для картинки */
+  .fullscreen-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: pageIn .2s ease both;
+  }
+  .fullscreen-modal img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  }
+  .fullscreen-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
 
-  /* ---- Poop "snowball" impact animation on the poster ---- */
   .poop-stage{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;}
   .poop-splat{position:absolute;top:42%;left:58%;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle, rgba(169,114,62,.9), rgba(169,114,62,0) 70%);transform:translate(-50%,-50%) scale(0);animation:splatPop .55s ease-out .66s forwards;}
   @keyframes splatPop{
@@ -203,32 +296,21 @@
     100%{transform:translate(-50%,-50%) scale(1) rotate(370deg);}
   }
 
-  .my-rating-box{border-radius:var(--radius);padding:18px;transition:box-shadow .3s ease;}
-  .my-rating-box.tier-poop{box-shadow:0 0 24px rgba(169,114,62,.3);border-color:rgba(169,114,62,.4);}
-  .my-rating-box.tier-pee{box-shadow:0 0 24px rgba(216,180,40,.28);border-color:rgba(216,180,40,.38);}
-  .my-rating-box.tier-green{box-shadow:0 0 24px rgba(52,211,153,.28);border-color:rgba(52,211,153,.38);}
-  .my-rating-box.tier-fire{box-shadow:0 0 28px rgba(255,140,20,.35);border-color:rgba(255,180,60,.42);}
-  .my-rating-top{display:flex;align-items:center;gap:14px;margin-bottom:15px;}
-  .my-rating-num{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.5px;animation:numPop .32s ease both;}
-  @keyframes numPop{0%{transform:scale(.7);opacity:.3;}100%{transform:scale(1);opacity:1;}}
-  .my-rating-label{font-size:11px;color:var(--ink-faint);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-  .rate-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
-  .rate-btn{aspect-ratio:1;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;background:var(--glass);border:1px solid var(--glass-border-soft);backdrop-filter:blur(14px);transition:transform .12s ease;color:var(--ink-dim);}
-  .rate-btn:active{transform:scale(.88);}
-  .rate-btn.tone-poop{background:rgba(169,114,62,.16);border-color:rgba(169,114,62,.55);color:#d3a06a;}
-  .rate-btn.tone-pee{background:rgba(216,180,40,.14);border-color:rgba(216,180,40,.5);color:#e8c94a;}
-  .rate-btn.tone-green{background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.5);color:#4ee2ab;}
-  .rate-btn.tone-fire{background:rgba(255,140,20,.14);border-color:rgba(255,140,20,.5);color:#ffb347;}
-  .rate-btn.selected{color:#fff;border-color:transparent;animation:ratePop .38s cubic-bezier(.34,1.56,.64,1) both;}
-  @keyframes ratePop{0%{transform:scale(.55);}55%{transform:scale(1.2);}100%{transform:scale(1);}}
-  .rate-btn.selected.tier-poop{background:linear-gradient(135deg,#a9723e,#5b3a1c);box-shadow:0 6px 16px rgba(169,114,62,.5);}
-  .rate-btn.selected.tier-pee{background:linear-gradient(135deg,#f0d95a,#a98b1e);box-shadow:0 6px 16px rgba(216,180,40,.4);}
-  .rate-btn.selected.tier-green{background:linear-gradient(135deg,#4ee2ab,#0f9e6e);box-shadow:0 6px 16px rgba(52,211,153,.42);}
-  .rate-btn.selected.tier-fire{background:linear-gradient(120deg,#ffd166,#ff7a1a,#ff2b3d,#ffd166);background-size:300% 300%;animation:fireRing 3s ease infinite, ratePop .38s cubic-bezier(.34,1.56,.64,1) both;box-shadow:0 6px 18px rgba(255,140,20,.5);}
+  .my-rating-box{border-radius:var(--radius-sm);padding:12px 14px;transition:all .3s ease;margin-bottom:14px;width:100%;max-width:380px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border-soft);backdrop-filter:blur(14px);}
+  .my-rating-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .my-rating-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .my-rating-val-mini{font-size:12px;font-weight:700;color:var(--ink-dim);}
+  
+  .rate-stars-row{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+  .rate-star-btn{background:none;border:none;padding:4px;cursor:pointer;color:var(--ink-faint);transition:transform .15s ease, color .15s ease, filter .15s ease;display:flex;align-items:center;justify-content:center;}
+  .rate-star-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;transition:all .15s ease;}
+  .rate-star-btn:active{transform:scale(0.85);}
+  
+  .rate-star-btn.filled svg{fill:#f5c518;stroke:#f5c518;filter:drop-shadow(0 0 6px rgba(245,197,24,0.4));}
+  .rate-star-btn.selected-star svg{transform:scale(1.35);fill:#f5c518;stroke:#f5c518;filter:drop-shadow(0 0 10px rgba(245,197,24,0.7));}
+
   .desc{font-size:14px;line-height:1.65;color:var(--ink-dim);white-space:pre-wrap;}
-  .desc-card{border-radius:var(--radius);padding:17px 18px;}
-  .trailer-btn{display:flex;align-items:center;justify-content:center;gap:9px;border-radius:var(--radius-pill);padding:15px;font-weight:700;font-size:14px;color:var(--ink);border:1px solid rgba(255,43,61,.35);background:rgba(255,43,61,.08);backdrop-filter:blur(16px);}
-  .trailer-btn svg{width:18px;height:18px;color:var(--accent-2);}
+  .desc-card{border-radius:var(--radius);padding:17px 18px;margin-bottom:16px;width:100%;text-align:left;}
 
   .choose-wrap{padding:28px 20px 30px;display:flex;flex-direction:column;gap:14px;animation:pageIn .32s cubic-bezier(.2,.8,.2,1) both;}
   .choose-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;margin-bottom:2px;}
@@ -241,22 +323,6 @@
   .choose-text .t1{font-size:16px;font-weight:700;}
   .choose-text .t2{font-size:12px;color:var(--ink-faint);margin-top:2px;}
 
-  /* ---- Preview card (TMDB pick, not yet saved) ---- */
-  .preview-wrap{padding:8px 16px 20px;height:calc(100vh - 78px);}
-  .preview-card{width:100%;height:100%;display:flex;flex-direction:column;border-radius:26px;overflow:hidden;position:relative;}
-  .preview-poster{position:relative;height:42vh;flex:0 0 auto;background:linear-gradient(160deg,#232228,#0c0c0f);}
-  .preview-poster img{width:100%;height:100%;object-fit:cover;}
-  .preview-poster .hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,7,10,0) 55%,rgba(12,12,15,.5) 100%);}
-  .preview-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 84px;}
-  .preview-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.4px;line-height:1.08;}
-  .preview-year{color:var(--ink-faint);font-size:18px;font-family:'Inter',sans-serif;font-weight:600;}
-  .preview-tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px;}
-  .preview-desc{font-size:13.5px;line-height:1.62;color:var(--ink-dim);}
-  .heart-btn{position:absolute;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;box-shadow:0 10px 28px var(--accent-glow);z-index:5;transition:transform .12s ease;}
-  .heart-btn svg{width:24px;height:24px;}
-  .heart-btn:active{transform:scale(.88);}
-
-  /* ---- category creation ---- */
   .add-cat-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 20px 6px;}
   .cat-icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:4px 0 16px;max-height:260px;overflow-y:auto;padding-right:2px;}
   .cat-icon-opt{aspect-ratio:1;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--glass-border-soft);color:var(--ink-dim);transition:transform .12s ease;}
@@ -271,6 +337,11 @@
   .modal-actions button{flex:1;}
   .load-more-btn{display:block;width:calc(100% - 40px);margin:6px 20px 4px;padding:14px;border-radius:var(--radius-pill);text-align:center;font-weight:700;font-size:13.5px;color:var(--ink-dim);}
   .load-more-btn:active{transform:scale(.98);}
+  
+  .search-action-bar {display:flex; gap:10px; width:100%; margin-bottom:14px; max-width:380px;}
+  .search-action-bar select {flex:1;}
+  .search-fav-btn {width:52px; height:52px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; background:var(--glass); border:1px solid var(--glass-border-soft); flex:0 0 auto; color:var(--ink-dim); transition:all .15s ease;}
+  .search-fav-btn.active {background:var(--accent); color:#fff; border-color:transparent; box-shadow:0 4px 14px var(--accent-glow);}
 </style>
 </head>
 <body>
@@ -279,15 +350,16 @@
 <script>
 (function(){
   let tg = null;
+  let tmdbSearchTimer = null;
+  let isOverviewExpanded = false; 
+  let previousView = 'home'; 
+
   function initTelegram(){
     try{
       tg = window.Telegram && window.Telegram.WebApp;
       if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor && tg.setHeaderColor('#07070a'); tg.setBackgroundColor && tg.setBackgroundColor('#07070a'); }
     }catch(e){}
   }
-  // Load the Telegram SDK without blocking the app: if it can't be reached
-  // (e.g. viewing outside Telegram, or the network is restricted), the app
-  // still starts after a short fallback timeout instead of hanging forever.
   function loadTelegramSdkThenStart(){
     let started = false;
     const start = () => { if (started) return; started = true; initTelegram(); loadAll(); };
@@ -336,9 +408,6 @@
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
-  // Default lists. Users can add their own on top of these (see
-  // "Добавить категорию" on the home screen) — everything is stored
-  // together in one categories array, keyed by a stable `v` id.
   const DEFAULT_CATEGORIES = [
     {v:'favorite', l:'Избранное', icon:'heart', color:'#ff2b3d', sub:'Твои любимые'},
     {v:'watchlist', l:'Смотреть позже', icon:'clock', color:'#8b6bff', sub:'В очереди'},
@@ -354,9 +423,6 @@
   ];
   function typeLabel(v){ const t = TYPES.find(t=>t.v===v); return t ? t.l : ''; }
 
-  // Static TMDB genre IDs mapped to the closest label in our own Russian
-  // genre list. Movies and TV shows use slightly different ID sets on
-  // TMDB, so we keep two maps and pick the right one per result.
   const TMDB_GENRE_MAP = {
     28:'Боевик', 12:'Приключения', 35:'Комедия', 80:'Криминал', 99:'Документальный',
     18:'Драма', 10751:'Семейный', 14:'Фэнтези', 36:'История', 27:'Ужасы',
@@ -369,7 +435,6 @@
     10764:'Драма', 10765:'Фантастика', 10766:'Мелодрама', 10767:'Документальный', 10768:'Военный', 37:'Вестерн'
   };
 
-  // Embedded TMDB API key (v3 auth) so search works out of the box.
   const DEFAULT_TMDB_KEY = '786670e67582409aa0c3f4232a45c9d3';
 
   let state = {
@@ -377,36 +442,17 @@
     pendingMovie: null, previewItem: null, loaded: false,
     tmdbKey: '', tmdbResults: null, tmdbQuery: '',
     discover: { cache: {}, loading: {}, lgbtKeywordIds: null, full: {}, fullLoading: {}, fullPage: {}, fullDone: {} },
-    discoverListKey: null
+    discoverListKey: null,
+    scrollPositions: {}
   };
 
-  const uid = () => 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-  let tmdbSearchTimer = null; // debounce handle for the bottom live-search bar
-
-  // ============================================================
-  // KINOBLO STORAGE
-  // Single storage layer. Nothing outside this block should know
-  // *where* data physically lives — it only calls loadMovies() /
-  // addMovie() / updateMovie() / deleteMovie() / STORAGE.getCategories() /
-  // STORAGE.saveCategories().
-  //
-  // Backend selection:
-  //   - Inside Telegram, with Bot API 9.0+  -> Telegram.WebApp.DeviceStorage
-  //     (persistent, per-user, on-device, up to 5MB — no server involved)
-  //   - Outside Telegram / old client        -> localStorage (dev/browser fallback)
-  //
-  // DeviceStorage has no "list all keys" method (unlike CloudStorage),
-  // so we keep our own index: one small key with just the list of
-  // movie IDs, plus one key per movie (kinoblo_movie_<id>). This avoids
-  // ever writing/reading one giant blob for the whole collection.
-  // ============================================================
   const IDX_KEY = 'kinoblo_index';
   const CAT_KEY = 'kinoblo_categories';
   const MIGRATED_KEY = 'kinoblo_migrated_v3';
-  const OLD_BLOB_KEY = 'kinoblo-movies-v2'; // legacy single-blob key (old localStorage/CloudStorage version)
+  const OLD_BLOB_KEY = 'kinoblo-movies-v2';
   const movieKey = id => 'kinoblo_movie_' + id;
 
-  let storageBackend = 'local'; // resolved in STORAGE.init()
+  let storageBackend = 'local';
 
   function deviceStorageUsable(){
     return !!(tg && tg.DeviceStorage && typeof tg.DeviceStorage.setItem === 'function'
@@ -484,15 +530,8 @@
       try{ const arr = JSON.parse(raw); return Array.isArray(arr) && arr.length ? arr : null; }catch(e){ return null; }
     },
     async saveCategories(cats){ return rawSet(CAT_KEY, JSON.stringify(cats)); },
-    // Small generic key/value settings, stored in the same backend
-    // (e.g. the user's own TMDB API key).
     async getSetting(key){ return rawGet('kinoblo_setting_' + key); },
     async setSetting(key, value){ return rawSet('kinoblo_setting_' + key, value); },
-    // One-time migration from the old single-blob storage (localStorage
-    // key 'kinoblo-movies-v2', and/or the old Telegram CloudStorage copy
-    // of it) into the new per-movie keys. Old data is never deleted —
-    // if migration can't run for some reason, nothing is lost, it's
-    // simply left where it was.
     async migrate(){
       const already = await rawGet(MIGRATED_KEY);
       if (already) return;
@@ -521,7 +560,6 @@
     }
   };
 
-  // Thin public API used by the rest of the app.
   let _storageErrorShown = false;
   function reportStorageError(msg){
     if (_storageErrorShown) return;
@@ -546,9 +584,6 @@
     return ok;
   }
 
-  // Debounced save for rapid taps (e.g. tapping through rating values
-  // 1→2→3…) — avoids a storage write on every single tap, but always
-  // flushes on navigation away from the page so nothing is lost.
   const _pendingSaves = {};
   function saveMovieDebounced(movie, delay){
     if (_pendingSaves[movie.id]) clearTimeout(_pendingSaves[movie.id].timer);
@@ -582,12 +617,6 @@
     render();
   }
 
-  // ============================================================
-  // TMDB search + discovery (client-side only, no backend). Search
-  // uses /search/multi so both movies AND TV shows/anime/cartoons show
-  // up. Discovery rows (browsable categories) use trending/popular/
-  // discover endpoints so the user can browse without typing anything.
-  // ============================================================
   async function tmdbFetch(path, key){
     const base = 'https://api.themoviedb.org/3';
     const sep = path.indexOf('?') > -1 ? '&' : '?';
@@ -596,6 +625,7 @@
     if (!res.ok) throw new Error('TMDB HTTP ' + res.status);
     return res.json();
   }
+
   function mapTmdbItem(r, forcedKind){
     const isTv = forcedKind ? forcedKind === 'tv' : r.media_type === 'tv';
     const gmap = isTv ? TMDB_TV_GENRE_MAP : TMDB_GENRE_MAP;
@@ -612,11 +642,6 @@
     };
   }
 
-  // Discovery rows shown on the search tab. "path"-based entries hit a
-  // single TMDB endpoint of a fixed kind. "special:lgbt" and
-  // provider/company entries pull from BOTH /discover/movie and
-  // /discover/tv and merge by popularity, so recent popular shows (like
-  // Netflix's LGBT-inclusive titles) surface alongside classics.
   const DISCOVER_CATEGORIES = [
     {key:'popular', label:'Популярное', kind:'movie', path:'/trending/movie/week'},
     {key:'series', label:'Сериалы', kind:'tv', path:'/trending/tv/week'},
@@ -674,10 +699,6 @@
     render();
   }
 
-  // Full paginated list for the "open category" view. Loads one TMDB
-  // page (or one page per underlying endpoint, for mixed categories)
-  // at a time, appended to state.discover.full[key], so the user can
-  // tap "Загрузить ещё" to keep scrolling through the whole category.
   async function loadDiscoverFullPage(key){
     const cat = discoverCatByKey(key);
     if (!cat || state.discover.fullLoading[key] || state.discover.fullDone[key]) return;
@@ -740,32 +761,35 @@
   }
 
   function openDiscoverList(key){
+    state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
     state.discoverListKey = key;
     state.view = 'discoverList';
     render();
+    document.getElementById('app').scrollTop = 0;
     if (!(state.discover.full[key] || []).length) loadDiscoverFullPage(key);
   }
 
   async function tmdbSearch(query, key){
     const data = await tmdbFetch('/search/multi?query=' + encodeURIComponent(query), key);
-    return (data.results || [])
+    let results = (data.results || [])
       .filter(r => r.media_type === 'movie' || r.media_type === 'tv')
       .slice(0, 10)
       .map(r => mapTmdbItem(r));
+    
+    results.sort((a, b) => (a.popularity || 0) - (b.popularity || 0));
+    
+    return results;
   }
-  async function tmdbTrailer(tmdbId, mediaType, key){
+
+  // Функция для получения кадров (бекдропов) фильма/сериала из TMDB API
+  async function tmdbImages(tmdbId, mediaType, key){
     try{
       const kind = mediaType === 'tv' ? 'tv' : 'movie';
-      let res = await fetch('https://api.themoviedb.org/3/' + kind + '/' + tmdbId + '/videos?api_key=' + encodeURIComponent(key) + '&language=ru-RU');
-      let data = await res.json();
-      let vids = data.results || [];
-      if (!vids.length){
-        res = await fetch('https://api.themoviedb.org/3/' + kind + '/' + tmdbId + '/videos?api_key=' + encodeURIComponent(key) + '&language=en-US');
-        data = await res.json(); vids = data.results || [];
-      }
-      const trailer = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer') || vids.find(v => v.site === 'YouTube');
-      return trailer ? ('https://www.youtube.com/watch?v=' + trailer.key) : '';
-    }catch(e){ return ''; }
+      const res = await fetch('https://api.themoviedb.org/3/' + kind + '/' + tmdbId + '/images?api_key=' + encodeURIComponent(key));
+      const data = await res.json();
+      const backdrops = data.backdrops || [];
+      return backdrops.map(b => 'https://image.tmdb.org/t/p/w780' + b.file_path);
+    }catch(e){ return []; }
   }
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -778,7 +802,6 @@
     window.open(url, '_blank', 'noopener');
   }
 
-  // Rating tiers: 1-3 "poop" (brown), 4-6 "pee" (yellow), 7-9 green, 10 fire.
   function tierMeta(r){
     if (r == null) return null;
     if (r <= 3) return {key:'poop', color:'#c9935a', em:'💩', emCls:'em-poop'};
@@ -792,8 +815,6 @@
     return '<div class="rating-pill" style="color:'+t.color+';">'+(t.em?'<span class="em '+t.emCls+'">'+t.em+'</span>':'')+r+'</div>';
   }
 
-  // Normalizes a movie's genres to an array, staying compatible with the
-  // old single-genre records that were saved before multi-select existed.
   function genresOf(m){
     if (m.genres && m.genres.length) return m.genres;
     if (m.genre) return [m.genre];
@@ -828,7 +849,7 @@
   function viewCategory(){
     const s = categoryMeta(state.categoryFilter);
     const list = state.movies.filter(m => m.status === state.categoryFilter);
-    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(s.l)+'</div></div>';
+    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(s.l)+'</div><button class="icon-btn glass-flat" id="editCatBtn" style="margin-left:auto;">'+icon('pencil',18)+'</button></div>';
     html += list.length
       ? '<div class="movies-grid">'+list.map(card).join('')+'</div>'
       : '<div class="empty glass-flat" style="margin-top:16px;">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
@@ -836,20 +857,28 @@
   }
 
   function renderTmdbResults(list){
-    if (!list.length) return '<div style="font-size:12.5px;color:var(--ink-faint);padding:0 20px;">Ничего не нашлось.</div>';
-    return '<div style="padding:2px 20px 6px;display:flex;flex-direction:column;gap:8px;">' + list.map((r,i) =>
-      '<button type="button" class="choose-btn glass-flat" data-tmdb-pick="'+i+'" style="padding:10px;text-align:left;">'
-      + (r.poster ? '<img src="'+escapeHtml(r.poster)+'" style="width:42px;height:63px;object-fit:cover;border-radius:8px;flex:0 0 auto;">' : '<div style="width:42px;height:63px;border-radius:8px;background:var(--glass);flex:0 0 auto;"></div>')
-      + '<div class="choose-text"><div class="t1" style="font-size:14px;">'+escapeHtml(r.title)+'</div><div class="t2">'+escapeHtml(r.year||'')+(r.mediaType==='tv'?' · Сериал':' · Фильм')+'</div></div>'
-      + '</button>'
-    ).join('') + '</div>';
+    if (!list.length) return '<div style="font-size:12.5px;color:var(--ink-faint);padding:6px 10px;">Ничего не нашлось.</div>';
+    return '<div style="display:flex;flex-direction:column;gap:8px;">' + list.map(item => {
+      const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
+      return '<button type="button" class="choose-btn glass-flat" data-tmdb-preview="'+item.tmdbId+'" data-tmdb-type="'+item.mediaType+'" style="padding:10px;text-align:left;display:flex;align-items:center;position:relative;">'
+      + (item.poster ? '<img src="'+escapeHtml(item.poster)+'" style="width:42px;height:63px;object-fit:cover;border-radius:8px;flex:0 0 auto;">' : '<div style="width:42px;height:63px;border-radius:8px;background:var(--glass);flex:0 0 auto;"></div>')
+      + '<div class="choose-text" style="flex:1;margin-left:12px;"><div class="t1" style="font-size:14px;">'+escapeHtml(item.title)+'</div><div class="t2">'+escapeHtml(item.year||'')+(item.mediaType==='tv'?' · Сериал':' · Фильм')+'</div></div>'
+      + '<div class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" title="Выбрать категорию" style="width:38px;height:38px;border-radius:50%;">'+icon('heart',18)+'</div>'
+      + '</button>';
+    }).join('') + '</div>';
   }
 
   function discoverCard(item){
+    const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
     const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(item.poster)+'" alt="" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
     const typePill = '<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div>';
     const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(item.title)+'</div>'+(item.year?'<div class="card-sub">'+escapeHtml(item.year)+'</div>':'')+'</div>';
-    return '<div class="card" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'"><div class="poster-frame tier-none">'+posterHtml+caption+'</div>'+typePill+'</div>';
+    
+    return '<div class="card" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'">'
+      + '<div class="poster-frame tier-none">'+posterHtml+caption+'</div>'
+      + typePill
+      + '<button type="button" class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" style="position:absolute;bottom:38px;right:8px;z-index:4;width:32px;height:32px;border-radius:50%;padding:0;" title="Выбрать категорию">'+icon('heart',15)+'</button>'
+      + '</div>';
   }
 
   function discoverRowsHtml(){
@@ -863,8 +892,6 @@
     }).join('') + '<div class="discover-scroll-pad"></div>';
   }
 
-  // Full grid view (3 per row) for a discover category, opened by
-  // tapping its header on the search tab. Supports "load more" paging.
   function viewDiscoverList(){
     const cat = discoverCatByKey(state.discoverListKey);
     if (!cat){ state.view = 'search'; return viewSearch(); }
@@ -886,7 +913,16 @@
   }
 
   function searchBarBottomHtml(){
-    return '<div class="search-bar-bottom"><div class="search-bar-inner glass">'
+    let dropdownHtml = '';
+    const searching = state.tmdbQuery && state.tmdbQuery.trim();
+    
+    if (searching) {
+      dropdownHtml = '<div class="search-results-dropdown">'
+        + (state.tmdbResults ? renderTmdbResults(state.tmdbResults) : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>')
+        + '</div>';
+    }
+
+    return dropdownHtml + '<div class="search-bar-bottom"><div class="search-bar-inner glass">'
     + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
     + '<input id="tmdbQueryBottom" placeholder="Найти фильм или сериал…" value="'+escapeHtml(state.tmdbQuery)+'">'
     + (state.tmdbQuery ? '<button type="button" class="sb-clear" id="tmdbQueryBottomClear">'+icon('close',13)+'</button>' : '')
@@ -894,87 +930,91 @@
   }
 
   function viewSearch(){
-    const searching = state.tmdbQuery && state.tmdbQuery.trim();
-    let browseSection;
-    if (searching){
-      browseSection = '<div class="section"><div class="section-head" style="cursor:default;"><div class="section-title">Результаты поиска</div></div>'
-        + (state.tmdbResults ? renderTmdbResults(state.tmdbResults) : '<div class="empty glass-flat" style="margin:0 20px;">Ищу…</div>')
-        + '</div>';
-    } else {
-      browseSection = discoverRowsHtml();
-    }
+    const browseSection = discoverRowsHtml();
     return '<div class="topbar"><div class="brand"><span class="logo">KINO<span>BLO</span></span><span class="tag">PRZ</span></div></div>' + browseSection;
   }
 
-  // Single-card preview of a TMDB pick, not yet saved: poster, title,
-  // TMDB rating and description, with a heart button to save it.
-  function viewPreview(){
-    const item = state.previewItem;
-    if (!item){ state.view = 'search'; return viewSearch(); }
-    const rating = (item.voteAverage != null && item.voteAverage > 0) ? item.voteAverage.toFixed(1) : null;
-    const posterHtml = item.poster ? '<img src="'+escapeHtml(item.poster)+'" onerror="this.style.display=\'none\';">' : '<div class="poster" style="height:100%;">'+escapeHtml(item.title)+'</div>';
-    return ''
-    + '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">Превью</div></div>'
-    + '<div class="preview-wrap"><div class="preview-card glass">'
-    +   '<div class="preview-poster">'+posterHtml+'<div class="hero-fade"></div>'+(rating?'<div class="rating-pill" style="color:#ffd166;">⭐ '+rating+'</div>':'')+'<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div></div>'
-    +   '<div class="preview-body">'
-    +     '<div class="preview-title">'+escapeHtml(item.title)+(item.year?' <span class="preview-year">'+escapeHtml(item.year)+'</span>':'')+'</div>'
-    +     '<div class="preview-tags">'+item.genres.slice(0,4).map(g=>'<span class="tag-pill">'+escapeHtml(g)+'</span>').join('')+'</div>'
-    +     '<div class="preview-desc">'+(item.description ? escapeHtml(item.description) : 'Описание отсутствует.')+'</div>'
-    +   '</div>'
-    +   '<button class="heart-btn" id="previewHeart">'+icon('heart',24)+'</button>'
-    + '</div></div>';
-  }
-
-  function viewChoose(){
-    return ''
-    + '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">Куда добавить?</div></div>'
-    + '<div class="choose-wrap"><div class="choose-title">«'+escapeHtml(state.pendingMovie.title)+'» готов</div>'
-    + '<div class="choose-sub">Выбери раздел, в который он попадёт</div>'
-    + state.categories.map(s => '<button class="choose-btn glass-flat" data-choose="'+s.v+'"><div class="choose-icon" style="background:'+s.color+';">'+icon(s.icon,22)+'</div><div class="choose-text"><div class="t1">'+escapeHtml(s.l)+'</div><div class="t2">'+escapeHtml(s.sub||'')+'</div></div></button>').join('')
-    + '</div>';
-  }
-
   function viewDetail(){
-    const m = state.movies.find(x=>x.id===state.detailId);
+    const m = state.movies.find(x=>x.id===state.detailId) || state.previewItem;
     if (!m) { state.view='home'; return viewHome(); }
     const heroImg = m.poster ? '<img src="'+escapeHtml(m.poster)+'" onerror="this.style.display=\'none\';">' : '';
-    const tier = tierMeta(m.myRating);
-    const heroTierCls = tier ? ' tier-'+tier.key : '';
-    const boxTierCls = tier ? ' tier-'+tier.key : '';
+    const isSaved = state.movies.some(x => x.id === m.id);
+    const tier = isSaved ? tierMeta(m.myRating) : null;
 
-    // "Poop snowball" hits the poster every time a badly-rated (1-3) movie is opened.
     const poopHtml = (tier && tier.key === 'poop')
       ? '<div class="poop-stage"><div class="poop-splat"></div><div class="poop-crumbs"><span>💩</span><span>💩</span><span>💩</span><span>💩</span></div><div class="poop-fly">💩</div></div>'
       : '';
 
-    const rows = [];
-    for (let i=1;i<=10;i++){
-      const t = tierMeta(i);
-      const sel = m.myRating === i;
-      const cls = 'rate-btn'+(sel?(' selected tier-'+t.key):(' tone-'+t.key));
-      rows.push('<button class="'+cls+'" data-rate="'+i+'">'+i+'</button>');
+    const starsHtml = [];
+    for (let i = 1; i <= 10; i++) {
+      const isFilled = isSaved && m.myRating != null && m.myRating >= i;
+      const isSelectedExact = isSaved && m.myRating === i;
+      const starCls = 'rate-star-btn' + (isFilled ? ' filled' : '') + (isSelectedExact ? ' selected-star' : '');
+      starsHtml.push('<button class="'+starCls+'" '+(!isSaved?'disabled style="opacity:0.4;cursor:not-allowed;"':'')+' data-rate="'+i+'" title="Оценка '+i+'">'+icon('star', 20)+'</button>');
     }
-    const typeTag = m.type ? '<span class="tag-pill">'+typeLabel(m.type)+'</span>' : '';
-    const tmdbTag = m.tmdbRating ? '<span class="tag-pill">⭐ '+m.tmdbRating.toFixed(1)+'</span>' : '';
-    const genreTags = genresOf(m).map(g=>'<span class="tag-pill">'+escapeHtml(g)+'</span>').join('');
+    
+    const genreStr = genresOf(m).join('  ');
+    const yearStr = m.year ? m.year : '';
+    const typeStr = typeLabel(m.type) || (m.mediaType === 'tv' ? 'Сериал' : 'Фильм');
+
+    let descriptionHtml = '';
+    if (m.description) {
+      const words = m.description.trim().split(/\s+/);
+      if (words.length > 25 && !isOverviewExpanded) {
+        const shortText = words.slice(0, 25).join(' ') + '...';
+        descriptionHtml = '<div class="detail-overview">' + escapeHtml(shortText) + '<button class="read-more-btn" id="toggleOverviewBtn">еще</button></div>';
+      } else {
+        descriptionHtml = '<div class="detail-overview">' + escapeHtml(m.description) + (words.length > 25 ? '<button class="read-more-btn" id="toggleOverviewBtn">свернуть</button>' : '') + '</div>';
+      }
+    }
+
+    let categorySelectHtml = '';
+    if (isSaved) {
+      categorySelectHtml = '<div class="search-action-bar">'
+        + '<select id="detailCatSelect">'
+        + state.categories.map(c => '<option value="'+c.v+'" '+(m.status===c.v?'selected':'')+'>'+escapeHtml(c.l)+'</option>').join('')
+        + '</select>'
+        + '</div>';
+    }
+
+    const ratingBoxHtml = isSaved ? `
+      <div class="my-rating-box">
+        <div class="my-rating-top">
+          <div class="my-rating-label">Оценка</div>
+          <div class="my-rating-val-mini">${m.myRating != null ? m.myRating + ' / 10' : 'Не выбрана'}</div>
+        </div>
+        <div class="rate-stars-row">${starsHtml.join('')}</div>
+      </div>
+    ` : '';
+
+    // Формируем блок со скриншотами (картинками из фильма), если они загружены
+    let screenshotsHtml = '';
+    if (m.screenshots && m.screenshots.length > 0) {
+      screenshotsHtml = '<div class="movie-screenshots-scroll">' + m.screenshots.map(imgUrl => 
+        '<div class="movie-screenshot-item" data-fullscreen-img="'+escapeHtml(imgUrl)+'"><img src="'+escapeHtml(imgUrl)+'" loading="lazy"></div>'
+      ).join('') + '</div>';
+    }
+
     return ''
     + '<div class="detail-page" id="detailPage">'
-    + '<div class="swipe-handle"><span></span></div>'
-    + '<div class="hero-wrap">'
-    + '<div class="hero'+heroTierCls+'">'+heroImg+'<div class="hero-fade"></div>'+poopHtml+'</div>'
-    + '<div class="hero-controls"><button class="icon-btn" id="backBtn">'+icon('back',18)+'</button></div>'
-    + '<div class="hero-card glass"><div class="hero-title">'+escapeHtml(m.title)+'</div>'
-    + '<div class="hero-meta"><span class="tag-pill">'+escapeHtml(categoryMeta(m.status).l)+'</span>'+typeTag+tmdbTag+genreTags+'</div></div>'
-    + '</div>'
-    + '<div class="detail-body">'
-    + '<div class="my-rating-box glass-flat'+boxTierCls+'"><div class="my-rating-top"><div class="my-rating-num" style="color:'+(tier?tier.color:'var(--ink-faint)')+';">'+(m.myRating!=null?(m.myRating+(tier&&tier.em?' '+tier.em:'')):'—')+'</div><div><div class="my-rating-label">Моя оценка</div></div></div>'
-    + '<div class="rate-grid">'+rows.join('')+'</div></div>'
-    + (m.youtube ? '<button class="trailer-btn" id="trailerBtn">'+icon('external',18)+' Смотреть трейлер на YouTube</button>' : '')
-    + (m.description ? '<div class="desc-card glass-flat"><div class="my-rating-label" style="margin-bottom:8px;">Описание</div><div class="desc">'+escapeHtml(m.description)+'</div></div>' : '')
-    + (m.myNote ? '<div class="desc-card glass-flat"><div class="my-rating-label" style="margin-bottom:8px;">Моё описание</div><div class="desc">'+escapeHtml(m.myNote)+'</div></div>' : '')
-    + '<button class="danger-btn" id="deleteFromDetail">Удалить фильм</button>'
-    + '</div>'
+    +   '<div class="detail-hero-bg">'+heroImg+'<div class="detail-hero-gradient"></div>'+poopHtml+'</div>'
+    +   '<div class="detail-top-controls"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button></div>'
+    +   '<div class="detail-content">'
+    +     '<div class="detail-title">'+escapeHtml(m.title)+'</div>'
+    +     descriptionHtml
+    +     '<div class="detail-meta-row">'
+    +       (genreStr ? '<span>'+escapeHtml(genreStr)+'</span>' : '')
+    +       (yearStr ? '<span>'+escapeHtml(yearStr)+'</span>' : '')
+    +       (typeStr ? '<span>'+escapeHtml(typeStr)+'</span>' : '')
+    +     '</div>'
+    +     categorySelectHtml
+    +     ratingBoxHtml
+    +     (isSaved && m.myNote ? '<div class="desc-card glass-flat"><div class="my-rating-label" style="margin-bottom:8px;">Моя заметка</div><div class="desc">'+escapeHtml(m.myNote)+'</div></div>' : '')
+    +     (isSaved ? '<button class="danger-btn" id="deleteFromDetail" style="width:100%; max-width:380px; margin-bottom:16px;">Удалить из коллекции</button>' : '<button class="primary-btn" id="saveFromDetail" style="width:100%; max-width:380px; margin-bottom:16px;">Добавить в коллекцию</button>')
+    +   '</div>'
+    +   '<div class="detail-action-area">'
+    +     screenshotsHtml
+    +   '</div>'
     + '</div>';
   }
 
@@ -992,23 +1032,27 @@
     if (state.view === 'home') html = viewHome();
     else if (state.view === 'search') html = viewSearch();
     else if (state.view === 'choose') html = viewChoose();
-    else if (state.view === 'preview') html = viewPreview();
     else if (state.view === 'detail') html = viewDetail();
     else if (state.view === 'category') html = viewCategory();
     else if (state.view === 'discoverList') html = viewDiscoverList();
     const showBottomSearch = state.view === 'search';
     if (showBottomSearch) html += searchBarBottomHtml();
-    const hideNav = state.view === 'choose' || state.view === 'preview';
+    const hideNav = state.view === 'choose' || state.view === 'detail';
     if (!hideNav) html += viewNav();
     app.innerHTML = html;
     bindEvents();
     if (showBottomSearch && !(state.tmdbQuery && state.tmdbQuery.trim())){
       DISCOVER_CATEGORIES.forEach(cat => { if (!state.discover.cache[cat.key]) loadDiscoverCategory(cat); });
     }
+    
+    if (state.view === 'search' || state.view === 'discoverList' || state.view === 'home') {
+      const pos = state.scrollPositions[state.view] || 0;
+      if (pos > 0) {
+        setTimeout(() => app.scrollTop = pos, 10);
+      }
+    }
   }
 
-  // Re-renders lose DOM focus, so after a live-search render we put focus
-  // back in the bottom search bar and move the cursor to the end.
   function focusSearchInput(){
     const el = document.getElementById('tmdbQueryBottom');
     if (!el) return;
@@ -1016,11 +1060,118 @@
     const v = el.value; el.value = ''; el.value = v;
   }
 
-  function openMovie(id){ state.detailId = id; state.view = 'detail'; render(); }
-  function openPreview(item){ state.previewItem = item; state.view = 'preview'; render(); }
+  function openMovie(id){ 
+    isOverviewExpanded = false; 
+    previousView = state.view; 
+    state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    state.detailId = id; 
+    state.previewItem = null; 
+    state.view = 'detail'; 
+    render(); 
+    document.getElementById('app').scrollTop = 0;
+  }
+  
+  function openPreview(item){ 
+    isOverviewExpanded = false; 
+    previousView = state.view; 
+    state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    state.previewItem = item; 
+    state.detailId = null; 
+    state.view = 'detail'; 
+    render(); 
+    document.getElementById('app').scrollTop = 0;
+  }
 
-  // Animates the detail sheet down and off-screen, then switches back home.
-  // Shared by the back button, and by the swipe gesture below.
+  async function openTmdbItemPreview(tmdbId, mediaType){
+    try{
+      const data = await tmdbFetch('/' + mediaType + '/' + tmdbId, state.tmdbKey);
+      const gmap = mediaType === 'tv' ? TMDB_TV_GENRE_MAP : TMDB_GENRE_MAP;
+      const screenshots = await tmdbImages(tmdbId, mediaType, state.tmdbKey);
+      
+      const existing = state.movies.some(x => x.tmdbId === Number(tmdbId));
+      if (existing) {
+        const match = state.movies.find(x => x.tmdbId === Number(tmdbId));
+        if (match) openMovie(match.id);
+        return;
+      }
+
+      const item = {
+        id: 'tmdb_' + mediaType + '_' + tmdbId,
+        tmdbId: Number(tmdbId),
+        mediaType: mediaType,
+        title: mediaType === 'tv' ? (data.name || data.original_name) : (data.title || data.original_title),
+        year: (mediaType === 'tv' ? data.first_air_date : data.release_date || '').slice(0, 4),
+        poster: data.poster_path ? ('https://image.tmdb.org/t/p/w500' + data.poster_path) : '',
+        description: data.overview || '',
+        genres: (data.genres || []).map(g => g.name || gmap[g.id]).filter(Boolean),
+        type: mediaType === 'tv' ? 'series' : 'movie',
+        screenshots: screenshots,
+        myRating: null,
+        myNote: '',
+        status: ''
+      };
+      openPreview(item);
+    }catch(e){
+      customAlert('Не удалось загрузить информацию о фильме.');
+    }
+  }
+
+  async function quickToggleFav(tmdbId, mediaType, e){
+    if(e) e.stopPropagation();
+    try {
+      const data = await tmdbFetch('/' + mediaType + '/' + tmdbId, state.tmdbKey);
+      const gmap = mediaType === 'tv' ? TMDB_TV_GENRE_MAP : TMDB_GENRE_MAP;
+      const screenshots = await tmdbImages(tmdbId, mediaType, state.tmdbKey);
+      const item = {
+        id: 'tmdb_' + mediaType + '_' + tmdbId,
+        tmdbId: Number(tmdbId),
+        mediaType: mediaType,
+        title: mediaType === 'tv' ? (data.name || data.original_name) : (data.title || data.original_title),
+        year: (mediaType === 'tv' ? data.first_air_date : data.release_date || '').slice(0, 4),
+        poster: data.poster_path ? ('https://image.tmdb.org/t/p/w500' + data.poster_path) : '',
+        description: data.overview || '',
+        genres: (data.genres || []).map(g => g.name || gmap[g.id]).filter(Boolean),
+        type: mediaType === 'tv' ? 'series' : 'movie',
+        screenshots: screenshots,
+        myRating: null,
+        myNote: '',
+        status: ''
+      };
+      
+      openCategorySelectorModal(item, async (chosenCat) => {
+        const alreadyInThisCategory = state.movies.some(x => x.tmdbId === Number(tmdbId) && x.status === chosenCat);
+        if (alreadyInThisCategory) {
+          customAlert('Этот фильм уже добавлен в данную категорию!');
+          const existing = state.movies.find(x => x.tmdbId === Number(tmdbId) && x.status === chosenCat);
+          if (existing) openMovie(existing.id);
+          return;
+        }
+
+        item.status = chosenCat;
+        state.movies.push(item);
+        await addMovie(item);
+        render();
+      });
+    } catch(err) {
+      customAlert('Не удалось добавить фильм.');
+    }
+  }
+
+  function openCategorySelectorModal(item, onSelect){
+    const body = '<div class="modal-msg" style="padding-top:2px;padding-bottom:12px;">Выберите категорию для фильма <b>'+escapeHtml(item.title)+'</b>:</div>'
+      + '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">'
+      + state.categories.map(c => '<button type="button" class="choose-btn glass-flat" data-choose-cat="'+c.v+'" style="padding:14px;justify-content:flex-start;"><span style="color:'+(c.color||'var(--accent)')+';margin-right:10px;">'+icon(c.icon,20)+'</span><span style="font-weight:600;">'+escapeHtml(c.l)+'</span></button>').join('')
+      + '</div>';
+    const overlay = customModal('Добавить в категорию', body);
+    overlay.querySelectorAll('[data-choose-cat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const catVal = btn.getAttribute('data-choose-cat');
+        overlay.remove();
+        onSelect(catVal);
+      });
+    });
+  }
+
   function goHomeAnimated(){
     if (state.detailId) flushPendingSave(state.detailId);
     const page = document.getElementById('detailPage');
@@ -1028,44 +1179,19 @@
       page.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1), opacity .26s ease';
       page.style.transform = 'translateY(100%)';
       page.style.opacity = '0';
-      setTimeout(() => { state.detailId=null; state.view='home'; render(); }, 230);
+      setTimeout(() => { 
+        const targetView = previousView || 'home';
+        state.detailId=null; 
+        state.previewItem=null; 
+        state.view=targetView; 
+        render(); 
+        document.getElementById('app').scrollTop = state.scrollPositions[targetView] || 0; 
+      }, 230);
     } else {
-      state.view = 'home'; render();
+      const targetView = previousView || 'home';
+      state.detailId = null; state.previewItem = null; state.view = targetView; render();
+      document.getElementById('app').scrollTop = state.scrollPositions[targetView] || 0;
     }
-  }
-
-  // Swipe-down-to-close: only engages when the page is scrolled to the top,
-  // so it never fights with scrolling a long description.
-  function attachSwipeClose(page){
-    let startY=0, startScroll=0, dragging=false, currentDy=0;
-    page.addEventListener('touchstart', e => {
-      if (e.touches.length !== 1) return;
-      startY = e.touches[0].clientY;
-      startScroll = window.scrollY || document.documentElement.scrollTop || 0;
-      dragging = false; currentDy = 0;
-    }, {passive:true});
-    page.addEventListener('touchmove', e => {
-      const dy = e.touches[0].clientY - startY;
-      if (!dragging){
-        if (startScroll <= 0 && dy > 6){ dragging = true; page.style.transition = 'none'; }
-        else return;
-      }
-      currentDy = Math.max(0, dy);
-      page.style.transform = 'translateY(' + (currentDy*0.82) + 'px)';
-      page.style.opacity = String(Math.max(0.45, 1 - currentDy/560));
-      if (e.cancelable) e.preventDefault();
-    }, {passive:false});
-    page.addEventListener('touchend', () => {
-      if (!dragging) return;
-      dragging = false;
-      if (currentDy > 110){
-        goHomeAnimated();
-      } else {
-        page.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1), opacity .26s ease';
-        page.style.transform = 'translateY(0)';
-        page.style.opacity = '1';
-      }
-    });
   }
 
   function customModal(titleText, bodyHtml){
@@ -1079,12 +1205,214 @@
   }
   function customAlert(msg){ customModal('KINOBLO', '<div class="modal-msg">'+escapeHtml(msg)+'</div>'); }
   function customConfirm(msg, onYes){
-    const overlay = customModal('Подтверждение', '<div class="modal-msg">'+escapeHtml(msg)+'</div><div class="modal-actions"><button class="secondary-btn glass-flat" id="cfNo">Отмена</button><button class="danger-btn" id="cfYes">Удалить</button></div>');
+    const overlay = customModal('Подтверждение', '<div class="modal-msg">'+escapeHtml(msg)+'</div><div class="modal-actions"><button class="secondary-btn glass-flat" id="cfNo">Отмена</button><button class="danger-btn" id="cfYes">Да</button></div>');
     overlay.querySelector('#cfNo').addEventListener('click', () => overlay.remove());
     overlay.querySelector('#cfYes').addEventListener('click', () => { overlay.remove(); onYes(); });
   }
 
-  // "Добавить категорию" — name + icon picker, appended to state.categories.
+  function bindEvents(){
+    document.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => openMovie(el.getAttribute('data-open'))));
+
+    document.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('click', () => {
+      state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+      state.categoryFilter = el.getAttribute('data-cat');
+      state.view = 'category';
+      render();
+      document.getElementById('app').scrollTop = 0;
+    }));
+
+    const toggleOverviewBtn = document.getElementById('toggleOverviewBtn');
+    if (toggleOverviewBtn) {
+      toggleOverviewBtn.addEventListener('click', () => {
+        isOverviewExpanded = !isOverviewExpanded;
+        render();
+      });
+    }
+
+    document.querySelectorAll('[data-discover-cat]').forEach(el => el.addEventListener('click', () => openDiscoverList(el.getAttribute('data-discover-cat'))));
+    document.querySelectorAll('[data-discover-pick]').forEach(el => el.addEventListener('click', () => {
+      openTmdbItemPreview(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+    }));
+    document.querySelectorAll('[data-tmdb-preview]').forEach(el => el.addEventListener('click', () => {
+      openTmdbItemPreview(el.getAttribute('data-tmdb-preview'), el.getAttribute('data-tmdb-type'));
+    }));
+    document.querySelectorAll('[data-quick-fav]').forEach(el => {
+      el.addEventListener('click', (e) => quickToggleFav(el.getAttribute('data-quick-fav'), el.getAttribute('data-quick-type'), e));
+    });
+
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) backBtn.addEventListener('click', () => {
+      if (state.view === 'detail' && state.previewItem && !state.movies.some(x=>x.id===state.previewItem.id)){
+        state.previewItem = null; state.view = previousView || 'search'; render();
+      } else if (state.view === 'detail') {
+        goHomeAnimated();
+      } else if (state.view === 'category' || state.view === 'discoverList') {
+        const prevView = state.view === 'discoverList' ? 'search' : 'home';
+        state.view = prevView; 
+        render();
+        document.getElementById('app').scrollTop = state.scrollPositions[prevView] || 0;
+      } else {
+        state.view = 'home'; render();
+      }
+    });
+
+    const addCatBtn = document.getElementById('addCategoryBtn');
+    if (addCatBtn) addCatBtn.addEventListener('click', openAddCategoryModal);
+
+    const editCatBtn = document.getElementById('editCatBtn');
+    if (editCatBtn) editCatBtn.addEventListener('click', openEditCategoryModal);
+
+    const loadMoreDiscover = document.getElementById('loadMoreDiscover');
+    if (loadMoreDiscover) loadMoreDiscover.addEventListener('click', () => loadDiscoverFullPage(state.discoverListKey));
+
+    const qInput = document.getElementById('tmdbQueryBottom');
+    if (qInput){
+      qInput.addEventListener('input', e => {
+        state.tmdbQuery = e.target.value;
+        const clr = document.getElementById('tmdbQueryBottomClear');
+        if (state.tmdbQuery && !clr){
+          render(); focusSearchInput();
+        } else if (!state.tmdbQuery && clr){
+          render(); focusSearchInput();
+        }
+        if (tmdbSearchTimer) clearTimeout(tmdbSearchTimer);
+        const q = state.tmdbQuery.trim();
+        if (!q){ state.tmdbResults = null; render(); focusSearchInput(); return; }
+        tmdbSearchTimer = setTimeout(async () => {
+          try{
+            state.tmdbResults = await tmdbSearch(q, state.tmdbKey);
+          }catch(e){ state.tmdbResults = []; }
+          render();
+          focusSearchInput();
+        }, 350);
+      });
+      qInput.addEventListener('focus', () => {
+        if (state.view !== 'search'){ state.view = 'search'; render(); focusSearchInput(); }
+      });
+    }
+
+    const clrBtn = document.getElementById('tmdbQueryBottomClear');
+    if (clrBtn) clrBtn.addEventListener('click', () => {
+      state.tmdbQuery = ''; state.tmdbResults = null; render(); focusSearchInput();
+    });
+
+    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => {
+      const v = el.getAttribute('data-nav');
+      if (v === 'home'){
+        if (state.view === 'home') {
+          state.scrollPositions['home'] = 0;
+          document.getElementById('app').scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          state.scrollPositions['home'] = 0;
+          state.view = 'home';
+          state.detailId = null;
+          state.previewItem = null;
+          render();
+          document.getElementById('app').scrollTop = 0;
+        }
+      }
+      else if (v === 'search'){
+        if (state.view === 'search') {
+          state.tmdbQuery = '';
+          state.tmdbResults = null;
+          state.scrollPositions['search'] = 0;
+          render();
+          document.getElementById('app').scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          state.scrollPositions['search'] = 0;
+          state.view = 'search';
+          state.detailId = null;
+          state.previewItem = null;
+          render();
+          document.getElementById('app').scrollTop = 0;
+        }
+      }
+    }));
+
+    const saveFromDetail = document.getElementById('saveFromDetail');
+    if (saveFromDetail && state.previewItem){
+      saveFromDetail.addEventListener('click', async () => {
+        const item = state.previewItem;
+        
+        openCategorySelectorModal(item, async (chosenCat) => {
+          const alreadyInThisCategory = state.movies.some(x => x.tmdbId === item.tmdbId && x.status === chosenCat);
+          if (alreadyInThisCategory) {
+            customAlert('Этот фильм уже добавлен в данную категорию!');
+            const existing = state.movies.find(x => x.tmdbId === item.tmdbId && x.status === chosenCat);
+            if (existing) openMovie(existing.id);
+            return;
+          }
+
+          item.status = chosenCat;
+          if (!state.movies.some(x => x.id === item.id)){
+            state.movies.push(item);
+            await addMovie(item);
+          }
+          state.detailId = item.id;
+          state.previewItem = null;
+          render();
+        });
+      });
+    }
+
+    const deleteFromDetail = document.getElementById('deleteFromDetail');
+    if (deleteFromDetail){
+      deleteFromDetail.addEventListener('click', () => {
+        const targetId = state.detailId || (state.previewItem && state.previewItem.id);
+        customConfirm('Удалить этот фильм из коллекции?', async () => {
+          await deleteMovie(targetId);
+          state.movies = state.movies.filter(x => x.id !== targetId);
+          goHomeAnimated();
+        });
+      });
+    }
+
+    const detailCatSelect = document.getElementById('detailCatSelect');
+    if (detailCatSelect){
+      detailCatSelect.addEventListener('change', async e => {
+        const activeMovie = state.movies.find(x => x.id === state.detailId);
+        if (!activeMovie) return;
+        
+        const newCat = e.target.value;
+        const alreadyInThisCategory = state.movies.some(x => x.tmdbId === activeMovie.tmdbId && x.status === newCat && x.id !== activeMovie.id);
+        if (alreadyInThisCategory) {
+          customAlert('Этот фильм уже есть в выбранной категории!');
+          detailCatSelect.value = activeMovie.status;
+          return;
+        }
+
+        activeMovie.status = newCat;
+        saveMovieDebounced(activeMovie, 100);
+      });
+    }
+
+    document.querySelectorAll('[data-rate]').forEach(el => el.addEventListener('click', async () => {
+      const activeMovie = state.movies.find(x => x.id === state.detailId);
+      if (!activeMovie) return;
+      
+      const r = Number(el.getAttribute('data-rate'));
+      activeMovie.myRating = r;
+      saveMovieDebounced(activeMovie);
+      render();
+    }));
+
+    // Обработчик клика по картинкам/кадрам для открытия во весь экран
+    document.querySelectorAll('[data-fullscreen-img]').forEach(el => {
+      el.addEventListener('click', () => {
+        const imgUrl = el.getAttribute('data-fullscreen-img');
+        const modal = document.createElement('div');
+        modal.className = 'fullscreen-modal';
+        modal.innerHTML = '<div class="fullscreen-close" id="fsClose">'+icon('close',20)+'</div><img src="'+escapeHtml(imgUrl)+'">';
+        document.body.appendChild(modal);
+        modal.querySelector('#fsClose').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      });
+    });
+
+    const page = document.getElementById('detailPage');
+    if (page) attachSwipeClose(page);
+  }
+
   function openAddCategoryModal(){
     let selectedIcon = 'star';
     const body = '<div class="modal-msg" style="padding-top:2px;padding-bottom:6px;">Название категории</div>'
@@ -1097,168 +1425,77 @@
       selectedIcon = b.getAttribute('data-cat-icon');
       overlay.querySelectorAll('[data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
     }));
-    overlay.querySelector('#saveNewCat').addEventListener('click', async () => {
-      const name = overlay.querySelector('#newCatName').value.trim();
-      if (!name){ return; }
-      const color = CAT_COLOR_PALETTE[state.categories.length % CAT_COLOR_PALETTE.length];
-      const cat = {v:'cat_'+Date.now().toString(36), l:name, icon:selectedIcon, color, sub:''};
-      state.categories.push(cat);
+  }
+
+  function openEditCategoryModal(){
+    const s = categoryMeta(state.categoryFilter);
+    if (!s) return;
+    let selectedIcon = s.icon || 'star';
+    let selectedColor = s.color || '#ff2b3d';
+    const body = '<div class="modal-msg" style="padding-top:2px;padding-bottom:6px;">Название категории</div>'
+      + '<input id="editCatName" value="'+escapeHtml(s.l)+'" style="margin-bottom:4px;">'
+      + '<div class="modal-msg" style="padding-bottom:2px;">Цвет</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' + CAT_COLOR_PALETTE.map(col=>'<button type="button" data-cat-col="'+col+'" style="width:32px;height:32px;border-radius:50%;background:'+col+';border:'+(col===selectedColor?'2px solid #fff':'none')+';"></button>').join('') + '</div>'
+      + '<div class="modal-msg" style="padding-bottom:2px;">Иконка</div>'
+      + '<div class="cat-icon-grid">' + CAT_ICON_OPTIONS.map(ic=>'<button type="button" class="cat-icon-opt'+(ic===selectedIcon?' active':'')+'" data-cat-icon="'+ic+'">'+icon(ic,20)+'</button>').join('') + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:4px;"><button class="danger-btn" id="deleteCatBtn" style="flex:1;">Удалить</button><button class="primary-btn" id="saveEditCat" style="flex:1;margin-top:0;">Сохранить</button></div>';
+    const overlay = customModal('Редактировать категорию', body);
+    overlay.querySelectorAll('[data-cat-icon]').forEach(b => b.addEventListener('click', () => {
+      selectedIcon = b.getAttribute('data-cat-icon');
+      overlay.querySelectorAll('[data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
+    }));
+    overlay.querySelectorAll('[data-cat-col]').forEach(b => b.addEventListener('click', () => {
+      selectedColor = b.getAttribute('data-cat-col');
+      overlay.querySelectorAll('[data-cat-col]').forEach(x=>x.style.border='none');
+      b.style.border = '2px solid #fff';
+    }));
+    overlay.querySelector('#saveEditCat').addEventListener('click', async () => {
+      const nameVal = overlay.querySelector('#editCatName').value.trim();
+      if (!nameVal){ customAlert('Введите название категории'); return; }
+      s.l = nameVal; s.icon = selectedIcon; s.color = selectedColor;
       await STORAGE.saveCategories(state.categories);
       overlay.remove();
       render();
     });
+    overlay.querySelector('#deleteCatBtn').addEventListener('click', () => {
+      customConfirm('Удалить эту категорию? Фильмы из неё переместятся в «Избранное».', async () => {
+        state.movies.forEach(m => { if (m.status === s.v) { m.status = 'favorite'; saveMovieDebounced(m, 10); } });
+        state.categories = state.categories.filter(c => c.v !== s.v);
+        await STORAGE.saveCategories(state.categories);
+        overlay.remove();
+        state.view = 'home';
+        render();
+      });
+    });
   }
 
-  function bindEvents(){
-    document.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => openMovie(el.getAttribute('data-open'))));
-
-    document.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('click', () => {
-      state.categoryFilter = el.getAttribute('data-cat');
-      state.view = 'category';
-      render();
-    }));
-
-    document.querySelectorAll('[data-discover-cat]').forEach(el => el.addEventListener('click', () => {
-      openDiscoverList(el.getAttribute('data-discover-cat'));
-    }));
-
-    const loadMoreDiscover = document.getElementById('loadMoreDiscover');
-    if (loadMoreDiscover) loadMoreDiscover.addEventListener('click', () => loadDiscoverFullPage(state.discoverListKey));
-
-    const addCategoryBtn = document.getElementById('addCategoryBtn');
-    if (addCategoryBtn) addCategoryBtn.addEventListener('click', openAddCategoryModal);
-
-    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => {
-      if (el.getAttribute('data-nav') === 'search'){ state.previewItem = null; state.pendingMovie = null; }
-      state.view = el.getAttribute('data-nav'); render();
-    }));
-
-    const backBtn = document.getElementById('backBtn');
-    if (backBtn) backBtn.addEventListener('click', () => {
-      if (state.view === 'detail'){ goHomeAnimated(); return; }
-      if (state.view === 'preview'){ state.previewItem = null; state.view = 'search'; render(); return; }
-      if (state.view === 'choose'){ state.view = 'preview'; render(); return; }
-      if (state.view === 'category'){ state.categoryFilter = null; state.view = 'home'; render(); return; }
-      if (state.view === 'discoverList'){ state.discoverListKey = null; state.view = 'search'; render(); return; }
-      state.view = 'home'; render();
-    });
-
-    const trailerBtn = document.getElementById('trailerBtn');
-    if (trailerBtn) trailerBtn.addEventListener('click', () => {
-      const m = state.movies.find(x=>x.id===state.detailId);
-      if (!m || !m.youtube){ customAlert('Ссылка на трейлер не указана.'); return; }
-      openExternal(m.youtube);
-    });
-
-    document.querySelectorAll('[data-rate]').forEach(el => el.addEventListener('click', () => {
-      const v = +el.getAttribute('data-rate');
-      const m = state.movies.find(x=>x.id===state.detailId);
-      m.myRating = (m.myRating === v) ? null : v;
-      saveMovieDebounced(m); // rapid taps coalesce into one write; flushed on navigation away
-      render();
-    }));
-
-    const delFromDetail = document.getElementById('deleteFromDetail');
-    if (delFromDetail) delFromDetail.addEventListener('click', () => {
-      customConfirm('Удалить этот фильм из KINOBLO? Это действие нельзя отменить.', async () => {
-        flushPendingSave(state.detailId);
-        await deleteMovie(state.detailId);
-        state.movies = state.movies.filter(x => x.id !== state.detailId);
-        state.view = 'home'; render();
-      });
-    });
-
-    // Bottom search bar: typing live-searches TMDB (debounced).
-    const tmdbQueryBottom = document.getElementById('tmdbQueryBottom');
-    if (tmdbQueryBottom){
-      tmdbQueryBottom.addEventListener('input', () => {
-        const q = tmdbQueryBottom.value;
-        state.tmdbQuery = q;
-        clearTimeout(tmdbSearchTimer);
-        if (!q.trim()){
-          state.tmdbResults = null;
-          render();
-          focusSearchInput();
-          return;
-        }
-        tmdbSearchTimer = setTimeout(async () => {
-          try{ state.tmdbResults = await tmdbSearch(q, state.tmdbKey); }
-          catch(e){ state.tmdbResults = []; }
-          render();
-          focusSearchInput();
-        }, 450);
-      });
-    }
-    const tmdbQueryBottomClear = document.getElementById('tmdbQueryBottomClear');
-    if (tmdbQueryBottomClear) tmdbQueryBottomClear.addEventListener('click', () => {
-      clearTimeout(tmdbSearchTimer);
-      state.tmdbQuery = ''; state.tmdbResults = null;
-      render();
-      focusSearchInput();
-    });
-
-    document.querySelectorAll('[data-tmdb-pick]').forEach(el => el.addEventListener('click', () => {
-      const idx = +el.getAttribute('data-tmdb-pick');
-      const item = (state.tmdbResults||[])[idx];
-      if (!item) return;
-      openPreview(item);
-    }));
-
-    // Picking an item from a discovery row or the full category grid
-    // works the same as a search result — look it up in whichever
-    // category cache holds it, then open the single-card preview.
-    document.querySelectorAll('[data-discover-pick]').forEach(el => el.addEventListener('click', () => {
-      const tmdbId = +el.getAttribute('data-discover-pick');
-      const mediaType = el.getAttribute('data-discover-type');
-      let item = null;
-      Object.values(state.discover.cache).forEach(list => {
-        if (item || !list) return;
-        const found = list.find(x => x.tmdbId === tmdbId && x.mediaType === mediaType);
-        if (found) item = found;
-      });
-      if (!item) Object.values(state.discover.full).forEach(list => {
-        if (item || !list) return;
-        const found = list.find(x => x.tmdbId === tmdbId && x.mediaType === mediaType);
-        if (found) item = found;
-      });
-      if (!item) return;
-      openPreview(item);
-    }));
-
-    const previewHeart = document.getElementById('previewHeart');
-    if (previewHeart) previewHeart.addEventListener('click', () => {
-      const item = state.previewItem;
-      if (!item) return;
-      state.pendingMovie = {
-        title: item.title, poster: item.poster, description: item.description,
-        type: item.mediaType === 'tv' ? 'series' : 'movie', genres: item.genres,
-        youtube: '', myRating: null, myNote: '',
-        tmdbId: item.tmdbId, tmdbMediaType: item.mediaType, tmdbRating: item.voteAverage
-      };
-      state.view = 'choose'; render();
-    });
-
-    document.querySelectorAll('[data-choose]').forEach(el => el.addEventListener('click', async () => {
-      const status = el.getAttribute('data-choose');
-      const m = Object.assign({id: uid()}, state.pendingMovie, {status});
-      await addMovie(m);
-      state.movies.push(m);
-      const tmdbId = m.tmdbId, mediaType = m.tmdbMediaType;
-      state.pendingMovie = null; state.previewItem = null;
-      state.tmdbQuery = ''; state.tmdbResults = null;
-      state.detailId = m.id; state.view = 'detail'; render();
-      if (tmdbId){
-        tmdbTrailer(tmdbId, mediaType, state.tmdbKey).then(yt => {
-          if (!yt) return;
-          m.youtube = yt;
-          updateMovie(m);
-          if (state.detailId === m.id) render();
-        });
+  function attachSwipeClose(el){
+    let startY = 0, currentY = 0, touching = false;
+    el.addEventListener('touchstart', e => {
+      if (document.getElementById('app').scrollTop <= 5){
+        startY = e.touches[0].clientY; touching = true; el.style.transition = 'none';
       }
-    }));
-
-    const detailPage = document.getElementById('detailPage');
-    if (detailPage) attachSwipeClose(detailPage);
+    }, {passive:true});
+    el.addEventListener('touchmove', e => {
+      if (!touching) return;
+      currentY = e.touches[0].clientY;
+      const diff = currentY - startY;
+      if (diff > 0){
+        el.style.transform = 'translateY(' + diff + 'px)';
+      }
+    }, {passive:true});
+    el.addEventListener('touchend', () => {
+      if (!touching) return;
+      touching = false;
+      const diff = currentY - startY;
+      startY = 0; currentY = 0;
+      if (diff > 110){
+        goHomeAnimated();
+      } else {
+        el.style.transition = 'transform .2s ease';
+        el.style.transform = 'translateY(0)';
+      }
+    });
   }
 
   loadTelegramSdkThenStart();
