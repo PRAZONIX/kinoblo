@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>KINOBLO</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -132,29 +131,20 @@
   .nav svg{width:21px;height:21px;}
   .nav .nlabel{font-size:10px;font-weight:700;letter-spacing:.3px;}
 
-  .form{padding:18px 20px 30px;display:flex;flex-direction:column;gap:15px;animation:pageIn .32s cubic-bezier(.2,.8,.2,1) both;}
-  .field label{display:block;font-size:11.5px;color:var(--ink-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:7px;}
+  .search-bar-bottom{position:fixed;left:0;right:0;bottom:92px;display:flex;justify-content:center;z-index:39;pointer-events:none;padding:0 16px;}
+  .search-bar-inner{pointer-events:auto;width:100%;max-width:488px;display:flex;align-items:center;gap:9px;padding:12px 16px;border-radius:var(--radius-pill);}
+  .search-bar-inner svg{color:var(--ink-faint);flex:0 0 auto;}
+  .search-bar-inner input{background:transparent;border:none;padding:2px 0;font-size:15.5px;backdrop-filter:none;-webkit-backdrop-filter:none;}
+  .search-bar-inner input:focus{border:none;background:transparent;}
+  .search-bar-inner .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);background:rgba(255,255,255,.08);}
+  .discover-scroll-pad{height:2px;}
 
-  .chip-row{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;-webkit-overflow-scrolling:touch;flex-wrap:wrap;}
-  .chip{flex:0 0 auto;padding:9px 15px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:600;color:var(--ink-dim);white-space:nowrap;background:var(--glass);border:1px solid var(--glass-border-soft);backdrop-filter:blur(14px);transition:transform .12s ease, background .15s ease;}
-  .chip:active{transform:scale(.93);}
-  .chip.active{background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;border-color:transparent;box-shadow:0 6px 16px var(--accent-glow);}
+  .field label{display:block;font-size:11.5px;color:var(--ink-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:7px;}
 
   .primary-btn{background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:var(--radius-pill);text-align:center;margin-top:4px;box-shadow:0 10px 26px var(--accent-glow);transition:transform .12s ease, box-shadow .12s ease;}
   .primary-btn:active{transform:scale(.97);box-shadow:0 4px 14px var(--accent-glow);}
   .secondary-btn{color:var(--ink);font-weight:600;font-size:14px;padding:13px;border-radius:var(--radius-pill);text-align:center;}
   .danger-btn{color:var(--accent-2);background:rgba(255,43,61,.08);border:1px solid rgba(255,43,61,.28);font-weight:700;padding:13px;border-radius:var(--radius-pill);text-align:center;backdrop-filter:blur(14px);}
-  .seg{display:flex;border-radius:var(--radius-pill);overflow:hidden;padding:4px;gap:3px;}
-  .seg button{flex:1;padding:10px 4px;font-size:11.5px;font-weight:700;color:var(--ink-dim);display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:var(--radius-pill);}
-  .seg button svg{width:16px;height:16px;}
-  .seg button.active{background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;}
-
-  .poster-upload{width:100%;height:230px;border-radius:var(--radius-sm);overflow:hidden;position:relative;border:1.5px dashed var(--glass-border);}
-  .poster-upload img{width:100%;height:100%;object-fit:cover;}
-  .poster-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:var(--ink-faint);font-size:13px;font-weight:600;}
-  .poster-placeholder svg{width:28px;height:28px;color:var(--ink-faint);}
-  .poster-edit-badge{position:absolute;bottom:10px;right:10px;background:rgba(9,9,11,.6);backdrop-filter:blur(10px);color:#fff;font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:var(--radius-pill);display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.14);}
-  .poster-edit-badge svg{width:13px;height:13px;}
 
   .subbar{display:flex;align-items:center;gap:12px;padding:20px 20px 8px;}
   .icon-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--ink);}
@@ -251,12 +241,36 @@
   .choose-text .t1{font-size:16px;font-weight:700;}
   .choose-text .t2{font-size:12px;color:var(--ink-faint);margin-top:2px;}
 
+  /* ---- Preview card (TMDB pick, not yet saved) ---- */
+  .preview-wrap{padding:8px 16px 20px;height:calc(100vh - 78px);}
+  .preview-card{width:100%;height:100%;display:flex;flex-direction:column;border-radius:26px;overflow:hidden;position:relative;}
+  .preview-poster{position:relative;height:42vh;flex:0 0 auto;background:linear-gradient(160deg,#232228,#0c0c0f);}
+  .preview-poster img{width:100%;height:100%;object-fit:cover;}
+  .preview-poster .hero-fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,7,10,0) 55%,rgba(12,12,15,.5) 100%);}
+  .preview-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 84px;}
+  .preview-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.4px;line-height:1.08;}
+  .preview-year{color:var(--ink-faint);font-size:18px;font-family:'Inter',sans-serif;font-weight:600;}
+  .preview-tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px;}
+  .preview-desc{font-size:13.5px;line-height:1.62;color:var(--ink-dim);}
+  .heart-btn{position:absolute;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;box-shadow:0 10px 28px var(--accent-glow);z-index:5;transition:transform .12s ease;}
+  .heart-btn svg{width:24px;height:24px;}
+  .heart-btn:active{transform:scale(.88);}
+
+  /* ---- category creation ---- */
+  .add-cat-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 20px 6px;}
+  .cat-icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:4px 0 16px;max-height:260px;overflow-y:auto;padding-right:2px;}
+  .cat-icon-opt{aspect-ratio:1;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--glass-border-soft);color:var(--ink-dim);transition:transform .12s ease;}
+  .cat-icon-opt:active{transform:scale(.9);}
+  .cat-icon-opt.active{background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;border-color:transparent;}
+
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:80;display:flex;align-items:flex-end;justify-content:center;}
   .modal{width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:18px;max-height:88vh;overflow-y:auto;background:linear-gradient(155deg, rgba(24,24,28,.92), rgba(14,14,17,.96));backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);border:1px solid var(--glass-border);border-bottom:none;box-shadow:0 -12px 40px rgba(0,0,0,.5);}
-  .modal-msg{font-size:14.5px;line-height:1.6;color:var(--ink-dim);padding:8px 4px 18px;}
+  .modal-msg{font-size:14.5px;line-height:1.6;color:var(--ink-dim);padding:8px 4px 10px;}
   .modal-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:.5px;padding:2px 4px 4px;}
   .modal-actions{display:flex;gap:8px;}
   .modal-actions button{flex:1;}
+  .load-more-btn{display:block;width:calc(100% - 40px);margin:6px 20px 4px;padding:14px;border-radius:var(--radius-pill);text-align:center;font-weight:700;font-size:13.5px;color:var(--ink-dim);}
+  .load-more-btn:active{transform:scale(.98);}
 </style>
 </head>
 <body>
@@ -264,8 +278,28 @@
 
 <script>
 (function(){
-  const tg = window.Telegram && window.Telegram.WebApp;
-  if (tg) { try { tg.ready(); tg.expand(); tg.setHeaderColor && tg.setHeaderColor('#07070a'); tg.setBackgroundColor && tg.setBackgroundColor('#07070a'); } catch(e){} }
+  let tg = null;
+  function initTelegram(){
+    try{
+      tg = window.Telegram && window.Telegram.WebApp;
+      if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor && tg.setHeaderColor('#07070a'); tg.setBackgroundColor && tg.setBackgroundColor('#07070a'); }
+    }catch(e){}
+  }
+  // Load the Telegram SDK without blocking the app: if it can't be reached
+  // (e.g. viewing outside Telegram, or the network is restricted), the app
+  // still starts after a short fallback timeout instead of hanging forever.
+  function loadTelegramSdkThenStart(){
+    let started = false;
+    const start = () => { if (started) return; started = true; initTelegram(); loadAll(); };
+    const fallback = setTimeout(start, 1000);
+    try{
+      const s = document.createElement('script');
+      s.src = 'https://telegram.org/js/telegram-web-app.js';
+      s.onload = () => { clearTimeout(fallback); start(); };
+      s.onerror = () => { clearTimeout(fallback); start(); };
+      document.head.appendChild(s);
+    }catch(e){ clearTimeout(fallback); start(); }
+  }
 
   const ICONS = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>',
@@ -277,16 +311,42 @@
     heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6Z"/></svg>',
     clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
     eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>',
-    external:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>'
+    external:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>',
+    chevron:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2Z"/></svg>',
+    bookmark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 16l-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg>',
+    film:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="2"/><path d="M7 4v16M17 4v16M2.5 9h4.5M2.5 15h4.5M17 9h4.5M17 15h4.5"/></svg>',
+    tv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M8 21h8M12 6 8 2M12 6l4-4"/></svg>',
+    popcorn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.4 13a1 1 0 0 1-1 .9H8.4a1 1 0 0 1-1-.9L6 8Z"/><path d="M5 8a2.5 2.5 0 0 1 2-4 2 2 0 0 1 3.5-1.6A2.2 2.2 0 0 1 12 1a2.2 2.2 0 0 1 1.9 1.3A2 2 0 0 1 17 4a2.5 2.5 0 0 1 2 4Z"/><path d="M10 8v13M14 8v13"/></svg>',
+    trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0Z"/><path d="M7 5H4a3 3 0 0 0 3 5M17 5h3a3 3 0 0 1-3 5"/></svg>',
+    zap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg>',
+    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>',
+    sparkles:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>',
+    ghost:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V11a7 7 0 0 1 14 0v10l-2.5-2-2 2-2.5-2-2 2-2.5-2Z"/><path d="M9 10h.01M15 10h.01"/></svg>',
+    skull:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a8 8 0 0 0-8 8v3.5c0 1.4.9 2 2 2h1v2.5h2V17h2v3h2v-3h2v3.5h2V17h1c1.1 0 2-.6 2-2V11a8 8 0 0 0-8-8Z"/><circle cx="9" cy="11" r="1.4"/><circle cx="15" cy="11" r="1.4"/></svg>',
+    crown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8 4 4 5-7 5 7 4-4-2 11H5L3 8Z"/></svg>',
+    gamepad:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 10v4M5 12h4"/><circle cx="16" cy="10.5" r="1"/><circle cx="18.5" cy="13" r="1"/></svg>',
+    music:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+    baby:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+    camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 5h13l-3 4 3 4H5Z"/></svg>'
   };
-  function icon(name, size){ return ICONS[name].replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
+  function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
-  const STATUSES = [
+  // Default lists. Users can add their own on top of these (see
+  // "Добавить категорию" on the home screen) — everything is stored
+  // together in one categories array, keyed by a stable `v` id.
+  const DEFAULT_CATEGORIES = [
     {v:'favorite', l:'Избранное', icon:'heart', color:'#ff2b3d', sub:'Твои любимые'},
     {v:'watchlist', l:'Смотреть позже', icon:'clock', color:'#8b6bff', sub:'В очереди'},
     {v:'watching', l:'Смотрю', icon:'eye', color:'#2fc4dd', sub:'Сейчас смотришь'}
   ];
-  function statusMeta(v){ return STATUSES.find(s=>s.v===v); }
+  const CAT_ICON_OPTIONS = ['heart','clock','eye','star','bookmark','film','tv','popcorn','trophy','zap','moon','sparkles','ghost','skull','crown','gamepad','music','globe','baby','camera','calendar','flag'];
+  const CAT_COLOR_PALETTE = ['#ff2b3d','#8b6bff','#2fc4dd','#ffb347','#34d399','#f0d95a','#ff5a6a','#4ee2ab'];
+  function categoryMeta(v){ return state.categories.find(c=>c.v===v) || DEFAULT_CATEGORIES[0]; }
 
   const TYPES = [
     {v:'movie', l:'Фильм'}, {v:'series', l:'Сериал'}, {v:'cartoon', l:'Мультфильм'},
@@ -294,45 +354,418 @@
   ];
   function typeLabel(v){ const t = TYPES.find(t=>t.v===v); return t ? t.l : ''; }
 
-  // Extended genre list covering the common film/TV genre categories.
-  const GENRES = ['Комедия','Драма','Ужасы','Триллер','Фэнтези','Фантастика','Боевик','Приключения','Мелодрама','Детектив','Криминал','Военный','Мюзикл','Документальный','Семейный','Биография','История','Спорт','Вестерн','Нуар','Катастрофа','Постапокалипсис'];
-
-  let state = {
-    movies: [], view: 'home', detailId: null, editingId: null,
-    pendingMovie: null, loaded: false
+  // Static TMDB genre IDs mapped to the closest label in our own Russian
+  // genre list. Movies and TV shows use slightly different ID sets on
+  // TMDB, so we keep two maps and pick the right one per result.
+  const TMDB_GENRE_MAP = {
+    28:'Боевик', 12:'Приключения', 35:'Комедия', 80:'Криминал', 99:'Документальный',
+    18:'Драма', 10751:'Семейный', 14:'Фэнтези', 36:'История', 27:'Ужасы',
+    10402:'Мюзикл', 9648:'Детектив', 10749:'Мелодрама', 878:'Фантастика',
+    53:'Триллер', 10752:'Военный', 37:'Вестерн'
+  };
+  const TMDB_TV_GENRE_MAP = {
+    10759:'Боевик', 16:'Комедия', 35:'Комедия', 80:'Криминал', 99:'Документальный',
+    18:'Драма', 10751:'Семейный', 10762:'Семейный', 9648:'Детектив', 10763:'Документальный',
+    10764:'Драма', 10765:'Фантастика', 10766:'Мелодрама', 10767:'Документальный', 10768:'Военный', 37:'Вестерн'
   };
 
-  const STORAGE_KEY = 'kinoblo-movies-v2';
-  const uid = () => 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  // Embedded TMDB API key (v3 auth) so search works out of the box.
+  const DEFAULT_TMDB_KEY = '786670e67582409aa0c3f4232a45c9d3';
 
-  function tgCloud(){ return tg && tg.CloudStorage ? tg.CloudStorage : null; }
+  let state = {
+    movies: [], categories: [], view: 'home', detailId: null, categoryFilter: null,
+    pendingMovie: null, previewItem: null, loaded: false,
+    tmdbKey: '', tmdbResults: null, tmdbQuery: '',
+    discover: { cache: {}, loading: {}, lgbtKeywordIds: null, full: {}, fullLoading: {}, fullPage: {}, fullDone: {} },
+    discoverListKey: null
+  };
+
+  const uid = () => 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  let tmdbSearchTimer = null; // debounce handle for the bottom live-search bar
+
+  // ============================================================
+  // KINOBLO STORAGE
+  // Single storage layer. Nothing outside this block should know
+  // *where* data physically lives — it only calls loadMovies() /
+  // addMovie() / updateMovie() / deleteMovie() / STORAGE.getCategories() /
+  // STORAGE.saveCategories().
+  //
+  // Backend selection:
+  //   - Inside Telegram, with Bot API 9.0+  -> Telegram.WebApp.DeviceStorage
+  //     (persistent, per-user, on-device, up to 5MB — no server involved)
+  //   - Outside Telegram / old client        -> localStorage (dev/browser fallback)
+  //
+  // DeviceStorage has no "list all keys" method (unlike CloudStorage),
+  // so we keep our own index: one small key with just the list of
+  // movie IDs, plus one key per movie (kinoblo_movie_<id>). This avoids
+  // ever writing/reading one giant blob for the whole collection.
+  // ============================================================
+  const IDX_KEY = 'kinoblo_index';
+  const CAT_KEY = 'kinoblo_categories';
+  const MIGRATED_KEY = 'kinoblo_migrated_v3';
+  const OLD_BLOB_KEY = 'kinoblo-movies-v2'; // legacy single-blob key (old localStorage/CloudStorage version)
+  const movieKey = id => 'kinoblo_movie_' + id;
+
+  let storageBackend = 'local'; // resolved in STORAGE.init()
+
+  function deviceStorageUsable(){
+    return !!(tg && tg.DeviceStorage && typeof tg.DeviceStorage.setItem === 'function'
+      && typeof tg.isVersionAtLeast === 'function' && tg.isVersionAtLeast('9.0'));
+  }
+  function rawGet(key){
+    return new Promise(resolve => {
+      if (storageBackend === 'device'){
+        try{ tg.DeviceStorage.getItem(key, (err, value) => resolve(err ? null : (value || null))); }
+        catch(e){ resolve(null); }
+      } else {
+        try{ resolve(localStorage.getItem(key)); }catch(e){ resolve(null); }
+      }
+    });
+  }
+  function rawSet(key, value){
+    return new Promise(resolve => {
+      if (storageBackend === 'device'){
+        try{ tg.DeviceStorage.setItem(key, value, (err, ok) => resolve(!err && ok !== false)); }
+        catch(e){ resolve(false); }
+      } else {
+        try{ localStorage.setItem(key, value); resolve(true); }catch(e){ resolve(false); }
+      }
+    });
+  }
+  function rawRemove(key){
+    return new Promise(resolve => {
+      if (storageBackend === 'device'){
+        try{ tg.DeviceStorage.removeItem(key, (err, ok) => resolve(!err && ok !== false)); }
+        catch(e){ resolve(false); }
+      } else {
+        try{ localStorage.removeItem(key); resolve(true); }catch(e){ resolve(false); }
+      }
+    });
+  }
+
+  const STORAGE = {
+    async init(){
+      storageBackend = deviceStorageUsable() ? 'device' : 'local';
+      await this.migrate();
+    },
+    async getMovieIds(){
+      const raw = await rawGet(IDX_KEY);
+      if (!raw) return [];
+      try{ const arr = JSON.parse(raw); return Array.isArray(arr) ? arr : []; }catch(e){ return []; }
+    },
+    async saveMovieIds(ids){ return rawSet(IDX_KEY, JSON.stringify(ids)); },
+    async getMovie(id){
+      const raw = await rawGet(movieKey(id));
+      if (!raw) return null;
+      try{ return JSON.parse(raw); }catch(e){ return null; }
+    },
+    async saveMovie(movie){
+      const ok = await rawSet(movieKey(movie.id), JSON.stringify(movie));
+      if (!ok) return false;
+      const ids = await this.getMovieIds();
+      if (ids.indexOf(movie.id) === -1){ ids.push(movie.id); await this.saveMovieIds(ids); }
+      return true;
+    },
+    async deleteMovie(id){
+      await rawRemove(movieKey(id));
+      const ids = await this.getMovieIds();
+      const ok = await this.saveMovieIds(ids.filter(x => x !== id));
+      return ok;
+    },
+    async loadAllMovies(){
+      const ids = await this.getMovieIds();
+      const out = [];
+      for (const id of ids){ const m = await this.getMovie(id); if (m) out.push(m); }
+      return out;
+    },
+    async getCategories(){
+      const raw = await rawGet(CAT_KEY);
+      if (!raw) return null;
+      try{ const arr = JSON.parse(raw); return Array.isArray(arr) && arr.length ? arr : null; }catch(e){ return null; }
+    },
+    async saveCategories(cats){ return rawSet(CAT_KEY, JSON.stringify(cats)); },
+    // Small generic key/value settings, stored in the same backend
+    // (e.g. the user's own TMDB API key).
+    async getSetting(key){ return rawGet('kinoblo_setting_' + key); },
+    async setSetting(key, value){ return rawSet('kinoblo_setting_' + key, value); },
+    // One-time migration from the old single-blob storage (localStorage
+    // key 'kinoblo-movies-v2', and/or the old Telegram CloudStorage copy
+    // of it) into the new per-movie keys. Old data is never deleted —
+    // if migration can't run for some reason, nothing is lost, it's
+    // simply left where it was.
+    async migrate(){
+      const already = await rawGet(MIGRATED_KEY);
+      if (already) return;
+      let oldRaw = null;
+      try{ oldRaw = localStorage.getItem(OLD_BLOB_KEY); }catch(e){}
+      if (!oldRaw && tg && tg.CloudStorage){
+        oldRaw = await new Promise(resolve => {
+          try{ tg.CloudStorage.getItem(OLD_BLOB_KEY, (err, v) => resolve(err ? null : v)); }
+          catch(e){ resolve(null); }
+        });
+      }
+      if (oldRaw){
+        let oldMovies = [];
+        try{ oldMovies = JSON.parse(oldRaw); }catch(e){ oldMovies = []; }
+        if (Array.isArray(oldMovies) && oldMovies.length){
+          const ids = await this.getMovieIds();
+          for (const m of oldMovies){
+            if (!m || !m.id) continue;
+            await rawSet(movieKey(m.id), JSON.stringify(m));
+            if (ids.indexOf(m.id) === -1) ids.push(m.id);
+          }
+          await this.saveMovieIds(ids);
+        }
+      }
+      await rawSet(MIGRATED_KEY, '1');
+    }
+  };
+
+  // Thin public API used by the rest of the app.
+  let _storageErrorShown = false;
+  function reportStorageError(msg){
+    if (_storageErrorShown) return;
+    _storageErrorShown = true;
+    customAlert(msg);
+    setTimeout(() => { _storageErrorShown = false; }, 4000);
+  }
+  async function loadMovies(){ return STORAGE.loadAllMovies(); }
+  async function addMovie(movie){
+    const ok = await STORAGE.saveMovie(movie);
+    if (!ok) reportStorageError('Не удалось сохранить фильм. Освободи немного места в хранилище.');
+    return ok;
+  }
+  async function updateMovie(movie){
+    const ok = await STORAGE.saveMovie(movie);
+    if (!ok) reportStorageError('Не удалось сохранить изменения. Освободи немного места в хранилище.');
+    return ok;
+  }
+  async function deleteMovie(id){
+    const ok = await STORAGE.deleteMovie(id);
+    if (!ok) reportStorageError('Не удалось удалить фильм. Попробуй ещё раз.');
+    return ok;
+  }
+
+  // Debounced save for rapid taps (e.g. tapping through rating values
+  // 1→2→3…) — avoids a storage write on every single tap, but always
+  // flushes on navigation away from the page so nothing is lost.
+  const _pendingSaves = {};
+  function saveMovieDebounced(movie, delay){
+    if (_pendingSaves[movie.id]) clearTimeout(_pendingSaves[movie.id].timer);
+    _pendingSaves[movie.id] = { movie, timer: setTimeout(() => {
+      delete _pendingSaves[movie.id];
+      updateMovie(movie);
+    }, delay || 500) };
+  }
+  function flushPendingSave(id){
+    const p = _pendingSaves[id];
+    if (!p) return;
+    clearTimeout(p.timer);
+    delete _pendingSaves[id];
+    updateMovie(p.movie);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden'){
+      Object.keys(_pendingSaves).forEach(flushPendingSave);
+    }
+  });
 
   async function loadAll(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      state.movies = raw ? JSON.parse(raw) : [];
-    }catch(e){ state.movies = []; }
+    await STORAGE.init();
+    state.movies = await loadMovies();
+    let cats = await STORAGE.getCategories();
+    if (!cats){ cats = DEFAULT_CATEGORIES.slice(); await STORAGE.saveCategories(cats); }
+    state.categories = cats;
+    const savedTmdbKey = await STORAGE.getSetting('tmdb_key');
+    state.tmdbKey = savedTmdbKey || DEFAULT_TMDB_KEY;
     state.loaded = true;
     render();
-    const cloud = tgCloud();
-    if (cloud && state.movies.length === 0){
-      cloud.getItem(STORAGE_KEY, (err, value) => {
-        if (!err && value){
-          try{ state.movies = JSON.parse(value); localStorage.setItem(STORAGE_KEY, value); render(); }catch(e){}
-        }
-      });
-    }
   }
-  async function saveMovies(){
-    const json = JSON.stringify(state.movies);
+
+  // ============================================================
+  // TMDB search + discovery (client-side only, no backend). Search
+  // uses /search/multi so both movies AND TV shows/anime/cartoons show
+  // up. Discovery rows (browsable categories) use trending/popular/
+  // discover endpoints so the user can browse without typing anything.
+  // ============================================================
+  async function tmdbFetch(path, key){
+    const base = 'https://api.themoviedb.org/3';
+    const sep = path.indexOf('?') > -1 ? '&' : '?';
+    const url = base + path + sep + 'api_key=' + encodeURIComponent(key) + '&language=ru-RU';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('TMDB HTTP ' + res.status);
+    return res.json();
+  }
+  function mapTmdbItem(r, forcedKind){
+    const isTv = forcedKind ? forcedKind === 'tv' : r.media_type === 'tv';
+    const gmap = isTv ? TMDB_TV_GENRE_MAP : TMDB_GENRE_MAP;
+    return {
+      tmdbId: r.id,
+      mediaType: isTv ? 'tv' : 'movie',
+      title: (isTv ? (r.name || r.original_name) : (r.title || r.original_title)) || '',
+      year: ((isTv ? r.first_air_date : r.release_date) || '').slice(0, 4),
+      poster: r.poster_path ? ('https://image.tmdb.org/t/p/w500' + r.poster_path) : '',
+      description: r.overview || '',
+      genres: (r.genre_ids || []).map(id => gmap[id]).filter(Boolean),
+      voteAverage: typeof r.vote_average === 'number' ? r.vote_average : null,
+      popularity: r.popularity || 0
+    };
+  }
+
+  // Discovery rows shown on the search tab. "path"-based entries hit a
+  // single TMDB endpoint of a fixed kind. "special:lgbt" and
+  // provider/company entries pull from BOTH /discover/movie and
+  // /discover/tv and merge by popularity, so recent popular shows (like
+  // Netflix's LGBT-inclusive titles) surface alongside classics.
+  const DISCOVER_CATEGORIES = [
+    {key:'popular', label:'Популярное', kind:'movie', path:'/trending/movie/week'},
+    {key:'series', label:'Сериалы', kind:'tv', path:'/trending/tv/week'},
+    {key:'movies', label:'Фильмы', kind:'movie', path:'/movie/popular'},
+    {key:'adult18', label:'18+', kind:'movie', path:'/discover/movie?certification_country=US&certification.gte=R&sort_by=popularity.desc'},
+    {key:'lgbt', label:'Запрещеночка', kind:'mixed', special:'lgbt'},
+    {key:'netflix', label:'NETFLIX', kind:'mixed', provider:8},
+    {key:'disney', label:'DISNEY+', kind:'mixed', provider:337},
+    {key:'sony', label:'SONY', kind:'mixed', company:34}
+  ];
+  function discoverCatByKey(key){ return DISCOVER_CATEGORIES.find(c => c.key === key); }
+
+  async function loadDiscoverCategory(cat){
+    if (state.discover.cache[cat.key] || state.discover.loading[cat.key]) return;
+    state.discover.loading[cat.key] = true;
     try{
-      localStorage.setItem(STORAGE_KEY, json);
+      let items = [];
+      if (cat.path){
+        const data = await tmdbFetch(cat.path, state.tmdbKey);
+        items = (data.results || []).map(r => ({r, kind: cat.kind}));
+      } else if (cat.special === 'lgbt'){
+        let kwIds = state.discover.lgbtKeywordIds;
+        if (!kwIds){
+          const [kw1, kw2] = await Promise.all([
+            tmdbFetch('/search/keyword?query=gay', state.tmdbKey),
+            tmdbFetch('/search/keyword?query=lgbt', state.tmdbKey)
+          ]);
+          const id1 = kw1.results && kw1.results[0] && kw1.results[0].id;
+          const id2 = kw2.results && kw2.results[0] && kw2.results[0].id;
+          kwIds = [id1, id2].filter(Boolean);
+          state.discover.lgbtKeywordIds = kwIds;
+        }
+        if (kwIds.length){
+          const kwParam = kwIds.join('|');
+          const [mv, tv] = await Promise.all([
+            tmdbFetch('/discover/movie?with_keywords=' + kwParam + '&sort_by=popularity.desc&primary_release_date.gte=2015-01-01', state.tmdbKey),
+            tmdbFetch('/discover/tv?with_keywords=' + kwParam + '&sort_by=popularity.desc&first_air_date.gte=2015-01-01', state.tmdbKey)
+          ]);
+          items = (mv.results || []).map(r => ({r, kind:'movie'})).concat((tv.results || []).map(r => ({r, kind:'tv'})));
+        }
+      } else if (cat.provider || cat.company){
+        const param = cat.provider ? ('with_watch_providers=' + cat.provider + '&watch_region=US') : ('with_companies=' + cat.company);
+        const [mv, tv] = await Promise.all([
+          tmdbFetch('/discover/movie?' + param + '&sort_by=popularity.desc', state.tmdbKey),
+          tmdbFetch('/discover/tv?' + param + '&sort_by=popularity.desc', state.tmdbKey)
+        ]);
+        items = (mv.results || []).map(r => ({r, kind:'movie'})).concat((tv.results || []).map(r => ({r, kind:'tv'})));
+      }
+      items.sort((a,b) => (b.r.popularity || 0) - (a.r.popularity || 0));
+      state.discover.cache[cat.key] = items.slice(0, 14).map(x => mapTmdbItem(x.r, x.kind));
     }catch(e){
-      customAlert('Не удалось сохранить: в хранилище браузера закончилось место. Попробуй удалить пару фильмов с крупными постерами.');
-      return;
+      state.discover.cache[cat.key] = [];
     }
-    const cloud = tgCloud();
-    if (cloud) cloud.setItem(STORAGE_KEY, json, () => {});
+    state.discover.loading[cat.key] = false;
+    render();
+  }
+
+  // Full paginated list for the "open category" view. Loads one TMDB
+  // page (or one page per underlying endpoint, for mixed categories)
+  // at a time, appended to state.discover.full[key], so the user can
+  // tap "Загрузить ещё" to keep scrolling through the whole category.
+  async function loadDiscoverFullPage(key){
+    const cat = discoverCatByKey(key);
+    if (!cat || state.discover.fullLoading[key] || state.discover.fullDone[key]) return;
+    state.discover.fullLoading[key] = true;
+    render();
+    const page = (state.discover.fullPage[key] || 0) + 1;
+    let items = [];
+    try{
+      if (cat.path){
+        const sep = cat.path.indexOf('?') > -1 ? '&' : '?';
+        const data = await tmdbFetch(cat.path + sep + 'page=' + page, state.tmdbKey);
+        items = (data.results || []).map(r => mapTmdbItem(r, cat.kind));
+        if (page >= (data.total_pages || 1)) state.discover.fullDone[key] = true;
+      } else if (cat.special === 'lgbt'){
+        let kwIds = state.discover.lgbtKeywordIds;
+        if (!kwIds){
+          const [kw1, kw2] = await Promise.all([
+            tmdbFetch('/search/keyword?query=gay', state.tmdbKey),
+            tmdbFetch('/search/keyword?query=lgbt', state.tmdbKey)
+          ]);
+          const id1 = kw1.results && kw1.results[0] && kw1.results[0].id;
+          const id2 = kw2.results && kw2.results[0] && kw2.results[0].id;
+          kwIds = [id1, id2].filter(Boolean);
+          state.discover.lgbtKeywordIds = kwIds;
+        }
+        if (kwIds.length){
+          const kwParam = kwIds.join('|');
+          const [mv, tv] = await Promise.all([
+            tmdbFetch('/discover/movie?with_keywords=' + kwParam + '&sort_by=popularity.desc&primary_release_date.gte=2015-01-01&page=' + page, state.tmdbKey),
+            tmdbFetch('/discover/tv?with_keywords=' + kwParam + '&sort_by=popularity.desc&first_air_date.gte=2015-01-01&page=' + page, state.tmdbKey)
+          ]);
+          items = (mv.results||[]).map(r=>mapTmdbItem(r,'movie')).concat((tv.results||[]).map(r=>mapTmdbItem(r,'tv')));
+          items.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+          const maxPages = Math.max(mv.total_pages||1, tv.total_pages||1);
+          if (page >= maxPages || page >= 20) state.discover.fullDone[key] = true;
+        } else { state.discover.fullDone[key] = true; }
+      } else if (cat.provider || cat.company){
+        const param = cat.provider ? ('with_watch_providers=' + cat.provider + '&watch_region=US') : ('with_companies=' + cat.company);
+        const [mv, tv] = await Promise.all([
+          tmdbFetch('/discover/movie?' + param + '&sort_by=popularity.desc&page=' + page, state.tmdbKey),
+          tmdbFetch('/discover/tv?' + param + '&sort_by=popularity.desc&page=' + page, state.tmdbKey)
+        ]);
+        items = (mv.results||[]).map(r=>mapTmdbItem(r,'movie')).concat((tv.results||[]).map(r=>mapTmdbItem(r,'tv')));
+        items.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+        const maxPages = Math.max(mv.total_pages||1, tv.total_pages||1);
+        if (page >= maxPages || page >= 20) state.discover.fullDone[key] = true;
+      }
+      const existing = state.discover.full[key] || [];
+      const seen = new Set(existing.map(x => x.mediaType + '_' + x.tmdbId));
+      const merged = existing.concat(items.filter(x => !seen.has(x.mediaType + '_' + x.tmdbId)));
+      state.discover.full[key] = merged;
+      state.discover.fullPage[key] = page;
+      if (page >= 20) state.discover.fullDone[key] = true;
+    }catch(e){
+      if (!(state.discover.full[key] || []).length) state.discover.full[key] = [];
+      state.discover.fullDone[key] = true;
+    }
+    state.discover.fullLoading[key] = false;
+    render();
+  }
+
+  function openDiscoverList(key){
+    state.discoverListKey = key;
+    state.view = 'discoverList';
+    render();
+    if (!(state.discover.full[key] || []).length) loadDiscoverFullPage(key);
+  }
+
+  async function tmdbSearch(query, key){
+    const data = await tmdbFetch('/search/multi?query=' + encodeURIComponent(query), key);
+    return (data.results || [])
+      .filter(r => r.media_type === 'movie' || r.media_type === 'tv')
+      .slice(0, 10)
+      .map(r => mapTmdbItem(r));
+  }
+  async function tmdbTrailer(tmdbId, mediaType, key){
+    try{
+      const kind = mediaType === 'tv' ? 'tv' : 'movie';
+      let res = await fetch('https://api.themoviedb.org/3/' + kind + '/' + tmdbId + '/videos?api_key=' + encodeURIComponent(key) + '&language=ru-RU');
+      let data = await res.json();
+      let vids = data.results || [];
+      if (!vids.length){
+        res = await fetch('https://api.themoviedb.org/3/' + kind + '/' + tmdbId + '/videos?api_key=' + encodeURIComponent(key) + '&language=en-US');
+        data = await res.json(); vids = data.results || [];
+      }
+      const trailer = vids.find(v => v.site === 'YouTube' && v.type === 'Trailer') || vids.find(v => v.site === 'YouTube');
+      return trailer ? ('https://www.youtube.com/watch?v=' + trailer.key) : '';
+    }catch(e){ return ''; }
   }
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -367,32 +800,10 @@
     return [];
   }
 
-  function resizeImage(file){
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          const maxW = 640;
-          const scale = Math.min(1, maxW / img.width);
-          const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.onerror = () => reject(new Error('img'));
-        img.src = e.target.result;
-      };
-      reader.onerror = () => reject(new Error('read'));
-      reader.readAsDataURL(file);
-    });
-  }
-
   function card(m){
     const tier = tierMeta(m.myRating);
     const frameCls = 'poster-frame ' + (tier ? 'tier-'+tier.key : 'tier-none');
-    const posterHtml = m.poster ? '<img class="poster" src="'+m.poster+'" alt="">' : '<div class="poster">'+escapeHtml(m.title)+'</div>';
+    const posterHtml = m.poster ? '<img class="poster" src="'+escapeHtml(m.poster)+'" alt="" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(m.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(m.title)+'</div>';
     const typePill = m.type ? '<div class="type-pill">'+typeLabel(m.type)+'</div>' : '';
     const gArr = genresOf(m);
     const subLine = [typeLabel(m.type), gArr.slice(0,2).join(', ')].filter(Boolean).join(' · ');
@@ -404,63 +815,115 @@
 
   function viewHome(){
     let html = '<div class="topbar"><div class="brand"><span class="logo">KINO<span>BLO</span></span><span class="tag">PRZ</span></div></div>';
-    STATUSES.forEach(s => {
+    state.categories.forEach(s => {
       const list = state.movies.filter(m => m.status === s.v);
-      html += '<div class="section"><div class="section-head"><div class="section-title">'+sectionIcon(s.icon)+s.l+'</div><div class="section-count">'+list.length+'</div></div>';
-      html += list.length ? '<div class="row-scroll">'+list.map(card).join('')+'</div>' : '<div class="empty glass-flat">Пусто. Нажми «+» внизу, чтобы добавить фильм в этот раздел.</div>';
+      html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon)+escapeHtml(s.l)+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
+      html += list.length ? '<div class="row-scroll">'+list.map(card).join('')+'</div>' : '<div class="empty glass-flat">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
       html += '</div>';
     });
+    html += '<button class="secondary-btn glass-flat add-cat-btn" id="addCategoryBtn">'+icon('plus',16)+'Добавить категорию</button>';
     return html;
   }
 
-  function posterUploadHtml(dataUrl){
-    return '<div class="field"><label>Постер</label><div class="poster-upload glass-flat" id="posterBox">'
-    + (dataUrl ? '<img src="'+dataUrl+'"><div class="poster-edit-badge">'+icon('image',13)+' Заменить</div>'
-                : '<div class="poster-placeholder">'+icon('image',28)+'<span>Загрузить постер</span></div>')
-    + '</div><input type="hidden" id="f_poster" value="'+(dataUrl?escapeHtml(dataUrl):'')+'"><input type="file" accept="image/*" id="f_posterFile" style="display:none;"></div>';
+  function viewCategory(){
+    const s = categoryMeta(state.categoryFilter);
+    const list = state.movies.filter(m => m.status === state.categoryFilter);
+    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(s.l)+'</div></div>';
+    html += list.length
+      ? '<div class="movies-grid">'+list.map(card).join('')+'</div>'
+      : '<div class="empty glass-flat" style="margin-top:16px;">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
+    return html;
   }
 
-  function chipGroupHtml(id, options, selected, dataKey){
-    return '<div class="chip-row" id="'+id+'">'
-    + options.map(o => '<button type="button" class="chip'+(o.v===selected?' active':'')+'" data-'+dataKey+'="'+escapeHtml(o.v)+'">'+escapeHtml(o.l)+'</button>').join('')
-    + '</div>';
+  function renderTmdbResults(list){
+    if (!list.length) return '<div style="font-size:12.5px;color:var(--ink-faint);padding:0 20px;">Ничего не нашлось.</div>';
+    return '<div style="padding:2px 20px 6px;display:flex;flex-direction:column;gap:8px;">' + list.map((r,i) =>
+      '<button type="button" class="choose-btn glass-flat" data-tmdb-pick="'+i+'" style="padding:10px;text-align:left;">'
+      + (r.poster ? '<img src="'+escapeHtml(r.poster)+'" style="width:42px;height:63px;object-fit:cover;border-radius:8px;flex:0 0 auto;">' : '<div style="width:42px;height:63px;border-radius:8px;background:var(--glass);flex:0 0 auto;"></div>')
+      + '<div class="choose-text"><div class="t1" style="font-size:14px;">'+escapeHtml(r.title)+'</div><div class="t2">'+escapeHtml(r.year||'')+(r.mediaType==='tv'?' · Сериал':' · Фильм')+'</div></div>'
+      + '</button>'
+    ).join('') + '</div>';
   }
 
-  // Multi-select variant: several genres can be toggled active at once.
-  function chipMultiHtml(id, options, selectedArr, dataKey){
-    const sel = selectedArr || [];
-    return '<div class="chip-row" id="'+id+'">'
-    + options.map(o => '<button type="button" class="chip'+(sel.indexOf(o.v)>-1?' active':'')+'" data-'+dataKey+'="'+escapeHtml(o.v)+'">'+escapeHtml(o.l)+'</button>').join('')
-    + '</div>';
+  function discoverCard(item){
+    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(item.poster)+'" alt="" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
+    const typePill = '<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div>';
+    const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(item.title)+'</div>'+(item.year?'<div class="card-sub">'+escapeHtml(item.year)+'</div>':'')+'</div>';
+    return '<div class="card" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'"><div class="poster-frame tier-none">'+posterHtml+caption+'</div>'+typePill+'</div>';
   }
 
-  function formFields(m){
-    m = m || {title:'',poster:'',description:'',myRating:null,myNote:'',youtube:'',status:'watchlist',type:'movie',genres:[]};
+  function discoverRowsHtml(){
+    return DISCOVER_CATEGORIES.map(cat => {
+      const list = state.discover.cache[cat.key];
+      let body;
+      if (!list) body = '<div class="empty glass-flat" style="margin:0 20px;">Загрузка…</div>';
+      else if (!list.length) body = '<div class="empty glass-flat" style="margin:0 20px;">Не удалось загрузить.</div>';
+      else body = '<div class="row-scroll">'+list.map(discoverCard).join('')+'</div>';
+      return '<div class="section"><div class="section-head" data-discover-cat="'+cat.key+'"><div class="section-title">'+escapeHtml(cat.label)+'</div><div class="section-count">'+icon('chevron',12)+'</div></div>'+body+'</div>';
+    }).join('') + '<div class="discover-scroll-pad"></div>';
+  }
+
+  // Full grid view (3 per row) for a discover category, opened by
+  // tapping its header on the search tab. Supports "load more" paging.
+  function viewDiscoverList(){
+    const cat = discoverCatByKey(state.discoverListKey);
+    if (!cat){ state.view = 'search'; return viewSearch(); }
+    const list = state.discover.full[cat.key] || [];
+    const loading = state.discover.fullLoading[cat.key];
+    const done = state.discover.fullDone[cat.key];
+    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(cat.label)+'</div></div>';
+    if (!list.length && loading){
+      html += '<div class="empty glass-flat" style="margin-top:16px;">Загрузка…</div>';
+    } else if (!list.length){
+      html += '<div class="empty glass-flat" style="margin-top:16px;">Не удалось загрузить список.</div>';
+    } else {
+      html += '<div class="movies-grid">'+list.map(discoverCard).join('')+'</div>';
+      if (!done){
+        html += '<button class="load-more-btn glass-flat" id="loadMoreDiscover">'+(loading ? 'Загружаю…' : 'Загрузить ещё')+'</button>';
+      }
+    }
+    return html;
+  }
+
+  function searchBarBottomHtml(){
+    return '<div class="search-bar-bottom"><div class="search-bar-inner glass">'
+    + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+    + '<input id="tmdbQueryBottom" placeholder="Найти фильм или сериал…" value="'+escapeHtml(state.tmdbQuery)+'">'
+    + (state.tmdbQuery ? '<button type="button" class="sb-clear" id="tmdbQueryBottomClear">'+icon('close',13)+'</button>' : '')
+    + '</div></div>';
+  }
+
+  function viewSearch(){
+    const searching = state.tmdbQuery && state.tmdbQuery.trim();
+    let browseSection;
+    if (searching){
+      browseSection = '<div class="section"><div class="section-head" style="cursor:default;"><div class="section-title">Результаты поиска</div></div>'
+        + (state.tmdbResults ? renderTmdbResults(state.tmdbResults) : '<div class="empty glass-flat" style="margin:0 20px;">Ищу…</div>')
+        + '</div>';
+    } else {
+      browseSection = discoverRowsHtml();
+    }
+    return '<div class="topbar"><div class="brand"><span class="logo">KINO<span>BLO</span></span><span class="tag">PRZ</span></div></div>' + browseSection;
+  }
+
+  // Single-card preview of a TMDB pick, not yet saved: poster, title,
+  // TMDB rating and description, with a heart button to save it.
+  function viewPreview(){
+    const item = state.previewItem;
+    if (!item){ state.view = 'search'; return viewSearch(); }
+    const rating = (item.voteAverage != null && item.voteAverage > 0) ? item.voteAverage.toFixed(1) : null;
+    const posterHtml = item.poster ? '<img src="'+escapeHtml(item.poster)+'" onerror="this.style.display=\'none\';">' : '<div class="poster" style="height:100%;">'+escapeHtml(item.title)+'</div>';
     return ''
-    + posterUploadHtml(m.poster)
-    + '<div class="field"><label>Название</label><input id="f_title" value="'+escapeHtml(m.title)+'" placeholder="Например, Дюна"></div>'
-    + '<div class="field"><label>Тип</label>'+chipGroupHtml('typeSeg', TYPES, m.type||'movie', 'type')+'</div>'
-    + '<div class="field"><label>Жанры (можно выбрать несколько)</label>'+chipMultiHtml('genreSeg', GENRES.map(g=>({v:g,l:g})), m.genres||[], 'genre')+'</div>'
-    + '<div class="field"><label>Описание (о чём фильм)</label><textarea id="f_desc" placeholder="Краткий сюжет">'+escapeHtml(m.description)+'</textarea></div>'
-    + '<div class="field"><label>Моё описание / впечатления</label><textarea id="f_note" placeholder="Твои мысли о фильме">'+escapeHtml(m.myNote)+'</textarea></div>'
-    + '<div class="field"><label>Ссылка на трейлер (YouTube)</label><input id="f_yt" value="'+escapeHtml(m.youtube)+'" placeholder="https://youtube.com/watch?v=…"></div>';
-  }
-
-  function viewAdd(){
-    const editing = state.editingId ? state.movies.find(x=>x.id===state.editingId) : null;
-    const rawPrefill = editing || state.pendingMovie;
-    const prefill = rawPrefill ? Object.assign({}, rawPrefill, {genres: genresOf(rawPrefill)}) : null;
-    const catSection = editing
-      ? '<div class="field"><label>Раздел</label><div class="seg glass-flat" id="statusSeg">'+STATUSES.map(s=>'<button data-status="'+s.v+'" type="button" class="'+(editing.status===s.v?'active':'')+'">'+icon(s.icon,16)+s.l+'</button>').join('')+'</div></div>'
-      : '';
-    return ''
-    + '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+(editing?'Редактировать':'Добавить фильм')+'</div></div>'
-    + '<div class="form" id="movieForm" data-status="'+(prefill?prefill.status:'watchlist')+'" data-type="'+(prefill&&prefill.type?prefill.type:'movie')+'" data-genres="'+escapeHtml(JSON.stringify(prefill?prefill.genres:[]))+'">'
-    + formFields(prefill)
-    + catSection
-    + '<button class="primary-btn" id="saveMovie">'+(editing?'Сохранить изменения':'Сохранить')+'</button>'
-    + (editing ? '<button class="danger-btn" id="deleteMovie">Удалить фильм</button>' : '')
-    + '</div>';
+    + '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">Превью</div></div>'
+    + '<div class="preview-wrap"><div class="preview-card glass">'
+    +   '<div class="preview-poster">'+posterHtml+'<div class="hero-fade"></div>'+(rating?'<div class="rating-pill" style="color:#ffd166;">⭐ '+rating+'</div>':'')+'<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div></div>'
+    +   '<div class="preview-body">'
+    +     '<div class="preview-title">'+escapeHtml(item.title)+(item.year?' <span class="preview-year">'+escapeHtml(item.year)+'</span>':'')+'</div>'
+    +     '<div class="preview-tags">'+item.genres.slice(0,4).map(g=>'<span class="tag-pill">'+escapeHtml(g)+'</span>').join('')+'</div>'
+    +     '<div class="preview-desc">'+(item.description ? escapeHtml(item.description) : 'Описание отсутствует.')+'</div>'
+    +   '</div>'
+    +   '<button class="heart-btn" id="previewHeart">'+icon('heart',24)+'</button>'
+    + '</div></div>';
   }
 
   function viewChoose(){
@@ -468,14 +931,14 @@
     + '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">Куда добавить?</div></div>'
     + '<div class="choose-wrap"><div class="choose-title">«'+escapeHtml(state.pendingMovie.title)+'» готов</div>'
     + '<div class="choose-sub">Выбери раздел, в который он попадёт</div>'
-    + STATUSES.map(s => '<button class="choose-btn glass-flat" data-choose="'+s.v+'"><div class="choose-icon" style="background:'+s.color+';">'+icon(s.icon,22)+'</div><div class="choose-text"><div class="t1">'+s.l+'</div><div class="t2">'+s.sub+'</div></div></button>').join('')
+    + state.categories.map(s => '<button class="choose-btn glass-flat" data-choose="'+s.v+'"><div class="choose-icon" style="background:'+s.color+';">'+icon(s.icon,22)+'</div><div class="choose-text"><div class="t1">'+escapeHtml(s.l)+'</div><div class="t2">'+escapeHtml(s.sub||'')+'</div></div></button>').join('')
     + '</div>';
   }
 
   function viewDetail(){
     const m = state.movies.find(x=>x.id===state.detailId);
     if (!m) { state.view='home'; return viewHome(); }
-    const heroImg = m.poster ? '<img src="'+m.poster+'">' : '';
+    const heroImg = m.poster ? '<img src="'+escapeHtml(m.poster)+'" onerror="this.style.display=\'none\';">' : '';
     const tier = tierMeta(m.myRating);
     const heroTierCls = tier ? ' tier-'+tier.key : '';
     const boxTierCls = tier ? ' tier-'+tier.key : '';
@@ -493,15 +956,16 @@
       rows.push('<button class="'+cls+'" data-rate="'+i+'">'+i+'</button>');
     }
     const typeTag = m.type ? '<span class="tag-pill">'+typeLabel(m.type)+'</span>' : '';
+    const tmdbTag = m.tmdbRating ? '<span class="tag-pill">⭐ '+m.tmdbRating.toFixed(1)+'</span>' : '';
     const genreTags = genresOf(m).map(g=>'<span class="tag-pill">'+escapeHtml(g)+'</span>').join('');
     return ''
     + '<div class="detail-page" id="detailPage">'
     + '<div class="swipe-handle"><span></span></div>'
     + '<div class="hero-wrap">'
     + '<div class="hero'+heroTierCls+'">'+heroImg+'<div class="hero-fade"></div>'+poopHtml+'</div>'
-    + '<div class="hero-controls"><button class="icon-btn" id="backBtn">'+icon('back',18)+'</button><button class="icon-btn" id="editBtn">'+icon('pencil',17)+'</button></div>'
+    + '<div class="hero-controls"><button class="icon-btn" id="backBtn">'+icon('back',18)+'</button></div>'
     + '<div class="hero-card glass"><div class="hero-title">'+escapeHtml(m.title)+'</div>'
-    + '<div class="hero-meta"><span class="tag-pill">'+statusMeta(m.status).l+'</span>'+typeTag+genreTags+'</div></div>'
+    + '<div class="hero-meta"><span class="tag-pill">'+escapeHtml(categoryMeta(m.status).l)+'</span>'+typeTag+tmdbTag+genreTags+'</div></div>'
     + '</div>'
     + '<div class="detail-body">'
     + '<div class="my-rating-box glass-flat'+boxTierCls+'"><div class="my-rating-top"><div class="my-rating-num" style="color:'+(tier?tier.color:'var(--ink-faint)')+';">'+(m.myRating!=null?(m.myRating+(tier&&tier.em?' '+tier.em:'')):'—')+'</div><div><div class="my-rating-label">Моя оценка</div></div></div>'
@@ -517,7 +981,7 @@
   function viewNav(){
     return '<div class="nav"><div class="nav-inner glass">'
     + '<button data-nav="home" class="'+(state.view==='home'?'active':'')+'">'+icon('home',22)+'<span class="nlabel">Главная</span></button>'
-    + '<button data-nav="add" class="'+(state.view==='add'?'active':'')+'">'+icon('plus',22)+'<span class="nlabel">Добавить</span></button>'
+    + '<button data-nav="search" class="'+(state.view==='search'?'active':'')+'">'+icon('search',22)+'<span class="nlabel">Поиск</span></button>'
     + '</div></div>';
   }
 
@@ -526,27 +990,47 @@
     if (!state.loaded){ app.innerHTML = '<div style="text-align:center;color:var(--ink-faint);padding-top:80px;font-size:13px;">Загружаю KINOBLO…</div>'; return; }
     let html = '';
     if (state.view === 'home') html = viewHome();
-    else if (state.view === 'add') html = viewAdd();
+    else if (state.view === 'search') html = viewSearch();
     else if (state.view === 'choose') html = viewChoose();
+    else if (state.view === 'preview') html = viewPreview();
     else if (state.view === 'detail') html = viewDetail();
-    html += (state.view === 'choose') ? '' : viewNav();
+    else if (state.view === 'category') html = viewCategory();
+    else if (state.view === 'discoverList') html = viewDiscoverList();
+    const showBottomSearch = state.view === 'search';
+    if (showBottomSearch) html += searchBarBottomHtml();
+    const hideNav = state.view === 'choose' || state.view === 'preview';
+    if (!hideNav) html += viewNav();
     app.innerHTML = html;
     bindEvents();
+    if (showBottomSearch && !(state.tmdbQuery && state.tmdbQuery.trim())){
+      DISCOVER_CATEGORIES.forEach(cat => { if (!state.discover.cache[cat.key]) loadDiscoverCategory(cat); });
+    }
+  }
+
+  // Re-renders lose DOM focus, so after a live-search render we put focus
+  // back in the bottom search bar and move the cursor to the end.
+  function focusSearchInput(){
+    const el = document.getElementById('tmdbQueryBottom');
+    if (!el) return;
+    el.focus();
+    const v = el.value; el.value = ''; el.value = v;
   }
 
   function openMovie(id){ state.detailId = id; state.view = 'detail'; render(); }
+  function openPreview(item){ state.previewItem = item; state.view = 'preview'; render(); }
 
   // Animates the detail sheet down and off-screen, then switches back home.
   // Shared by the back button, and by the swipe gesture below.
   function goHomeAnimated(){
+    if (state.detailId) flushPendingSave(state.detailId);
     const page = document.getElementById('detailPage');
     if (page){
       page.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1), opacity .26s ease';
       page.style.transform = 'translateY(100%)';
       page.style.opacity = '0';
-      setTimeout(() => { state.editingId=null; state.detailId=null; state.view='home'; render(); }, 230);
+      setTimeout(() => { state.detailId=null; state.view='home'; render(); }, 230);
     } else {
-      state.editingId = null; state.view = 'home'; render();
+      state.view = 'home'; render();
     }
   }
 
@@ -600,23 +1084,64 @@
     overlay.querySelector('#cfYes').addEventListener('click', () => { overlay.remove(); onYes(); });
   }
 
+  // "Добавить категорию" — name + icon picker, appended to state.categories.
+  function openAddCategoryModal(){
+    let selectedIcon = 'star';
+    const body = '<div class="modal-msg" style="padding-top:2px;padding-bottom:6px;">Название категории</div>'
+      + '<input id="newCatName" placeholder="Например, Пересмотреть" style="margin-bottom:4px;">'
+      + '<div class="modal-msg" style="padding-bottom:2px;">Иконка</div>'
+      + '<div class="cat-icon-grid" id="catIconGrid">' + CAT_ICON_OPTIONS.map(ic=>'<button type="button" class="cat-icon-opt'+(ic===selectedIcon?' active':'')+'" data-cat-icon="'+ic+'">'+icon(ic,20)+'</button>').join('') + '</div>'
+      + '<button class="primary-btn" id="saveNewCat" style="margin-top:2px;">Создать категорию</button>';
+    const overlay = customModal('Новая категория', body);
+    overlay.querySelectorAll('[data-cat-icon]').forEach(b => b.addEventListener('click', () => {
+      selectedIcon = b.getAttribute('data-cat-icon');
+      overlay.querySelectorAll('[data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
+    }));
+    overlay.querySelector('#saveNewCat').addEventListener('click', async () => {
+      const name = overlay.querySelector('#newCatName').value.trim();
+      if (!name){ return; }
+      const color = CAT_COLOR_PALETTE[state.categories.length % CAT_COLOR_PALETTE.length];
+      const cat = {v:'cat_'+Date.now().toString(36), l:name, icon:selectedIcon, color, sub:''};
+      state.categories.push(cat);
+      await STORAGE.saveCategories(state.categories);
+      overlay.remove();
+      render();
+    });
+  }
+
   function bindEvents(){
     document.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => openMovie(el.getAttribute('data-open'))));
 
+    document.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('click', () => {
+      state.categoryFilter = el.getAttribute('data-cat');
+      state.view = 'category';
+      render();
+    }));
+
+    document.querySelectorAll('[data-discover-cat]').forEach(el => el.addEventListener('click', () => {
+      openDiscoverList(el.getAttribute('data-discover-cat'));
+    }));
+
+    const loadMoreDiscover = document.getElementById('loadMoreDiscover');
+    if (loadMoreDiscover) loadMoreDiscover.addEventListener('click', () => loadDiscoverFullPage(state.discoverListKey));
+
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    if (addCategoryBtn) addCategoryBtn.addEventListener('click', openAddCategoryModal);
+
     document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => {
-      if (el.getAttribute('data-nav') === 'add'){ state.editingId = null; state.pendingMovie = null; }
+      if (el.getAttribute('data-nav') === 'search'){ state.previewItem = null; state.pendingMovie = null; }
       state.view = el.getAttribute('data-nav'); render();
     }));
 
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.addEventListener('click', () => {
       if (state.view === 'detail'){ goHomeAnimated(); return; }
-      if (state.view === 'choose'){ state.view = 'add'; render(); return; }
-      state.editingId = null; state.view = 'home'; render();
+      if (state.view === 'preview'){ state.previewItem = null; state.view = 'search'; render(); return; }
+      if (state.view === 'choose'){ state.view = 'preview'; render(); return; }
+      if (state.view === 'category'){ state.categoryFilter = null; state.view = 'home'; render(); return; }
+      if (state.view === 'discoverList'){ state.discoverListKey = null; state.view = 'search'; render(); return; }
+      state.view = 'home'; render();
     });
-
-    const editBtn = document.getElementById('editBtn');
-    if (editBtn) editBtn.addEventListener('click', () => { state.editingId = state.detailId; state.view='add'; render(); });
 
     const trailerBtn = document.getElementById('trailerBtn');
     if (trailerBtn) trailerBtn.addEventListener('click', () => {
@@ -625,119 +1150,119 @@
       openExternal(m.youtube);
     });
 
-    document.querySelectorAll('[data-rate]').forEach(el => el.addEventListener('click', async () => {
+    document.querySelectorAll('[data-rate]').forEach(el => el.addEventListener('click', () => {
       const v = +el.getAttribute('data-rate');
       const m = state.movies.find(x=>x.id===state.detailId);
       m.myRating = (m.myRating === v) ? null : v;
-      await saveMovies();
+      saveMovieDebounced(m); // rapid taps coalesce into one write; flushed on navigation away
       render();
     }));
 
     const delFromDetail = document.getElementById('deleteFromDetail');
     if (delFromDetail) delFromDetail.addEventListener('click', () => {
       customConfirm('Удалить этот фильм из KINOBLO? Это действие нельзя отменить.', async () => {
+        flushPendingSave(state.detailId);
+        await deleteMovie(state.detailId);
         state.movies = state.movies.filter(x => x.id !== state.detailId);
-        await saveMovies();
         state.view = 'home'; render();
       });
     });
 
-    const posterBox = document.getElementById('posterBox');
-    const posterFile = document.getElementById('f_posterFile');
-    if (posterBox && posterFile){
-      posterBox.addEventListener('click', () => posterFile.click());
-      posterFile.addEventListener('change', async () => {
-        const file = posterFile.files[0];
-        if (!file) return;
-        try{
-          const dataUrl = await resizeImage(file);
-          document.getElementById('f_poster').value = dataUrl;
-          posterBox.innerHTML = '<img src="'+dataUrl+'"><div class="poster-edit-badge">'+icon('image',13)+' Заменить</div>';
-        }catch(e){ customAlert('Не получилось загрузить картинку. Попробуй другой файл.'); }
+    // Bottom search bar: typing live-searches TMDB (debounced).
+    const tmdbQueryBottom = document.getElementById('tmdbQueryBottom');
+    if (tmdbQueryBottom){
+      tmdbQueryBottom.addEventListener('input', () => {
+        const q = tmdbQueryBottom.value;
+        state.tmdbQuery = q;
+        clearTimeout(tmdbSearchTimer);
+        if (!q.trim()){
+          state.tmdbResults = null;
+          render();
+          focusSearchInput();
+          return;
+        }
+        tmdbSearchTimer = setTimeout(async () => {
+          try{ state.tmdbResults = await tmdbSearch(q, state.tmdbKey); }
+          catch(e){ state.tmdbResults = []; }
+          render();
+          focusSearchInput();
+        }, 450);
       });
     }
+    const tmdbQueryBottomClear = document.getElementById('tmdbQueryBottomClear');
+    if (tmdbQueryBottomClear) tmdbQueryBottomClear.addEventListener('click', () => {
+      clearTimeout(tmdbSearchTimer);
+      state.tmdbQuery = ''; state.tmdbResults = null;
+      render();
+      focusSearchInput();
+    });
 
-    const statusSeg = document.getElementById('statusSeg');
-    if (statusSeg) statusSeg.querySelectorAll('[data-status]').forEach(b => b.addEventListener('click', () => {
-      document.getElementById('movieForm').dataset.status = b.getAttribute('data-status');
-      statusSeg.querySelectorAll('[data-status]').forEach(x=>x.classList.toggle('active', x===b));
+    document.querySelectorAll('[data-tmdb-pick]').forEach(el => el.addEventListener('click', () => {
+      const idx = +el.getAttribute('data-tmdb-pick');
+      const item = (state.tmdbResults||[])[idx];
+      if (!item) return;
+      openPreview(item);
     }));
 
-    const typeSeg = document.getElementById('typeSeg');
-    if (typeSeg) typeSeg.querySelectorAll('[data-type]').forEach(b => b.addEventListener('click', () => {
-      document.getElementById('movieForm').dataset.type = b.getAttribute('data-type');
-      typeSeg.querySelectorAll('[data-type]').forEach(x=>x.classList.toggle('active', x===b));
+    // Picking an item from a discovery row or the full category grid
+    // works the same as a search result — look it up in whichever
+    // category cache holds it, then open the single-card preview.
+    document.querySelectorAll('[data-discover-pick]').forEach(el => el.addEventListener('click', () => {
+      const tmdbId = +el.getAttribute('data-discover-pick');
+      const mediaType = el.getAttribute('data-discover-type');
+      let item = null;
+      Object.values(state.discover.cache).forEach(list => {
+        if (item || !list) return;
+        const found = list.find(x => x.tmdbId === tmdbId && x.mediaType === mediaType);
+        if (found) item = found;
+      });
+      if (!item) Object.values(state.discover.full).forEach(list => {
+        if (item || !list) return;
+        const found = list.find(x => x.tmdbId === tmdbId && x.mediaType === mediaType);
+        if (found) item = found;
+      });
+      if (!item) return;
+      openPreview(item);
     }));
 
-    // Genres are multi-select: each tap toggles that genre in a JSON array
-    // kept on the form's dataset, instead of picking a single value.
-    const genreSeg = document.getElementById('genreSeg');
-    if (genreSeg) genreSeg.querySelectorAll('[data-genre]').forEach(b => b.addEventListener('click', () => {
-      const form = document.getElementById('movieForm');
-      let arr = [];
-      try{ arr = JSON.parse(form.dataset.genres || '[]'); }catch(e){ arr = []; }
-      const val = b.getAttribute('data-genre');
-      const idx = arr.indexOf(val);
-      if (idx > -1){ arr.splice(idx,1); b.classList.remove('active'); }
-      else { arr.push(val); b.classList.add('active'); }
-      form.dataset.genres = JSON.stringify(arr);
-    }));
+    const previewHeart = document.getElementById('previewHeart');
+    if (previewHeart) previewHeart.addEventListener('click', () => {
+      const item = state.previewItem;
+      if (!item) return;
+      state.pendingMovie = {
+        title: item.title, poster: item.poster, description: item.description,
+        type: item.mediaType === 'tv' ? 'series' : 'movie', genres: item.genres,
+        youtube: '', myRating: null, myNote: '',
+        tmdbId: item.tmdbId, tmdbMediaType: item.mediaType, tmdbRating: item.voteAverage
+      };
+      state.view = 'choose'; render();
+    });
 
     document.querySelectorAll('[data-choose]').forEach(el => el.addEventListener('click', async () => {
       const status = el.getAttribute('data-choose');
       const m = Object.assign({id: uid()}, state.pendingMovie, {status});
+      await addMovie(m);
       state.movies.push(m);
-      await saveMovies();
-      state.pendingMovie = null;
+      const tmdbId = m.tmdbId, mediaType = m.tmdbMediaType;
+      state.pendingMovie = null; state.previewItem = null;
+      state.tmdbQuery = ''; state.tmdbResults = null;
       state.detailId = m.id; state.view = 'detail'; render();
-    }));
-
-    const saveBtn = document.getElementById('saveMovie');
-    if (saveBtn) saveBtn.addEventListener('click', async () => {
-      const title = document.getElementById('f_title').value.trim();
-      if (!title){ customAlert('Укажи название фильма.'); return; }
-      const form = document.getElementById('movieForm');
-      let genresArr = [];
-      try{ genresArr = JSON.parse(form.dataset.genres || '[]'); }catch(e){ genresArr = []; }
-      const data = {
-        title,
-        poster: document.getElementById('f_poster').value,
-        description: document.getElementById('f_desc').value.trim(),
-        myNote: document.getElementById('f_note').value.trim(),
-        youtube: document.getElementById('f_yt').value.trim(),
-        type: form.dataset.type || 'movie',
-        genres: genresArr
-      };
-      if (state.editingId){
-        const m = state.movies.find(x=>x.id===state.editingId);
-        Object.assign(m, data, {status: form.dataset.status});
-        delete m.genre;
-        await saveMovies();
-        state.view = 'detail'; state.detailId = m.id; state.editingId = null;
-        render();
-      } else {
-        data.myRating = state.pendingMovie ? state.pendingMovie.myRating : null;
-        state.pendingMovie = data;
-        state.view = 'choose'; render();
+      if (tmdbId){
+        tmdbTrailer(tmdbId, mediaType, state.tmdbKey).then(yt => {
+          if (!yt) return;
+          m.youtube = yt;
+          updateMovie(m);
+          if (state.detailId === m.id) render();
+        });
       }
-    });
-
-    const delBtn = document.getElementById('deleteMovie');
-    if (delBtn) delBtn.addEventListener('click', () => {
-      customConfirm('Удалить этот фильм из KINOBLO? Это действие нельзя отменить.', async () => {
-        state.movies = state.movies.filter(x => x.id !== state.editingId);
-        await saveMovies();
-        state.editingId = null; state.view = 'home'; render();
-      });
-    });
+    }));
 
     const detailPage = document.getElementById('detailPage');
     if (detailPage) attachSwipeClose(detailPage);
   }
 
-  loadAll();
+  loadTelegramSdkThenStart();
 })();
 </script>
 </body>
 </html>
-
