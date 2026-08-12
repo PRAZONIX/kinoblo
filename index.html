@@ -72,18 +72,60 @@
     border:1px solid var(--glass-border-soft);
   }
 
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:24px 20px 16px;}
-  .brand{display:flex;align-items:baseline;gap:9px;}
-  .brand .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2.5px;color:var(--ink);text-shadow:0 0 22px var(--accent-glow);}
-  .brand .logo span{color:var(--accent);}
-  .brand .tag{font-size:10px;color:var(--ink-dim);font-weight:700;letter-spacing:1.6px;padding:4px 9px;border-radius:var(--radius-pill);}
-  .brand .tag{background:var(--glass);border:1px solid var(--glass-border-soft);backdrop-filter:blur(14px);}
+  .topbar{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px 20px;text-align:center;}
+  .netflix-brand{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .netflix-logo{font-family:'Bebas Neue',sans-serif;font-size:46px;letter-spacing:4px;color:var(--ink);text-shadow:0 0 30px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.8);line-height:1;}
+  .netflix-logo span{color:var(--accent);}
+  
+  .netflix-subtitle-row{display:flex;align-items:center;gap:8px;margin-top:2px;}
+  .netflix-prz{font-size:12px;color:var(--ink-dim);font-weight:700;letter-spacing:2.5px;text-transform:uppercase;}
+  
+  .cross-smile-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+  }
+
+  .genres-scroll-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 0 20px 14px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .genre-chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    background: var(--glass);
+    border: 1px solid var(--glass-border-soft);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    transition: all .15s ease;
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+  }
+  .genre-chip:active {
+    transform: scale(0.95);
+  }
+  .genre-chip.active {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 14px var(--accent-glow);
+  }
 
   .section{padding:14px 0 6px;}
   .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;padding:0 20px;cursor:pointer;transition:opacity .12s ease;}
   .section-head:active{opacity:.62;}
   .section-title{display:flex;align-items:center;gap:9px;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.8px;}
-  .section-title .ic{width:19px;height:19px;color:var(--accent);display:flex;}
+  .section-title .ic{width:19px;height:19px;display:flex;}
   .section-title .ic svg{width:19px;height:19px;}
   .section-count{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-faint);font-weight:600;letter-spacing:.5px;}
   .section-count svg{width:12px;height:12px;opacity:.8;}
@@ -114,12 +156,7 @@
   .poster-caption .card-sub{margin-top:4px;font-size:10px;font-weight:600;letter-spacing:.3px;color:rgba(255,255,255,.66);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   .rating-pill{position:absolute;top:8px;right:8px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11.5px;font-weight:800;padding:4px 8px;border-radius:var(--radius-pill);background:rgba(9,9,11,.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);}
-  .rating-pill .em{font-size:12px;}
   .type-pill{position:absolute;top:8px;left:8px;z-index:3;font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:4px 8px;border-radius:var(--radius-pill);background:rgba(9,9,11,.55);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--ink-dim);}
-  @keyframes wobble{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
-  @keyframes flicker{0%,100%{transform:scale(1) translateY(0);opacity:1}50%{transform:scale(1.18) translateY(-2px);opacity:.8}}
-  .em-poop{display:inline-block;animation:wobble .9s ease-in-out infinite;}
-  .em-fire{display:inline-block;animation:flicker 1s ease-in-out infinite;}
 
   .empty{color:var(--ink-faint);font-size:13px;border-radius:var(--radius-sm);padding:24px;text-align:center;line-height:1.55;margin:0 20px;border:1px dashed var(--glass-border-soft);}
 
@@ -204,7 +241,6 @@
   
   .detail-action-area{position:relative;z-index:5;padding:0 20px 30px;width:100%;}
   
-  /* Стили для горизонтальной галереи кадров внизу фильма */
   .movie-screenshots-scroll {
     display: flex;
     gap: 10px;
@@ -235,11 +271,10 @@
     display: block;
   }
 
-  /* Модальное окно полного экрана для картинки */
   .fullscreen-modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.92);
+    background: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(10px);
     z-index: 100;
     display: flex;
@@ -247,6 +282,7 @@
     justify-content: center;
     padding: 20px;
     animation: pageIn .2s ease both;
+    touch-action: pan-y;
   }
   .fullscreen-modal img {
     max-width: 100%;
@@ -254,6 +290,7 @@
     object-fit: contain;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    transition: transform 0.2s ease, opacity 0.2s ease;
   }
   .fullscreen-close {
     position: absolute;
@@ -269,31 +306,20 @@
     color: #fff;
     cursor: pointer;
     border: 1px solid rgba(255,255,255,0.2);
+    z-index: 101;
   }
-
-  .poop-stage{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;}
-  .poop-splat{position:absolute;top:42%;left:58%;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle, rgba(169,114,62,.9), rgba(169,114,62,0) 70%);transform:translate(-50%,-50%) scale(0);animation:splatPop .55s ease-out .66s forwards;}
-  @keyframes splatPop{
-    0%{transform:translate(-50%,-50%) scale(0);opacity:0;}
-    45%{transform:translate(-50%,-50%) scale(2.3);opacity:.85;}
-    100%{transform:translate(-50%,-50%) scale(3.6);opacity:0;}
-  }
-  .poop-crumbs span{position:absolute;top:42%;left:58%;font-size:13px;opacity:0;animation:crumbFly .5s ease-out .66s forwards;}
-  .poop-crumbs span:nth-child(1){--dx:-26px;--dy:-14px;animation-delay:.66s;}
-  .poop-crumbs span:nth-child(2){--dx:22px;--dy:-20px;animation-delay:.68s;}
-  .poop-crumbs span:nth-child(3){--dx:-14px;--dy:18px;animation-delay:.70s;}
-  .poop-crumbs span:nth-child(4){--dx:24px;--dy:14px;animation-delay:.67s;}
-  @keyframes crumbFly{
-    0%{transform:translate(-50%,-50%) scale(.6);opacity:1;}
-    100%{transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.2);opacity:0;}
-  }
-  .poop-fly{position:absolute;top:42%;left:58%;font-size:58px;transform:translate(-50%,-50%);animation:poopFlyIn .82s cubic-bezier(.34,1.56,.64,1) forwards;filter:drop-shadow(0 10px 16px rgba(0,0,0,.55));}
-  @keyframes poopFlyIn{
-    0%{transform:translate(calc(-50% - 230px), calc(-50% - 270px)) scale(.3) rotate(-55deg);opacity:0;}
-    16%{opacity:1;}
-    70%{transform:translate(-50%,-50%) scale(1.28) rotate(360deg);}
-    84%{transform:translate(-50%,-53%) scale(.86) rotate(378deg);}
-    100%{transform:translate(-50%,-50%) scale(1) rotate(370deg);}
+  .fullscreen-counter {
+    position: absolute;
+    top: 28px;
+    left: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    z-index: 101;
+    background: rgba(255,255,255,0.1);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    backdrop-filter: blur(10px);
   }
 
   .my-rating-box{border-radius:var(--radius-sm);padding:12px 14px;transition:all .3s ease;margin-bottom:14px;width:100%;max-width:380px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-border-soft);backdrop-filter:blur(14px);}
@@ -404,7 +430,13 @@
     baby:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
     camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>',
     calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
-    flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 5h13l-3 4 3 4H5Z"/></svg>'
+    flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 5h13l-3 4 3 4H5Z"/></svg>',
+    crossSmile: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l6 6m0 0l6 6m-6-6l6-6m-6 6L6 18"/><path d="M4.5 15.5c2 2.5 5 4 7.5 4s5.5-1.5 7.5-4"/></svg>',
+    
+    minimalPoop: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2 0-3.5 1.5-3.5 3.5 0 .8.3 1.5.8 2.1C8.2 9.5 7 11.1 7 13c0 2.2 1.8 4 4 4h2c2.2 0 4-1.8 4-4 0-1.9-1.2-3.5-2.3-4.4.5-.6.8-1.3.8-2.1C15.5 4.5 14 3 12 3z"/></svg>',
+    minimalMinus: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+    minimalThumbUp: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
+    minimalFire: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-2-.5-3-1-4 2 1 3 3 3 5a6 6 0 1 1-12 0c0-3.5 2-6 5-11Z"/></svg>'
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
@@ -615,6 +647,7 @@
     state.tmdbKey = savedTmdbKey || DEFAULT_TMDB_KEY;
     state.loaded = true;
     render();
+    initSwipeBack();
   }
 
   async function tmdbFetch(path, key){
@@ -638,7 +671,8 @@
       description: r.overview || '',
       genres: (r.genre_ids || []).map(id => gmap[id]).filter(Boolean),
       voteAverage: typeof r.vote_average === 'number' ? r.vote_average : null,
-      popularity: r.popularity || 0
+      popularity: r.popularity || 0,
+      type: isTv ? 'series' : 'movie'
     };
   }
 
@@ -646,6 +680,13 @@
     {key:'popular', label:'Популярное', kind:'movie', path:'/trending/movie/week'},
     {key:'series', label:'Сериалы', kind:'tv', path:'/trending/tv/week'},
     {key:'movies', label:'Фильмы', kind:'movie', path:'/movie/popular'},
+    {key:'cartoon', label:'Мультики', kind:'movie', path:'/discover/movie?with_genres=16&sort_by=popularity.desc'},
+    {key:'anime', label:'Аниме', kind:'tv', path:'/discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc'},
+    {key:'short', label:'Короткометражки', kind:'movie', path:'/discover/movie?with_genres=18&with_runtime.lte=40&sort_by=popularity.desc'},
+    {key:'comedy', label:'Комедии', kind:'movie', path:'/discover/movie?with_genres=35&sort_by=popularity.desc'},
+    {key:'thriller', label:'Триллеры', kind:'movie', path:'/discover/movie?with_genres=53&sort_by=popularity.desc'},
+    {key:'horror', label:'Ужасы', kind:'movie', path:'/discover/movie?with_genres=27&sort_by=popularity.desc'},
+    {key:'documentary', label:'Документалки', kind:'movie', path:'/discover/movie?with_genres=99&sort_by=popularity.desc'},
     {key:'adult18', label:'18+', kind:'movie', path:'/discover/movie?certification_country=US&certification.gte=R&sort_by=popularity.desc'},
     {key:'lgbt', label:'Запрещеночка', kind:'mixed', special:'lgbt'},
     {key:'netflix', label:'NETFLIX', kind:'mixed', provider:8},
@@ -781,7 +822,6 @@
     return results;
   }
 
-  // Функция для получения кадров (бекдропов) фильма/сериала из TMDB API
   async function tmdbImages(tmdbId, mediaType, key){
     try{
       const kind = mediaType === 'tv' ? 'tv' : 'movie';
@@ -804,15 +844,22 @@
 
   function tierMeta(r){
     if (r == null) return null;
-    if (r <= 3) return {key:'poop', color:'#c9935a', em:'💩', emCls:'em-poop'};
-    if (r <= 6) return {key:'pee', color:'#e8c94a', em:'', emCls:''};
-    if (r <= 9) return {key:'green', color:'#34d399', em:'', emCls:''};
-    return {key:'fire', color:'#ffb347', em:'🔥', emCls:'em-fire'};
+    if (r <= 3) return {key:'poop', color:'#c9935a', iconName:'minimalPoop'};
+    if (r <= 6) return {key:'pee', color:'#e8c94a', iconName:'minimalMinus'};
+    if (r <= 9) return {key:'green', color:'#34d399', iconName:'minimalThumbUp'};
+    return {key:'fire', color:'#ffb347', iconName:'minimalFire'};
   }
+  
   function ratingPill(r){
     const t = tierMeta(r);
     if (!t) return '';
-    return '<div class="rating-pill" style="color:'+t.color+';">'+(t.em?'<span class="em '+t.emCls+'">'+t.em+'</span>':'')+r+'</div>';
+    let svgIcon = '';
+    if (t.key === 'poop') svgIcon = icon('minimalPoop', 13);
+    else if (t.key === 'pee') svgIcon = icon('minimalMinus', 13);
+    else if (t.key === 'green') svgIcon = icon('minimalThumbUp', 13);
+    else if (t.key === 'fire') svgIcon = icon('minimalFire', 13);
+
+    return '<div class="rating-pill" style="color:'+t.color+';">' + svgIcon + '<span>'+r+'</span></div>';
   }
 
   function genresOf(m){
@@ -829,16 +876,101 @@
     const gArr = genresOf(m);
     const subLine = [typeLabel(m.type), gArr.slice(0,2).join(', ')].filter(Boolean).join(' · ');
     const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(m.title)+'</div>'+(subLine?'<div class="card-sub">'+escapeHtml(subLine)+'</div>':'')+'</div>';
+    
+    if (m._sourceType === 'tmdb') {
+      return '<div class="card" data-discover-pick="'+m.tmdbId+'" data-discover-type="'+m.mediaType+'"><div class="'+frameCls+'">'+posterHtml+caption+'</div>'+typePill+ratingPill(m.myRating)+'</div>';
+    }
     return '<div class="card" data-open="'+m.id+'"><div class="'+frameCls+'">'+posterHtml+caption+'</div>'+typePill+ratingPill(m.myRating)+'</div>';
   }
 
-  function sectionIcon(name){ return '<span class="ic">'+icon(name,17)+'</span>'; }
+  function discoverCard(item){
+    const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
+    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(item.poster)+'" alt="" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
+    const typePill = '<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div>';
+    const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(item.title)+'</div>'+(item.year?'<div class="card-sub">'+item.year+'</div>':'')+'</div>';
+    
+    return '<div class="card" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'">'
+      + '<div class="poster-frame tier-none">'+posterHtml+caption+'</div>'
+      + typePill
+      + '<button type="button" class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" style="position:absolute;bottom:38px;right:8px;z-index:4;width:32px;height:32px;border-radius:50%;padding:0;" title="Выбрать категорию">'+icon('heart',15)+'</button>'
+      + '</div>';
+  }
+
+  function getSimilarRecommendations(currentMovie) {
+    let poolMap = new Map();
+    state.movies.forEach(m => {
+      if (m.id !== currentMovie.id && m.tmdbId !== currentMovie.tmdbId) {
+        poolMap.set(m.id, { ...m, _sourceType: 'local' });
+      }
+    });
+    Object.values(state.discover.cache).forEach(list => {
+      if (Array.isArray(list)) {
+        list.forEach(item => {
+          if (item.tmdbId !== currentMovie.tmdbId) {
+            poolMap.set('tmdb_' + item.mediaType + '_' + item.tmdbId, { ...item, id: 'tmdb_' + item.mediaType + '_' + item.tmdbId, _sourceType: 'tmdb' });
+          }
+        });
+      }
+    });
+
+    let candidates = Array.from(poolMap.values());
+    if (candidates.length === 0) return [];
+
+    const curTitle = (currentMovie.title || '').toLowerCase();
+    const curType = currentMovie.type || (currentMovie.mediaType === 'tv' ? 'series' : 'movie');
+    const curGenres = genresOf(currentMovie).map(g => g.toLowerCase());
+    const curProd = (currentMovie.producer || currentMovie.company || '').toLowerCase();
+
+    candidates.forEach(item => {
+      let score = 0;
+      const itemTitle = (item.title || '').toLowerCase();
+      const itemType = item.type || (item.mediaType === 'tv' ? 'series' : 'movie');
+      const itemGenres = genresOf(item).map(g => g.toLowerCase());
+      const itemProd = (item.producer || item.company || '').toLowerCase();
+
+      if (curTitle && itemTitle) {
+        if (itemTitle === curTitle) {
+          score += 50;
+        } else if (itemTitle.includes(curTitle) || curTitle.includes(itemTitle)) {
+          score += 30;
+        } else {
+          const curWords = curTitle.split(/\s+/).filter(w => w.length > 2);
+          const itemWords = itemTitle.split(/\s+/).filter(w => w.length > 2);
+          let commonWords = curWords.filter(w => itemWords.includes(w));
+          score += commonWords.length * 15;
+        }
+      }
+
+      if (curType && itemType && curType === itemType) {
+        score += 20;
+      }
+
+      if (curGenres.length > 0 && itemGenres.length > 0) {
+        let matchedGenres = itemGenres.filter(g => curGenres.includes(g));
+        score += matchedGenres.length * 10;
+      }
+
+      if (curProd && itemProd && (itemProd.includes(curProd) || curProd.includes(itemProd))) {
+        score += 15;
+      }
+
+      score += (item.popularity || 0) / 1000;
+      item._matchScore = score;
+    });
+
+    candidates.sort((a, b) => b._matchScore - a._matchScore);
+    return candidates.slice(0, 10);
+  }
+
+  function sectionIcon(name, color){ 
+    return '<span class="ic" style="color:'+(color || 'var(--accent)')+';">'+icon(name,17)+'</span>'; 
+  }
 
   function viewHome(){
-    let html = '<div class="topbar"><div class="brand"><span class="logo">KINO<span>BLO</span></span><span class="tag">PRZ</span></div></div>';
+    let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>';
     state.categories.forEach(s => {
       const list = state.movies.filter(m => m.status === s.v);
-      html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon)+escapeHtml(s.l)+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
+      html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
       html += list.length ? '<div class="row-scroll">'+list.map(card).join('')+'</div>' : '<div class="empty glass-flat">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
       html += '</div>';
     });
@@ -849,7 +981,7 @@
   function viewCategory(){
     const s = categoryMeta(state.categoryFilter);
     const list = state.movies.filter(m => m.status === state.categoryFilter);
-    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(s.l)+'</div><button class="icon-btn glass-flat" id="editCatBtn" style="margin-left:auto;">'+icon('pencil',18)+'</button></div>';
+    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle" style="display:flex;align-items:center;gap:8px;"><span style="color:'+(s.color||'var(--accent)')+';display:flex;">'+icon(s.icon,20)+'</span><span>'+escapeHtml(s.l)+'</span></div><button class="icon-btn glass-flat" id="editCatBtn" style="margin-left:auto;">'+icon('pencil',18)+'</button></div>';
     html += list.length
       ? '<div class="movies-grid">'+list.map(card).join('')+'</div>'
       : '<div class="empty glass-flat" style="margin-top:16px;">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
@@ -866,19 +998,6 @@
       + '<div class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" title="Выбрать категорию" style="width:38px;height:38px;border-radius:50%;">'+icon('heart',18)+'</div>'
       + '</button>';
     }).join('') + '</div>';
-  }
-
-  function discoverCard(item){
-    const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
-    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(item.poster)+'" alt="" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
-    const typePill = '<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div>';
-    const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(item.title)+'</div>'+(item.year?'<div class="card-sub">'+escapeHtml(item.year)+'</div>':'')+'</div>';
-    
-    return '<div class="card" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'">'
-      + '<div class="poster-frame tier-none">'+posterHtml+caption+'</div>'
-      + typePill
-      + '<button type="button" class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" style="position:absolute;bottom:38px;right:8px;z-index:4;width:32px;height:32px;border-radius:50%;padding:0;" title="Выбрать категорию">'+icon('heart',15)+'</button>'
-      + '</div>';
   }
 
   function discoverRowsHtml(){
@@ -930,8 +1049,13 @@
   }
 
   function viewSearch(){
-    const browseSection = discoverRowsHtml();
-    return '<div class="topbar"><div class="brand"><span class="logo">KINO<span>BLO</span></span><span class="tag">PRZ</span></div></div>' + browseSection;
+    const genresBarHtml = '<div class="genres-scroll-bar">' + DISCOVER_CATEGORIES.map(cat => 
+      '<button class="genre-chip" data-discover-cat="'+cat.key+'">'+escapeHtml(cat.label)+'</button>'
+    ).join('') + '</div>';
+
+    return '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>' 
+      + genresBarHtml 
+      + discoverRowsHtml();
   }
 
   function viewDetail(){
@@ -939,11 +1063,6 @@
     if (!m) { state.view='home'; return viewHome(); }
     const heroImg = m.poster ? '<img src="'+escapeHtml(m.poster)+'" onerror="this.style.display=\'none\';">' : '';
     const isSaved = state.movies.some(x => x.id === m.id);
-    const tier = isSaved ? tierMeta(m.myRating) : null;
-
-    const poopHtml = (tier && tier.key === 'poop')
-      ? '<div class="poop-stage"><div class="poop-splat"></div><div class="poop-crumbs"><span>💩</span><span>💩</span><span>💩</span><span>💩</span></div><div class="poop-fly">💩</div></div>'
-      : '';
 
     const starsHtml = [];
     for (let i = 1; i <= 10; i++) {
@@ -987,17 +1106,27 @@
       </div>
     ` : '';
 
-    // Формируем блок со скриншотами (картинками из фильма), если они загружены
     let screenshotsHtml = '';
     if (m.screenshots && m.screenshots.length > 0) {
-      screenshotsHtml = '<div class="movie-screenshots-scroll">' + m.screenshots.map(imgUrl => 
-        '<div class="movie-screenshot-item" data-fullscreen-img="'+escapeHtml(imgUrl)+'"><img src="'+escapeHtml(imgUrl)+'" loading="lazy"></div>'
+      screenshotsHtml = '<div class="movie-screenshots-scroll">' + m.screenshots.map((imgUrl, idx) => 
+        '<div class="movie-screenshot-item" data-fullscreen-index="'+idx+'"><img src="'+escapeHtml(imgUrl)+'" loading="lazy"></div>'
       ).join('') + '</div>';
+    }
+
+    let similarList = getSimilarRecommendations(m);
+    let similarSectionHtml = '';
+    if (similarList.length > 0) {
+      similarSectionHtml = `
+        <div class="section" style="margin-top: 20px; text-align: left; width: 100%;">
+          <div class="section-title" style="padding: 0 20px; margin-bottom: 12px; font-size: 20px;">Так же посмотрите</div>
+          <div class="row-scroll">${similarList.map(card).join('')}</div>
+        </div>
+      `;
     }
 
     return ''
     + '<div class="detail-page" id="detailPage">'
-    +   '<div class="detail-hero-bg">'+heroImg+'<div class="detail-hero-gradient"></div>'+poopHtml+'</div>'
+    +   '<div class="detail-hero-bg">'+heroImg+'<div class="detail-hero-gradient"></div></div>'
     +   '<div class="detail-top-controls"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button></div>'
     +   '<div class="detail-content">'
     +     '<div class="detail-title">'+escapeHtml(m.title)+'</div>'
@@ -1014,6 +1143,7 @@
     +   '</div>'
     +   '<div class="detail-action-area">'
     +     screenshotsHtml
+    +     similarSectionHtml
     +   '</div>'
     + '</div>';
   }
@@ -1060,12 +1190,24 @@
     const v = el.value; el.value = ''; el.value = v;
   }
 
-  function openMovie(id){ 
+  async function openMovie(id){ 
     isOverviewExpanded = false; 
     previousView = state.view; 
     state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
     state.detailId = id; 
     state.previewItem = null; 
+    
+    const m = state.movies.find(x => x.id === id);
+    if (m && m.tmdbId && (!m.screenshots || m.screenshots.length === 0)) {
+      tmdbImages(m.tmdbId, m.mediaType || 'movie', state.tmdbKey).then(shots => {
+        if (shots && shots.length > 0) {
+          m.screenshots = shots;
+          saveMovieDebounced(m, 10);
+          if (state.detailId === id) render();
+        }
+      });
+    }
+
     state.view = 'detail'; 
     render(); 
     document.getElementById('app').scrollTop = 0;
@@ -1210,6 +1352,54 @@
     overlay.querySelector('#cfYes').addEventListener('click', () => { overlay.remove(); onYes(); });
   }
 
+  function triggerBackAction() {
+    if (state.view === 'home' || state.view === 'search') return;
+    
+    if (state.view === 'detail' && state.previewItem && !state.movies.some(x=>x.id===state.previewItem.id)){
+      state.previewItem = null; state.view = previousView || 'search'; render();
+    } else if (state.view === 'detail') {
+      goHomeAnimated();
+    } else if (state.view === 'category' || state.view === 'discoverList') {
+      const prevView = state.view === 'discoverList' ? 'search' : 'home';
+      state.view = prevView; 
+      render();
+      document.getElementById('app').scrollTop = state.scrollPositions[prevView] || 0;
+    } else {
+      state.view = 'home'; render();
+    }
+  }
+
+  function initSwipeBack() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    
+    const appEl = document.getElementById('app');
+    if (!appEl) return;
+
+    appEl.addEventListener('touchstart', e => {
+      if (state.view === 'home' || state.view === 'search') return;
+      if (e.touches && e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, {passive: true});
+
+    appEl.addEventListener('touchend', e => {
+      if (state.view === 'home' || state.view === 'search') return;
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        
+        const diffX = touchEndX - touchStartX;
+        const diffY = Math.abs(touchEndY - touchStartY);
+
+        if (touchStartX <= 50 && diffX > 70 && diffY < 60) {
+          triggerBackAction();
+        }
+      }
+    }, {passive: true});
+  }
+
   function bindEvents(){
     document.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => openMovie(el.getAttribute('data-open'))));
 
@@ -1241,20 +1431,7 @@
     });
 
     const backBtn = document.getElementById('backBtn');
-    if (backBtn) backBtn.addEventListener('click', () => {
-      if (state.view === 'detail' && state.previewItem && !state.movies.some(x=>x.id===state.previewItem.id)){
-        state.previewItem = null; state.view = previousView || 'search'; render();
-      } else if (state.view === 'detail') {
-        goHomeAnimated();
-      } else if (state.view === 'category' || state.view === 'discoverList') {
-        const prevView = state.view === 'discoverList' ? 'search' : 'home';
-        state.view = prevView; 
-        render();
-        document.getElementById('app').scrollTop = state.scrollPositions[prevView] || 0;
-      } else {
-        state.view = 'home'; render();
-      }
-    });
+    if (backBtn) backBtn.addEventListener('click', triggerBackAction);
 
     const addCatBtn = document.getElementById('addCategoryBtn');
     if (addCatBtn) addCatBtn.addEventListener('click', openAddCategoryModal);
@@ -1396,35 +1573,86 @@
       render();
     }));
 
-    // Обработчик клика по картинкам/кадрам для открытия во весь экран
-    document.querySelectorAll('[data-fullscreen-img]').forEach(el => {
+    document.querySelectorAll('[data-fullscreen-index]').forEach(el => {
       el.addEventListener('click', () => {
-        const imgUrl = el.getAttribute('data-fullscreen-img');
+        const activeMovie = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+        if (!activeMovie || !activeMovie.screenshots) return;
+        
+        let currentIndex = parseInt(el.getAttribute('data-fullscreen-index'), 10);
+        const screenshots = activeMovie.screenshots;
+
         const modal = document.createElement('div');
         modal.className = 'fullscreen-modal';
-        modal.innerHTML = '<div class="fullscreen-close" id="fsClose">'+icon('close',20)+'</div><img src="'+escapeHtml(imgUrl)+'">';
+        modal.innerHTML = `
+          <div class="fullscreen-close" id="fsClose">${icon('close',20)}</div>
+          <div class="fullscreen-counter" id="fsCounter">${currentIndex + 1} / ${screenshots.length}</div>
+          <img id="fsImg" src="${escapeHtml(screenshots[currentIndex])}">
+        `;
         document.body.appendChild(modal);
+
+        const imgEl = modal.querySelector('#fsImg');
+        const counterEl = modal.querySelector('#fsCounter');
+
+        function updateImage(newIndex, animClass) {
+          currentIndex = (newIndex + screenshots.length) % screenshots.length;
+          counterEl.textContent = (currentIndex + 1) + ' / ' + screenshots.length;
+          
+          if (animClass) {
+            imgEl.style.transform = animClass === 'left' ? 'translateX(-50px)' : 'translateX(50px)';
+            imgEl.style.opacity = '0';
+            setTimeout(() => {
+              imgEl.src = screenshots[currentIndex];
+              imgEl.style.transform = animClass === 'left' ? 'translateX(50px)' : 'translateX(-50px)';
+              void imgEl.offsetWidth;
+              imgEl.style.transform = 'translateX(0)';
+              imgEl.style.opacity = '1';
+            }, 150);
+          } else {
+            imgEl.src = screenshots[currentIndex];
+          }
+        }
+
         modal.querySelector('#fsClose').addEventListener('click', () => modal.remove());
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
       });
     });
-
-    const page = document.getElementById('detailPage');
-    if (page) attachSwipeClose(page);
   }
 
   function openAddCategoryModal(){
     let selectedIcon = 'star';
+    let selectedColor = '#ff2b3d';
     const body = '<div class="modal-msg" style="padding-top:2px;padding-bottom:6px;">Название категории</div>'
       + '<input id="newCatName" placeholder="Например, Пересмотреть" style="margin-bottom:4px;">'
+      + '<div class="modal-msg" style="padding-bottom:2px;">Цвет</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;" id="newCatColorPalette">' + CAT_COLOR_PALETTE.map(col=>'<button type="button" data-cat-col="'+col+'" style="width:32px;height:32px;border-radius:50%;background:'+col+';border:'+(col===selectedColor?'2px solid #fff':'none')+';"></button>').join('') + '</div>'
       + '<div class="modal-msg" style="padding-bottom:2px;">Иконка</div>'
-      + '<div class="cat-icon-grid" id="catIconGrid">' + CAT_ICON_OPTIONS.map(ic=>'<button type="button" class="cat-icon-opt'+(ic===selectedIcon?' active':'')+'" data-cat-icon="'+ic+'">'+icon(ic,20)+'</button>').join('') + '</div>'
+      + '<div class="cat-icon-grid" id="newCatIconGrid">' + CAT_ICON_OPTIONS.map(ic=>'<button type="button" class="cat-icon-opt'+(ic===selectedIcon?' active':'')+'" data-cat-icon="'+ic+'">'+icon(ic,20)+'</button>').join('') + '</div>'
       + '<button class="primary-btn" id="saveNewCat" style="margin-top:2px;">Создать категорию</button>';
     const overlay = customModal('Новая категория', body);
-    overlay.querySelectorAll('[data-cat-icon]').forEach(b => b.addEventListener('click', () => {
-      selectedIcon = b.getAttribute('data-cat-icon');
-      overlay.querySelectorAll('[data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
+    
+    overlay.querySelectorAll('[data-cat-col]').forEach(b => b.addEventListener('click', () => {
+      selectedColor = b.getAttribute('data-cat-col');
+      overlay.querySelectorAll('[data-cat-col]').forEach(x => x.style.border = 'none');
+      b.style.border = '2px solid #fff';
     }));
+
+    overlay.querySelectorAll('#newCatIconGrid [data-cat-icon]').forEach(b => b.addEventListener('click', () => {
+      selectedIcon = b.getAttribute('data-cat-icon');
+      overlay.querySelectorAll('#newCatIconGrid [data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
+    }));
+
+    overlay.querySelector('#saveNewCat').addEventListener('click', async () => {
+      const nameInput = overlay.querySelector('#newCatName').value.trim();
+      if (!nameInput) {
+        customAlert('Введите название категории.');
+        return;
+      }
+      const newV = 'cat_' + Date.now();
+      state.categories.push({ v: newV, l: nameInput, icon: selectedIcon, color: selectedColor, sub: '' });
+      await STORAGE.saveCategories(state.categories);
+      overlay.remove();
+      render();
+    });
   }
 
   function openEditCategoryModal(){
@@ -1435,66 +1663,54 @@
     const body = '<div class="modal-msg" style="padding-top:2px;padding-bottom:6px;">Название категории</div>'
       + '<input id="editCatName" value="'+escapeHtml(s.l)+'" style="margin-bottom:4px;">'
       + '<div class="modal-msg" style="padding-bottom:2px;">Цвет</div>'
-      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' + CAT_COLOR_PALETTE.map(col=>'<button type="button" data-cat-col="'+col+'" style="width:32px;height:32px;border-radius:50%;background:'+col+';border:'+(col===selectedColor?'2px solid #fff':'none')+';"></button>').join('') + '</div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;" id="editCatColorPalette">' + CAT_COLOR_PALETTE.map(col=>'<button type="button" data-cat-col="'+col+'" style="width:32px;height:32px;border-radius:50%;background:'+col+';border:'+(col===selectedColor?'2px solid #fff':'none')+';"></button>').join('') + '</div>'
       + '<div class="modal-msg" style="padding-bottom:2px;">Иконка</div>'
-      + '<div class="cat-icon-grid">' + CAT_ICON_OPTIONS.map(ic=>'<button type="button" class="cat-icon-opt'+(ic===selectedIcon?' active':'')+'" data-cat-icon="'+ic+'">'+icon(ic,20)+'</button>').join('') + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:4px;"><button class="danger-btn" id="deleteCatBtn" style="flex:1;">Удалить</button><button class="primary-btn" id="saveEditCat" style="flex:1;margin-top:0;">Сохранить</button></div>';
+      + '<div class="cat-icon-grid" id="editCatIconGrid">' + CAT_ICON_OPTIONS.map(ic=>'<button type="button" class="cat-icon-opt'+(ic===selectedIcon?' active':'')+'" data-cat-icon="'+ic+'">'+icon(ic,20)+'</button>').join('') + '</div>'
+      + '<div style="display:flex;gap:8px;"><button class="danger-btn" id="deleteCat" style="flex:1;">Удалить</button><button class="primary-btn" id="saveEditCat" style="flex:2;margin-top:0;">Сохранить</button></div>';
+    
     const overlay = customModal('Редактировать категорию', body);
-    overlay.querySelectorAll('[data-cat-icon]').forEach(b => b.addEventListener('click', () => {
-      selectedIcon = b.getAttribute('data-cat-icon');
-      overlay.querySelectorAll('[data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
-    }));
+    
     overlay.querySelectorAll('[data-cat-col]').forEach(b => b.addEventListener('click', () => {
       selectedColor = b.getAttribute('data-cat-col');
-      overlay.querySelectorAll('[data-cat-col]').forEach(x=>x.style.border='none');
+      overlay.querySelectorAll('[data-cat-col]').forEach(x => x.style.border = 'none');
       b.style.border = '2px solid #fff';
     }));
+
+    overlay.querySelectorAll('#editCatIconGrid [data-cat-icon]').forEach(b => b.addEventListener('click', () => {
+      selectedIcon = b.getAttribute('data-cat-icon');
+      overlay.querySelectorAll('#editCatIconGrid [data-cat-icon]').forEach(x=>x.classList.toggle('active', x===b));
+    }));
+
     overlay.querySelector('#saveEditCat').addEventListener('click', async () => {
-      const nameVal = overlay.querySelector('#editCatName').value.trim();
-      if (!nameVal){ customAlert('Введите название категории'); return; }
-      s.l = nameVal; s.icon = selectedIcon; s.color = selectedColor;
+      const newName = overlay.querySelector('#editCatName').value.trim();
+      if (!newName) {
+        customAlert('Название категории не может быть пустым.');
+        return;
+      }
+      s.l = newName;
+      s.icon = selectedIcon;
+      s.color = selectedColor;
       await STORAGE.saveCategories(state.categories);
       overlay.remove();
       render();
     });
-    overlay.querySelector('#deleteCatBtn').addEventListener('click', () => {
-      customConfirm('Удалить эту категорию? Фильмы из неё переместятся в «Избранное».', async () => {
-        state.movies.forEach(m => { if (m.status === s.v) { m.status = 'favorite'; saveMovieDebounced(m, 10); } });
+
+    overlay.querySelector('#deleteCat').addEventListener('click', () => {
+      customConfirm('Удалить эту категорию? Фильмы из неё останутся в коллекции, но сбросят категорию.', async () => {
         state.categories = state.categories.filter(c => c.v !== s.v);
         await STORAGE.saveCategories(state.categories);
+        
+        state.movies.forEach(m => {
+          if (m.status === s.v) {
+            m.status = state.categories.length ? state.categories[0].v : '';
+            saveMovieDebounced(m, 10);
+          }
+        });
+
         overlay.remove();
         state.view = 'home';
         render();
       });
-    });
-  }
-
-  function attachSwipeClose(el){
-    let startY = 0, currentY = 0, touching = false;
-    el.addEventListener('touchstart', e => {
-      if (document.getElementById('app').scrollTop <= 5){
-        startY = e.touches[0].clientY; touching = true; el.style.transition = 'none';
-      }
-    }, {passive:true});
-    el.addEventListener('touchmove', e => {
-      if (!touching) return;
-      currentY = e.touches[0].clientY;
-      const diff = currentY - startY;
-      if (diff > 0){
-        el.style.transform = 'translateY(' + diff + 'px)';
-      }
-    }, {passive:true});
-    el.addEventListener('touchend', () => {
-      if (!touching) return;
-      touching = false;
-      const diff = currentY - startY;
-      startY = 0; currentY = 0;
-      if (diff > 110){
-        goHomeAnimated();
-      } else {
-        el.style.transition = 'transform .2s ease';
-        el.style.transform = 'translateY(0)';
-      }
     });
   }
 
