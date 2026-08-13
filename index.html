@@ -190,7 +190,8 @@
 
   .poster-frame{border-radius:var(--radius-sm);overflow:hidden;position:relative;width:100%;}
   .poster-frame.tier-none{padding:0;}
-  .poster-frame.tier-poop{padding:3px;background:linear-gradient(135deg,#a9723e,#5b3a1c);box-shadow:0 0 16px rgba(139,94,46,.48);}
+  .poster-frame.tier-poop{padding:3px;background:linear-gradient(135deg,#5b3a1c,#3a220e);box-shadow:0 0 12px rgba(91,58,28,.3);}
+  .poster-frame.tier-poop .poster{opacity:0.45;filter:sepia(0.8) brightness(0.7);transition:all .3s ease;}
   .poster-frame.tier-pee{padding:3px;background:linear-gradient(135deg,#f0d95a,#a98b1e);box-shadow:0 0 16px rgba(216,180,40,.38);}
   .poster-frame.tier-green{padding:3px;background:linear-gradient(135deg,#4ee2ab,#0f9e6e);box-shadow:0 0 16px rgba(52,211,153,.4);}
   .poster-frame.tier-fire{padding:3px;background:linear-gradient(120deg,#ffd166,#ff7a1a,#ff2b3d,#ffd166);background-size:300% 300%;animation:fireRing 3s ease infinite;box-shadow:0 0 20px rgba(255,140,20,.5);}
@@ -680,6 +681,9 @@
       try{ return JSON.parse(raw); }catch(e){ return null; }
     },
     async saveMovie(movie){
+      if (!movie.addedAt) {
+        movie.addedAt = Date.now();
+      }
       const ok = await rawSet(movieKey(movie.id), JSON.stringify(movie));
       if (!ok) return false;
       const ids = await this.getMovieIds();
@@ -724,6 +728,7 @@
           const ids = await this.getMovieIds();
           for (const m of oldMovies){
             if (!m || !m.id) continue;
+            if (!m.addedAt) m.addedAt = Date.now();
             await rawSet(movieKey(m.id), JSON.stringify(m));
             if (ids.indexOf(m.id) === -1) ids.push(m.id);
           }
@@ -743,6 +748,7 @@
   }
   async function loadMovies(){ return STORAGE.loadAllMovies(); }
   async function addMovie(movie){
+    if (!movie.addedAt) movie.addedAt = Date.now();
     const ok = await STORAGE.saveMovie(movie);
     if (!ok) reportStorageError('Не удалось сохранить фильм. Освободи немного места в хранилище.');
     return ok;
@@ -888,7 +894,6 @@
     if (!cat || state.discover.fullLoading[key] || state.discover.fullDone[key]) return;
     state.discover.fullLoading[key] = true;
     
-    // Показываем индикатор подгрузки
     const loader = document.getElementById('infiniteLoader');
     if (loader) loader.style.display = 'block';
 
@@ -961,7 +966,6 @@
       const scrollHeight = app.scrollHeight;
       const clientHeight = app.clientHeight;
 
-      // Если скролл близко к низу (за 300px)
       if (scrollTop + clientHeight >= scrollHeight - 300) {
         if (!state.discover.fullLoading[key] && !state.discover.fullDone[key]) {
           loadDiscoverFullPage(key);
@@ -1013,10 +1017,11 @@
 
   function tierMeta(r){
     if (r == null) return null;
-    if (r <= 3) return {key:'poop', color:'#c9935a', iconName:'minimalPoop'};
+    if (r >= 1 && r <= 3) return {key:'poop', color:'#c9935a', iconName:'minimalPoop'};
     if (r <= 6) return {key:'pee', color:'#e8c94a', iconName:'minimalMinus'};
     if (r <= 9) return {key:'green', color:'#34d399', iconName:'minimalThumbUp'};
-    return {key:'fire', color:'#ffb347', iconName:'minimalFire'};
+    if (r === 10) return {key:'fire', color:'#ffb347', iconName:'minimalFire'};
+    return null;
   }
   
   function ratingPill(m){
@@ -1142,10 +1147,15 @@
     return '<span class="ic" style="color:'+(color || 'var(--accent)')+';">'+icon(name,17)+'</span>'; 
   }
 
+  function getSortedMoviesByStatus(status) {
+    const list = state.movies.filter(m => m.status === status);
+    return list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+  }
+
   function viewHome(){
     let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>';
     state.categories.forEach(s => {
-      const list = state.movies.filter(m => m.status === s.v);
+      const list = getSortedMoviesByStatus(s.v);
       html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
       html += list.length ? '<div class="row-scroll">'+list.map(card).join('')+'</div>' : '<div class="empty glass-flat">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
       html += '</div>';
@@ -1156,7 +1166,7 @@
 
   function viewCategory(){
     const s = categoryMeta(state.categoryFilter);
-    const list = state.movies.filter(m => m.status === state.categoryFilter);
+    const list = getSortedMoviesByStatus(state.categoryFilter);
     let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle" style="display:flex;align-items:center;gap:8px;"><span style="color:'+(s.color||'var(--accent)')+';display:flex;">'+icon(s.icon,20)+'</span><span>'+escapeHtml(s.l)+'</span></div><button class="icon-btn glass-flat" id="editCatBtn" style="margin-left:auto;">'+icon('pencil',18)+'</button></div>';
     html += list.length
       ? '<div class="movies-grid">'+list.map(card).join('')+'</div>'
@@ -1467,13 +1477,11 @@
     const arrowIndicator = document.getElementById('swipeArrowIndicator');
 
     app.addEventListener('touchstart', e => {
-      if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose'){
-        if (e.touches[0].clientX < 35){
-          startX = e.touches[0].clientX;
-          currentX = startX;
-          isSwiping = true;
-          startTime = Date.now();
-        }
+      if (e.touches[0].clientX < 45){
+        startX = e.touches[0].clientX;
+        currentX = startX;
+        isSwiping = true;
+        startTime = Date.now();
       }
     }, {passive:true});
 
@@ -1481,11 +1489,11 @@
       if (!isSwiping) return;
       currentX = e.touches[0].clientX;
       const diff = currentX - startX;
-      const pageEl = document.getElementById('detailPage') || app.firstElementChild;
       
-      if (pageEl && diff > 0){
-        pageEl.style.transform = 'translateX(' + diff + 'px)';
-        pageEl.style.transition = 'none';
+      if (diff > 0){
+        app.style.transform = 'translateX(' + diff + 'px) scale(' + (1 - Math.min(diff / 1000, 0.05)) + ')';
+        app.style.opacity = String(1 - Math.min(diff / 400, 0.6));
+        app.style.transition = 'none';
 
         if (arrowIndicator) {
           const progress = Math.min(diff / 120, 1);
@@ -1504,140 +1512,149 @@
       isSwiping = false;
       const diff = currentX - startX;
       const duration = Date.now() - startTime;
-      const pageEl = document.getElementById('detailPage') || app.firstElementChild;
-      
-      if (arrowIndicator){
+
+      if (arrowIndicator) {
         arrowIndicator.style.transform = 'translateY(-50%) scale(0) translateX(-20px)';
         arrowIndicator.style.opacity = '0';
       }
 
-      if (pageEl){
-        if (diff > 110 || (diff > 40 && duration < 250)){
-          pageEl.style.transition = 'transform 0.2s ease';
-          pageEl.style.transform = 'translateX(100%)';
-          setTimeout(() => {
-            if (state.view === 'detail') {
-              state.view = previousView || 'home';
-              state.detailId = null;
-              state.previewItem = null;
-            } else if (state.view === 'category' || state.view === 'discoverList' || state.view === 'choose') {
-              state.view = 'home';
-            }
-            render();
-          }, 200);
-        } else {
-          pageEl.style.transition = 'transform 0.2s ease';
-          pageEl.style.transform = 'translateX(0)';
-          setTimeout(() => { if (pageEl) pageEl.style.transition = ''; }, 200);
-        }
+      if (diff > 100 || (diff > 40 && duration < 250)){
+        app.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease';
+        app.style.transform = 'translateX(100vw) scale(0.9)';
+        app.style.opacity = '0';
+        setTimeout(() => {
+          app.style.transition = '';
+          app.style.transform = '';
+          app.style.opacity = '';
+          if (state.view === 'detail') {
+            state.view = previousView;
+          } else if (state.view === 'category' || state.view === 'discoverList' || state.view === 'choose') {
+            state.view = 'home';
+          } else if (state.view === 'search') {
+            state.view = 'home';
+          }
+          render();
+        }, 220);
+      } else {
+        app.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease';
+        app.style.transform = 'translateX(0) scale(1)';
+        app.style.opacity = '1';
+        setTimeout(() => { 
+          app.style.transition = ''; 
+          app.style.transform = ''; 
+          app.style.opacity = ''; 
+        }, 200);
       }
     });
   }
 
   function bindEvents(){
-    const app = document.getElementById('app');
-    
-    const backBtn = document.getElementById('backBtn');
-    if (backBtn) backBtn.onclick = () => {
-      if (state.view === 'detail') {
-        state.view = previousView || 'home';
-        state.detailId = null;
-        state.previewItem = null;
-      } else if (state.view === 'category' || state.view === 'discoverList' || state.view === 'choose') {
-        state.view = 'home';
-      }
-      render();
-    };
-
-    const toggleOverviewBtn = document.getElementById('toggleOverviewBtn');
-    if (toggleOverviewBtn) toggleOverviewBtn.onclick = () => {
-      isOverviewExpanded = !isOverviewExpanded;
-      const overviewContainer = toggleOverviewBtn.closest('.detail-overview');
-      const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
-      if (overviewContainer && m && m.description) {
-        const textInner = overviewContainer.querySelector('.overview-text-inner');
-        if (textInner) {
-          textInner.style.opacity = '0';
-          setTimeout(() => {
-            const words = m.description.trim().split(/\s+/);
-            if (isOverviewExpanded) {
-              textInner.textContent = m.description;
-              toggleOverviewBtn.textContent = 'свернуть';
-            } else {
-              textInner.textContent = words.slice(0, 25).join(' ') + '...';
-              toggleOverviewBtn.textContent = 'еще';
-            }
-            textInner.style.opacity = '1';
-          }, 150);
-        }
-      }
-    };
-
-    app.querySelectorAll('[data-nav]').forEach(btn => {
+    document.querySelectorAll('[data-nav]').forEach(btn => {
       btn.onclick = () => {
-        const target = btn.getAttribute('data-nav');
-        if (state.view === target) {
-          state.scrollPositions[target] = 0;
-          app.scrollTop = 0;
-        } else {
-          state.scrollPositions[state.view] = app.scrollTop || 0;
-          state.view = target;
+        const v = btn.getAttribute('data-nav');
+        state.scrollPositions[state.view] = 0;
+        state.view = v;
+        if (v === 'search'){
           state.tmdbQuery = '';
           state.tmdbResults = null;
-          render();
-          app.scrollTop = state.scrollPositions[target] || 0;
         }
+        render();
+        document.getElementById('app').scrollTop = 0;
       };
     });
 
-    app.querySelectorAll('.section-head[data-cat]').forEach(el => {
+    document.querySelectorAll('.section-head[data-cat]').forEach(el => {
       el.onclick = () => {
-        state.scrollPositions[state.view] = app.scrollTop || 0;
+        state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
         state.categoryFilter = el.getAttribute('data-cat');
         state.view = 'category';
         render();
-        app.scrollTop = 0;
+        document.getElementById('app').scrollTop = 0;
       };
     });
 
-    app.querySelectorAll('.section-head[data-discover-cat]').forEach(el => {
-      el.onclick = () => {
-        openDiscoverList(el.getAttribute('data-discover-cat'));
-      };
+    document.querySelectorAll('[data-open]').forEach(el => {
+      el.onclick = () => openMovie(el.getAttribute('data-open'));
     });
 
-    app.querySelectorAll('.genre-chip[data-discover-cat]').forEach(el => {
-      el.onclick = () => {
-        openDiscoverList(el.getAttribute('data-discover-cat'));
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn){
+      backBtn.onclick = () => {
+        if (state.view === 'detail'){
+          state.view = previousView;
+        } else if (state.view === 'category' || state.view === 'discoverList' || state.view === 'choose'){
+          state.view = 'home';
+        }
+        render();
       };
-    });
+    }
 
-    app.querySelectorAll('.card[data-open]').forEach(el => {
-      el.onclick = () => {
-        const id = el.getAttribute('data-open');
-        openMovie(id);
+    const qInput = document.getElementById('tmdbQueryBottom');
+    if (qInput){
+      qInput.oninput = e => {
+        const val = e.target.value;
+        state.tmdbQuery = val;
+        const clearBtn = document.getElementById('tmdbQueryBottomClear');
+        if (clearBtn) clearBtn.style.display = val ? '' : 'none';
+
+        if (tmdbSearchTimer) clearTimeout(tmdbSearchTimer);
+        if (!val.trim()){
+          state.tmdbResults = null;
+          render();
+          focusSearchInput();
+          return;
+        }
+        tmdbSearchTimer = setTimeout(async () => {
+          try{
+            const res = await tmdbSearch(val, state.tmdbKey);
+            state.tmdbResults = res;
+            render();
+            focusSearchInput();
+          }catch(err){
+            state.tmdbResults = [];
+            render();
+            focusSearchInput();
+          }
+        }, 350);
       };
-    });
+      qInput.onfocus = () => {
+        if (state.tmdbQuery && !state.tmdbResults){
+          tmdbSearch(state.tmdbQuery, state.tmdbKey).then(res => {
+            state.tmdbResults = res;
+            render();
+            focusSearchInput();
+          });
+        }
+      };
+    }
 
-    app.querySelectorAll('.card[data-discover-pick]').forEach(el => {
-      el.onclick = (e) => {
+    const qClear = document.getElementById('tmdbQueryBottomClear');
+    if (qClear){
+      qClear.onclick = () => {
+        state.tmdbQuery = '';
+        state.tmdbResults = null;
+        render();
+        focusSearchInput();
+      };
+    }
+
+    document.querySelectorAll('[data-tmdb-preview]').forEach(btn => {
+      btn.onclick = e => {
         if (e.target.closest('[data-quick-fav]')) return;
-        const id = el.getAttribute('data-discover-pick');
-        const type = el.getAttribute('data-discover-type');
-        previewTmdb(id, type);
+        previewTmdb(btn.getAttribute('data-tmdb-preview'), btn.getAttribute('data-tmdb-type'));
       };
     });
 
-    app.querySelectorAll('[data-quick-fav]').forEach(btn => {
-      btn.onclick = (e) => {
+    document.querySelectorAll('[data-quick-fav]').forEach(btn => {
+      btn.onclick = e => {
         e.stopPropagation();
-        const tmdbId = Number(btn.getAttribute('data-quick-fav'));
+        const tmdbId = btn.getAttribute('data-quick-fav');
         const mediaType = btn.getAttribute('data-quick-type');
-        const existing = state.movies.find(x => x.tmdbId === tmdbId);
-        if (existing) {
+        const existing = state.movies.find(x => x.tmdbId == tmdbId);
+        if (existing){
           deleteMovie(existing.id).then(() => {
-            loadMovies().then(mList => {
-              state.movies = mList;
+            loadMovies().then(arr => {
+              state.movies = arr;
               render();
             });
           });
@@ -1647,366 +1664,266 @@
       };
     });
 
-    const saveFromDetail = document.getElementById('saveFromDetail');
-    if (saveFromDetail) {
-      saveFromDetail.onclick = () => {
-        if (state.previewItem) {
-          state.pendingMovie = state.previewItem;
-          state.view = 'choose';
+    document.querySelectorAll('[data-choose-cat]').forEach(btn => {
+      btn.onclick = async () => {
+        const catV = btn.getAttribute('data-choose-cat');
+        const m = state.pendingMovie;
+        if (!m) return;
+        m.id = 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        m.status = catV;
+        m.addedAt = Date.now();
+        const ok = await addMovie(m);
+        if (ok){
+          state.movies = await loadMovies();
+          state.detailId = m.id;
+          state.previewItem = null;
+          state.pendingMovie = null;
+          state.view = 'detail';
           render();
         }
+      };
+    });
+
+    const saveFromDetail = document.getElementById('saveFromDetail');
+    if (saveFromDetail){
+      saveFromDetail.onclick = async () => {
+        const m = state.previewItem;
+        if (!m) return;
+        state.pendingMovie = m;
+        state.view = 'choose';
+        render();
       };
     }
 
     const deleteFromDetail = document.getElementById('deleteFromDetail');
-    if (deleteFromDetail) {
-      deleteFromDetail.onclick = () => {
+    if (deleteFromDetail){
+      deleteFromDetail.onclick = async () => {
         const m = state.movies.find(x => x.id === state.detailId);
-        if (m) {
-          deleteMovie(m.id).then(() => {
-            loadMovies().then(mList => {
-              state.movies = mList;
-              state.view = previousView || 'home';
-              state.detailId = null;
-              state.previewItem = null;
-              render();
-            });
-          });
+        if (!m) return;
+        showConfirmModal('Удалить фильм?', 'Фильм будет удален из твоей коллекции.', async () => {
+          await deleteMovie(m.id);
+          state.movies = await loadMovies();
+          state.view = 'home';
+          render();
+        });
+      };
+    }
+
+    const detailCatSelect = document.getElementById('detailCatSelect');
+    if (detailCatSelect){
+      detailCatSelect.onchange = e => {
+        const newCat = e.target.value;
+        const m = state.movies.find(x => x.id === state.detailId);
+        if (!m) return;
+        m.status = newCat;
+        saveMovieDebounced(m);
+      };
+    }
+
+    document.querySelectorAll('[data-rate]').forEach(btn => {
+      btn.onclick = () => {
+        const r = parseInt(btn.getAttribute('data-rate'), 10);
+        const m = state.movies.find(x => x.id === state.detailId);
+        if (!m) return;
+        m.myRating = (m.myRating === r) ? null : r;
+        saveMovieDebounced(m);
+        render();
+      };
+    });
+
+    const toggleOverviewBtn = document.getElementById('toggleOverviewBtn');
+    if (toggleOverviewBtn){
+      toggleOverviewBtn.onclick = () => {
+        isOverviewExpanded = !isOverviewExpanded;
+        const overviewEl = toggleOverviewBtn.parentElement;
+        const m = state.movies.find(x=>x.id===state.detailId) || state.previewItem;
+        if (!m || !m.description) return;
+        const words = m.description.trim().split(/\s+/);
+        const textInner = overviewEl.querySelector('.overview-text-inner');
+        if (textInner){
+          if (isOverviewExpanded){
+            textInner.textContent = m.description;
+            toggleOverviewBtn.textContent = 'свернуть';
+          } else {
+            textInner.textContent = words.slice(0, 25).join(' ') + '...';
+            toggleOverviewBtn.textContent = 'еще';
+          }
         }
       };
     }
 
-    app.querySelectorAll('[data-choose-cat]').forEach(btn => {
-      btn.onclick = () => {
-        const catVal = btn.getAttribute('data-choose-cat');
-        const m = state.pendingMovie;
-        if (!m) return;
-        const newObj = {
-          id: 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-          tmdbId: m.tmdbId,
-          mediaType: m.mediaType,
-          title: m.title,
-          year: m.year,
-          poster: m.poster,
-          description: m.description,
-          genres: m.genres,
-          type: m.type,
-          voteAverage: m.voteAverage,
-          screenshots: m.screenshots || [],
-          status: catVal,
-          myRating: null,
-          myNote: ''
-        };
-        addMovie(newObj).then(ok => {
-          if (ok) {
-            loadMovies().then(mList => {
-              state.movies = mList;
-              state.pendingMovie = null;
-              state.detailId = newObj.id;
-              state.previewItem = null;
-              state.view = 'detail';
-              render();
-            });
-          }
-        });
+    document.querySelectorAll('.movie-screenshot-item').forEach(item => {
+      item.onclick = () => {
+        const idx = parseInt(item.getAttribute('data-fullscreen-index'), 10);
+        const m = state.movies.find(x=>x.id===state.detailId) || state.previewItem;
+        if (m && m.screenshots && m.screenshots[idx]) {
+          openFullscreenModal(m.screenshots, idx);
+        }
       };
     });
 
-    app.querySelectorAll('[data-tmdb-preview]').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.getAttribute('data-tmdb-preview');
-        const type = btn.getAttribute('data-tmdb-type');
-        previewTmdb(id, type);
+    document.querySelectorAll('[data-discover-cat]').forEach(el => {
+      el.onclick = () => {
+        const key = el.getAttribute('data-discover-cat');
+        openDiscoverList(key);
       };
     });
 
-    app.querySelectorAll('.rate-star-btn[data-rate]').forEach(btn => {
-      btn.onclick = () => {
-        const val = Number(btn.getAttribute('data-rate'));
-        const m = state.movies.find(x => x.id === state.detailId);
-        if (!m) return;
-        m.myRating = val;
-        render();
-        saveMovieDebounced(m, 300);
+    document.querySelectorAll('[data-discover-pick]').forEach(el => {
+      el.onclick = e => {
+        if (e.target.closest('[data-quick-fav]')) return;
+        const tmdbId = el.getAttribute('data-discover-pick');
+        const mediaType = el.getAttribute('data-discover-type');
+        previewTmdb(tmdbId, mediaType);
       };
     });
 
-    const detailCatSelect = document.getElementById('detailCatSelect');
-    if (detailCatSelect) {
-      detailCatSelect.onchange = () => {
-        const m = state.movies.find(x => x.id === state.detailId);
-        if (!m) return;
-        m.status = detailCatSelect.value;
-        updateMovie(m);
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    if (addCategoryBtn){
+      addCategoryBtn.onclick = () => {
+        openCategoryModal(null);
       };
     }
 
     const editCatBtn = document.getElementById('editCatBtn');
-    if (editCatBtn) {
+    if (editCatBtn){
       editCatBtn.onclick = () => {
-        const s = categoryMeta(state.categoryFilter);
-        const div = document.createElement('div');
-        div.className = 'modal-overlay';
-        div.innerHTML = '<div class="modal">'
-          + '<div class="modal-title" style="margin-bottom:10px;">Редактировать категорию</div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Название</label><input id="editCatName" value="'+escapeHtml(s.l)+'"></div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Подзаголовок</label><input id="editCatSub" value="'+escapeHtml(s.sub||'')+'"></div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Цвет</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">'
-          + CAT_COLOR_PALETTE.map(c => '<button type="button" data-color-opt="'+c+'" style="width:32px;height:32px;border-radius:50%;background:'+c+';border:'+(s.color===c?'3px solid #fff':'none')+';"></button>').join('')
-          + '</div></div>'
-          + '<div class="field" style="margin-bottom:16px;"><label>Иконка</label><div class="cat-icon-grid">'
-          + CAT_ICON_OPTIONS.map(ic => '<button type="button" data-icon-opt="'+ic+'" class="cat-icon-opt '+(s.icon===ic?'active':'')+'">'+icon(ic,20)+'</button>').join('')
-          + '</div></div>'
-          + '<div class="modal-actions">'
-          + '<button class="secondary-btn glass-flat" id="cancelCatEdit">Отмена</button>'
-          + '<button class="primary-btn" id="saveCatEdit" style="margin-top:0;">Сохранить</button>'
-          + '</div>'
-          + (state.categories.length > 1 ? '<button class="danger-btn" id="deleteCatBtn" style="width:100%;margin-top:10px;">Удалить категорию</button>' : '')
-          + '</div>';
-        document.body.appendChild(div);
-
-        let selectedColor = s.color;
-        let selectedIcon = s.icon;
-
-        div.querySelectorAll('[data-color-opt]').forEach(b => {
-          b.onclick = () => {
-            selectedColor = b.getAttribute('data-color-opt');
-            div.querySelectorAll('[data-color-opt]').forEach(x => x.style.border = 'none');
-            b.style.border = '3px solid #fff';
-          };
-        });
-
-        div.querySelectorAll('[data-icon-opt]').forEach(b => {
-          b.onclick = () => {
-            selectedIcon = b.getAttribute('data-icon-opt');
-            div.querySelectorAll('[data-icon-opt]').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-          };
-        });
-
-        div.querySelector('#cancelCatEdit').onclick = () => div.remove();
-
-        const saveBtn = div.querySelector('#saveCatEdit');
-        saveBtn.onclick = () => {
-          const newName = div.querySelector('#editCatName').value.trim();
-          const newSub = div.querySelector('#editCatSub').value.trim();
-          if (!newName) return;
-          s.l = newName;
-          s.sub = newSub;
-          s.color = selectedColor;
-          s.icon = selectedIcon;
-          STORAGE.saveCategories(state.categories).then(() => {
-            div.remove();
-            render();
-          });
-        };
-
-        const delBtn = div.querySelector('#deleteCatBtn');
-        if (delBtn) {
-          delBtn.onclick = () => {
-            const confirmDiv = document.createElement('div');
-            confirmDiv.className = 'modal-overlay';
-            confirmDiv.innerHTML = '<div class="modal" style="text-align:center;padding:24px;"><div class="modal-title">Удалить категорию?</div><div class="modal-msg">Фильмы из этой категории не удалятся, но потеряют статус.</div><div class="modal-actions" style="margin-top:14px;"><button class="secondary-btn glass-flat" id="cancelDel">Отмена</button><button class="danger-btn" id="confirmDel" style="margin-top:0;">Удалить</button></div></div>';
-            document.body.appendChild(confirmDiv);
-            confirmDiv.querySelector('#cancelDel').onclick = () => confirmDiv.remove();
-            confirmDiv.querySelector('#confirmDel').onclick = () => {
-              state.categories = state.categories.filter(x => x.v !== s.v);
-              state.movies.forEach(m => {
-                if (m.status === s.v) m.status = state.categories[0].v;
-              });
-              STORAGE.saveCategories(state.categories).then(() => {
-                state.movies.forEach(m => updateMovie(m));
-                confirmDiv.remove();
-                div.remove();
-                state.view = 'home';
-                render();
-              });
-            };
-          };
-        }
+        const cat = state.categories.find(c => c.v === state.categoryFilter);
+        if (cat) openCategoryModal(cat);
       };
     }
-
-    const addCategoryBtn = document.getElementById('addCategoryBtn');
-    if (addCategoryBtn) {
-      addCategoryBtn.onclick = () => {
-        let selectedColor = CAT_COLOR_PALETTE[0];
-        let selectedIcon = CAT_ICON_OPTIONS[0];
-        const div = document.createElement('div');
-        div.className = 'modal-overlay';
-        div.innerHTML = '<div class="modal">'
-          + '<div class="modal-title" style="margin-bottom:10px;">Новая категория</div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Название</label><input id="newCatName" placeholder="Например: Аниме"></div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Подзаголовок</label><input id="newCatSub" placeholder="Например: Любимые сериалы"></div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Цвет</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">'
-          + CAT_COLOR_PALETTE.map((c, i) => '<button type="button" data-color-opt="'+c+'" style="width:32px;height:32px;border-radius:50%;background:'+c+';border:'+(i===0?'3px solid #fff':'none')+';"></button>').join('')
-          + '</div></div>'
-          + '<div class="field" style="margin-bottom:16px;"><label>Иконка</label><div class="cat-icon-grid">'
-          + CAT_ICON_OPTIONS.map((ic, i) => '<button type="button" data-icon-opt="'+ic+'" class="cat-icon-opt '+(i===0?'active':'')+'">'+icon(ic,20)+'</button>').join('')
-          + '</div></div>'
-          + '<div class="modal-actions">'
-          + '<button class="secondary-btn glass-flat" id="cancelCatAdd">Отмена</button>'
-          + '<button class="primary-btn" id="saveCatAdd" style="margin-top:0;">Создать</button>'
-          + '</div>'
-          + '</div>';
-        document.body.appendChild(div);
-
-        div.querySelectorAll('[data-color-opt]').forEach(b => {
-          b.onclick = () => {
-            selectedColor = b.getAttribute('data-color-opt');
-            div.querySelectorAll('[data-color-opt]').forEach(x => x.style.border = 'none');
-            b.style.border = '3px solid #fff';
-          };
-        });
-
-        div.querySelectorAll('[data-icon-opt]').forEach(b => {
-          b.onclick = () => {
-            selectedIcon = b.getAttribute('data-icon-opt');
-            div.querySelectorAll('[data-icon-opt]').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-          };
-        });
-
-        div.querySelector('#cancelCatAdd').onclick = () => div.remove();
-
-        div.querySelector('#saveCatAdd').onclick = () => {
-          const name = div.querySelector('#newCatName').value.trim();
-          const sub = div.querySelector('#newCatSub').value.trim();
-          if (!name) return;
-          const newV = 'cat_' + Date.now();
-          state.categories.push({ v: newV, l: name, icon: selectedIcon, color: selectedColor, sub: sub });
-          STORAGE.saveCategories(state.categories).then(() => {
-            div.remove();
-            render();
-          });
-        };
-      };
-    }
-
-    const queryInput = document.getElementById('tmdbQueryBottom');
-    const queryClear = document.getElementById('tmdbQueryBottomClear');
-    if (queryInput) {
-      queryInput.oninput = () => {
-        const val = queryInput.value;
-        state.tmdbQuery = val;
-        if (queryClear) queryClear.style.display = val ? '' : 'none';
-        
-        let dropdownContainer = document.getElementById('searchResultsDropdownContainer');
-        if (val.trim()) {
-          if (!dropdownContainer) {
-            const newDropdown = document.createElement('div');
-            newDropdown.id = 'searchResultsDropdownContainer';
-            newDropdown.className = 'search-results-dropdown';
-            newDropdown.innerHTML = '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>';
-            app.appendChild(newDropdown);
-          } else {
-            dropdownContainer.innerHTML = '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>';
-          }
-        } else {
-          if (dropdownContainer) dropdownContainer.remove();
-        }
-
-        if (tmdbSearchTimer) clearTimeout(tmdbSearchTimer);
-        if (!val.trim()) {
-          state.tmdbResults = null;
-          render();
-          return;
-        }
-        tmdbSearchTimer = setTimeout(async () => {
-          try {
-            const results = await tmdbSearch(val, state.tmdbKey);
-            state.tmdbResults = results;
-            let container = document.getElementById('searchResultsDropdownContainer');
-            if (container) {
-              container.innerHTML = renderTmdbResults(results);
-              container.querySelectorAll('[data-tmdb-preview]').forEach(btn => {
-                btn.onclick = () => {
-                  previewTmdb(btn.getAttribute('data-tmdb-preview'), btn.getAttribute('data-tmdb-type'));
-                };
-              });
-              container.querySelectorAll('[data-quick-fav]').forEach(btn => {
-                btn.onclick = (e) => {
-                  e.stopPropagation();
-                  const tmdbId = Number(btn.getAttribute('data-quick-fav'));
-                  const mediaType = btn.getAttribute('data-quick-type');
-                  const existing = state.movies.find(x => x.tmdbId === tmdbId);
-                  if (existing) {
-                    deleteMovie(existing.id).then(() => {
-                      loadMovies().then(mList => {
-                        state.movies = mList;
-                        if (container) container.innerHTML = renderTmdbResults(state.tmdbResults);
-                      });
-                    });
-                  } else {
-                    openChooseForTmdb(tmdbId, mediaType);
-                  }
-                };
-              });
-            } else {
-              render();
-            }
-          } catch(e) {
-            state.tmdbResults = [];
-            let container = document.getElementById('searchResultsDropdownContainer');
-            if (container) container.innerHTML = '<div style="font-size:12.5px;color:var(--ink-faint);padding:6px 10px;">Ошибка поиска.</div>';
-          }
-        }, 300);
-      };
-    }
-
-    if (queryClear) {
-      queryClear.onclick = () => {
-        state.tmdbQuery = '';
-        state.tmdbResults = null;
-        render();
-      };
-    }
-
-    app.querySelectorAll('.movie-screenshot-item[data-fullscreen-index]').forEach(item => {
-      item.onclick = () => {
-        const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
-        if (!m || !m.screenshots) return;
-        const index = Number(item.getAttribute('data-fullscreen-index'));
-        openFullscreenGallery(m.screenshots, index);
-      };
-    });
   }
 
-  function openFullscreenGallery(images, startIndex){
+  function openFullscreenModal(screenshots, startIndex){
     let currentIndex = startIndex;
     const modal = document.createElement('div');
     modal.className = 'fullscreen-modal';
     
-    function updateContent(){
-      modal.innerHTML = `
-        <div class="fullscreen-counter">${currentIndex + 1} / ${images.length}</div>
-        <button class="fullscreen-close">${icon('close', 20)}</button>
-        <img src="${escapeHtml(images[currentIndex])}" alt="">
-      `;
-      modal.querySelector('.fullscreen-close').onclick = () => modal.remove();
-      
-      const imgEl = modal.querySelector('img');
-      let touchStartX = 0;
-      imgEl.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
-      imgEl.addEventListener('touchend', e => {
-        let diff = e.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(diff) > 50) {
-          if (diff > 0 && currentIndex > 0) {
-            currentIndex--;
-            updateContent();
-          } else if (diff < 0 && currentIndex < images.length - 1) {
-            currentIndex++;
-            updateContent();
-          }
-        }
-      });
-    }
+    const counter = document.createElement('div');
+    counter.className = 'fullscreen-counter';
+    counter.textContent = (currentIndex + 1) + ' / ' + screenshots.length;
+    modal.appendChild(counter);
 
-    updateContent();
-    modal.onclick = (e) => {
-      if (e.target === modal) modal.remove();
-    };
+    const closeBtn = document.createElement('div');
+    closeBtn.className = 'fullscreen-close';
+    closeBtn.innerHTML = icon('close', 20);
+    modal.appendChild(closeBtn);
+
+    const img = document.createElement('img');
+    img.src = screenshots[currentIndex];
+    modal.appendChild(img);
+
     document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    closeBtn.onclick = closeModal;
+    modal.onclick = e => { if (e.target === modal) closeModal(); };
+
+    let touchStartX = 0;
+    modal.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+    modal.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(diff) > 50){
+        if (diff > 0 && currentIndex > 0) currentIndex--;
+        else if (diff < 0 && currentIndex < screenshots.length - 1) currentIndex++;
+        img.style.opacity = '0';
+        setTimeout(() => {
+          img.src = screenshots[currentIndex];
+          counter.textContent = (currentIndex + 1) + ' / ' + screenshots.length;
+          img.style.opacity = '1';
+        }, 150);
+      }
+    }, {passive:true});
+  }
+
+  function openCategoryModal(catToEdit){
+    const isEdit = !!catToEdit;
+    let selectedIcon = isEdit ? catToEdit.icon : 'heart';
+    let selectedColor = isEdit ? catToEdit.color : '#ff2b3d';
+    let catName = isEdit ? catToEdit.l : '';
+    let catSub = isEdit ? (catToEdit.sub || '') : '';
+
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+
+    const renderModalContent = () => {
+      div.innerHTML = '<div class="modal">'
+        + '<div class="modal-title">'+(isEdit?'Редактировать категорию':'Новая категория')+'</div>'
+        + '<div style="margin:12px 0 16px;">'
+          + '<div class="field" style="margin-bottom:12px;"><label>Название</label><input id="modalCatName" value="'+escapeHtml(catName)+'" placeholder="Например: Любимые анимации"></div>'
+          + '<div class="field" style="margin-bottom:12px;"><label>Подпись</label><input id="modalCatSub" value="'+escapeHtml(catSub)+'" placeholder="Например: Шедеврыаниме"></div>'
+          + '<div class="field" style="margin-bottom:12px;"><label>Иконка</label><div class="cat-icon-grid">'
+            + CAT_ICON_OPTIONS.map(ic => '<button type="button" class="cat-icon-opt '+(selectedIcon===ic?'active':'')+'" data-select-icon="'+ic+'">'+icon(ic,20)+'</button>').join('')
+          + '</div></div>'
+          + '<div class="field" style="margin-bottom:16px;"><label>Цвет</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">'
+            + CAT_COLOR_PALETTE.map(col => '<button type="button" style="width:32px;height:32px;border-radius:50%;background:'+col+';border:'+(selectedColor===col?'2px solid #fff':'none')+';" data-select-color="'+col+'"></button>').join('')
+          + '</div></div>'
+        + '</div>'
+        + '<div class="modal-actions">'
+          + (isEdit ? '<button class="danger-btn" id="modalDeleteCat">Удалить</button>' : '')
+          + '<button class="secondary-btn glass-flat" id="modalCancelCat">Отмена</button>'
+          + '<button class="primary-btn" id="modalSaveCat" style="margin-top:0;">Сохранить</button>'
+        + '</div>'
+      + '</div>';
+
+      div.querySelectorAll('[data-select-icon]').forEach(b => {
+        b.onclick = () => { selectedIcon = b.getAttribute('data-select-icon'); renderModalContent(); };
+      });
+      div.querySelectorAll('[data-select-color]').forEach(b => {
+        b.onclick = () => { selectedColor = b.getAttribute('data-select-color'); renderModalContent(); };
+      });
+      div.querySelector('#modalCancelCat').onclick = () => div.remove();
+      if (isEdit && div.querySelector('#modalDeleteCat')){
+        div.querySelector('#modalDeleteCat').onclick = () => {
+          showConfirmModal('Удалить категорию?', 'Все фильмы из этой категории переместятся в «Избранное».', async () => {
+            state.movies.forEach(m => { if (m.status === catToEdit.v) m.status = 'favorite'; });
+            for (const m of state.movies){ await updateMovie(m); }
+            state.categories = state.categories.filter(c => c.v !== catToEdit.v);
+            await STORAGE.saveCategories(state.categories);
+            div.remove();
+            state.view = 'home';
+            render();
+          });
+        };
+      }
+      div.querySelector('#modalSaveCat').onclick = async () => {
+        const nameInput = div.querySelector('#modalCatName').value.trim();
+        const subInput = div.querySelector('#modalCatSub').value.trim();
+        if (!nameInput){ customAlert('Введи название категории.'); return; }
+        
+        if (isEdit){
+          catToEdit.l = nameInput;
+          catToEdit.sub = subInput;
+          catToEdit.icon = selectedIcon;
+          catToEdit.color = selectedColor;
+        } else {
+          const newV = 'cat_' + Date.now();
+          state.categories.push({ v: newV, l: nameInput, icon: selectedIcon, color: selectedColor, sub: subInput });
+        }
+        await STORAGE.saveCategories(state.categories);
+        div.remove();
+        render();
+      };
+    };
+
+    renderModalContent();
+    document.body.appendChild(div);
+  }
+
+  function showConfirmModal(title, msg, onConfirm){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal" style="padding:24px;">'
+      + '<div class="modal-title" style="text-align:center;">'+escapeHtml(title)+'</div>'
+      + '<div class="modal-msg" style="text-align:center;">'+escapeHtml(msg)+'</div>'
+      + '<div class="modal-actions" style="margin-top:16px;">'
+        + '<button class="secondary-btn glass-flat" id="confCancel">Отмена</button>'
+        + '<button class="primary-btn" id="confOk" style="margin-top:0;background:linear-gradient(135deg,#ff5a6a,#ff2b3d);">Удалить</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.querySelector('#confCancel').onclick = () => div.remove();
+    div.querySelector('#confOk').onclick = () => { div.remove(); onConfirm(); };
   }
 
   loadTelegramSdkThenStart();
