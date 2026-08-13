@@ -1552,6 +1552,11 @@
     document.querySelectorAll('[data-nav]').forEach(btn => {
       btn.onclick = () => {
         const v = btn.getAttribute('data-nav');
+        if (state.view === v) {
+          state.scrollPositions[v] = 0;
+          document.getElementById('app').scrollTop = 0;
+          return;
+        }
         state.scrollPositions[state.view] = 0;
         state.view = v;
         if (v === 'search'){
@@ -1650,13 +1655,11 @@
         e.stopPropagation();
         const tmdbId = btn.getAttribute('data-quick-fav');
         const mediaType = btn.getAttribute('data-quick-type');
-        const existing = state.movies.find(x => x.tmdbId == tmdbId);
-        if (existing){
+        const existing = state.movies.find(x => x.tmdbId === Number(tmdbId) || x.tmdbId === tmdbId);
+        if (existing) {
           deleteMovie(existing.id).then(() => {
-            loadMovies().then(arr => {
-              state.movies = arr;
-              render();
-            });
+            state.movies = state.movies.filter(x => x.id !== existing.id);
+            render();
           });
         } else {
           openChooseForTmdb(tmdbId, mediaType);
@@ -1664,29 +1667,42 @@
       };
     });
 
+    document.querySelectorAll('[data-discover-cat]').forEach(el => {
+      el.onclick = () => {
+        openDiscoverList(el.getAttribute('data-discover-cat'));
+      };
+    });
+
+    document.querySelectorAll('[data-discover-pick]').forEach(el => {
+      el.onclick = e => {
+        if (e.target.closest('[data-quick-fav]')) return;
+        previewTmdb(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+      };
+    });
+
     document.querySelectorAll('[data-choose-cat]').forEach(btn => {
       btn.onclick = async () => {
-        const catV = btn.getAttribute('data-choose-cat');
+        const cat = btn.getAttribute('data-choose-cat');
         const m = state.pendingMovie;
         if (!m) return;
         m.id = 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        m.status = catV;
+        m.status = cat;
         m.addedAt = Date.now();
         const ok = await addMovie(m);
         if (ok){
-          state.movies = await loadMovies();
+          state.movies.push(m);
+          state.pendingMovie = null;
           state.detailId = m.id;
           state.previewItem = null;
-          state.pendingMovie = null;
           state.view = 'detail';
           render();
         }
       };
     });
 
-    const saveFromDetail = document.getElementById('saveFromDetail');
-    if (saveFromDetail){
-      saveFromDetail.onclick = async () => {
+    const saveBtn = document.getElementById('saveFromDetail');
+    if (saveBtn){
+      saveBtn.onclick = () => {
         const m = state.previewItem;
         if (!m) return;
         state.pendingMovie = m;
@@ -1695,23 +1711,23 @@
       };
     }
 
-    const deleteFromDetail = document.getElementById('deleteFromDetail');
-    if (deleteFromDetail){
-      deleteFromDetail.onclick = async () => {
+    const delBtn = document.getElementById('deleteFromDetail');
+    if (delBtn){
+      delBtn.onclick = async () => {
         const m = state.movies.find(x => x.id === state.detailId);
         if (!m) return;
-        showConfirmModal('Удалить фильм?', 'Фильм будет удален из твоей коллекции.', async () => {
-          await deleteMovie(m.id);
-          state.movies = await loadMovies();
-          state.view = 'home';
+        const ok = await deleteMovie(m.id);
+        if (ok){
+          state.movies = state.movies.filter(x => x.id !== m.id);
+          state.view = previousView || 'home';
           render();
-        });
+        }
       };
     }
 
-    const detailCatSelect = document.getElementById('detailCatSelect');
-    if (detailCatSelect){
-      detailCatSelect.onchange = e => {
+    const catSelect = document.getElementById('detailCatSelect');
+    if (catSelect){
+      catSelect.onchange = e => {
         const newCat = e.target.value;
         const m = state.movies.find(x => x.id === state.detailId);
         if (!m) return;
@@ -1720,68 +1736,73 @@
       };
     }
 
-    document.querySelectorAll('[data-rate]').forEach(btn => {
+    document.querySelectorAll('.rate-star-btn[data-rate]').forEach(btn => {
       btn.onclick = () => {
         const r = parseInt(btn.getAttribute('data-rate'), 10);
         const m = state.movies.find(x => x.id === state.detailId);
         if (!m) return;
         m.myRating = (m.myRating === r) ? null : r;
-        saveMovieDebounced(m);
         render();
+        saveMovieDebounced(m);
       };
     });
 
-    const toggleOverviewBtn = document.getElementById('toggleOverviewBtn');
-    if (toggleOverviewBtn){
-      toggleOverviewBtn.onclick = () => {
+    const toggleBtn = document.getElementById('toggleOverviewBtn');
+    if (toggleBtn){
+      toggleBtn.onclick = () => {
         isOverviewExpanded = !isOverviewExpanded;
-        const overviewEl = toggleOverviewBtn.parentElement;
-        const m = state.movies.find(x=>x.id===state.detailId) || state.previewItem;
-        if (!m || !m.description) return;
-        const words = m.description.trim().split(/\s+/);
-        const textInner = overviewEl.querySelector('.overview-text-inner');
-        if (textInner){
-          if (isOverviewExpanded){
-            textInner.textContent = m.description;
-            toggleOverviewBtn.textContent = 'свернуть';
-          } else {
-            textInner.textContent = words.slice(0, 25).join(' ') + '...';
-            toggleOverviewBtn.textContent = 'еще';
-          }
-        }
+        render();
       };
     }
 
-    document.querySelectorAll('.movie-screenshot-item').forEach(item => {
-      item.onclick = () => {
-        const idx = parseInt(item.getAttribute('data-fullscreen-index'), 10);
-        const m = state.movies.find(x=>x.id===state.detailId) || state.previewItem;
-        if (m && m.screenshots && m.screenshots[idx]) {
-          openFullscreenModal(m.screenshots, idx);
-        }
-      };
-    });
-
-    document.querySelectorAll('[data-discover-cat]').forEach(el => {
+    document.querySelectorAll('.movie-screenshot-item[data-fullscreen-index]').forEach(el => {
       el.onclick = () => {
-        const key = el.getAttribute('data-discover-cat');
-        openDiscoverList(key);
+        const idx = parseInt(el.getAttribute('data-fullscreen-index'), 10);
+        const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+        if (!m || !m.screenshots || !m.screenshots.length) return;
+        
+        let curIdx = idx;
+        const modal = document.createElement('div');
+        modal.className = 'fullscreen-modal';
+        
+        const updateModalContent = () => {
+          modal.innerHTML = `
+            <div class="fullscreen-counter">${curIdx + 1} / ${m.screenshots.length}</div>
+            <button class="fullscreen-close">${icon('close', 20)}</button>
+            <img src="${escapeHtml(m.screenshots[curIdx])}" alt="">
+          `;
+          modal.querySelector('.fullscreen-close').onclick = () => modal.remove();
+          modal.onclick = (ev) => {
+            if (ev.target === modal) modal.remove();
+          };
+        };
+        
+        updateModalContent();
+        document.body.appendChild(modal);
+
+        let touchStartX = 0;
+        modal.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+        }, {passive: true});
+
+        modal.addEventListener('touchend', (e) => {
+          const diff = e.changedTouches[0].clientX - touchStartX;
+          if (Math.abs(diff) > 50) {
+            if (diff > 0) {
+              curIdx = (curIdx - 1 + m.screenshots.length) % m.screenshots.length;
+            } else {
+              curIdx = (curIdx + 1) % m.screenshots.length;
+            }
+            updateModalContent();
+          }
+        }, {passive: true});
       };
     });
 
-    document.querySelectorAll('[data-discover-pick]').forEach(el => {
-      el.onclick = e => {
-        if (e.target.closest('[data-quick-fav]')) return;
-        const tmdbId = el.getAttribute('data-discover-pick');
-        const mediaType = el.getAttribute('data-discover-type');
-        previewTmdb(tmdbId, mediaType);
-      };
-    });
-
-    const addCategoryBtn = document.getElementById('addCategoryBtn');
-    if (addCategoryBtn){
-      addCategoryBtn.onclick = () => {
-        openCategoryModal(null);
+    const addCatBtn = document.getElementById('addCategoryBtn');
+    if (addCatBtn){
+      addCatBtn.onclick = () => {
+        openCategoryEditor(null);
       };
     }
 
@@ -1789,141 +1810,118 @@
     if (editCatBtn){
       editCatBtn.onclick = () => {
         const cat = state.categories.find(c => c.v === state.categoryFilter);
-        if (cat) openCategoryModal(cat);
+        if (cat) openCategoryEditor(cat);
       };
     }
   }
 
-  function openFullscreenModal(screenshots, startIndex){
-    let currentIndex = startIndex;
-    const modal = document.createElement('div');
-    modal.className = 'fullscreen-modal';
-    
-    const counter = document.createElement('div');
-    counter.className = 'fullscreen-counter';
-    counter.textContent = (currentIndex + 1) + ' / ' + screenshots.length;
-    modal.appendChild(counter);
-
-    const closeBtn = document.createElement('div');
-    closeBtn.className = 'fullscreen-close';
-    closeBtn.innerHTML = icon('close', 20);
-    modal.appendChild(closeBtn);
-
-    const img = document.createElement('img');
-    img.src = screenshots[currentIndex];
-    modal.appendChild(img);
-
-    document.body.appendChild(modal);
-
-    const closeModal = () => modal.remove();
-    closeBtn.onclick = closeModal;
-    modal.onclick = e => { if (e.target === modal) closeModal(); };
-
-    let touchStartX = 0;
-    modal.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
-    modal.addEventListener('touchend', e => {
-      const diff = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(diff) > 50){
-        if (diff > 0 && currentIndex > 0) currentIndex--;
-        else if (diff < 0 && currentIndex < screenshots.length - 1) currentIndex++;
-        img.style.opacity = '0';
-        setTimeout(() => {
-          img.src = screenshots[currentIndex];
-          counter.textContent = (currentIndex + 1) + ' / ' + screenshots.length;
-          img.style.opacity = '1';
-        }, 150);
-      }
-    }, {passive:true});
-  }
-
-  function openCategoryModal(catToEdit){
+  function openCategoryEditor(catToEdit){
     const isEdit = !!catToEdit;
-    let selectedIcon = isEdit ? catToEdit.icon : 'heart';
-    let selectedColor = isEdit ? catToEdit.color : '#ff2b3d';
+    let selectedIcon = isEdit ? catToEdit.icon : CAT_ICON_OPTIONS[0];
+    let selectedColor = isEdit ? catToEdit.color : CAT_COLOR_PALETTE[0];
     let catName = isEdit ? catToEdit.l : '';
     let catSub = isEdit ? (catToEdit.sub || '') : '';
 
     const div = document.createElement('div');
     div.className = 'modal-overlay';
+    
+    const renderModalInner = () => {
+      div.innerHTML = `
+        <div class="modal">
+          <div class="modal-title">${isEdit ? 'Редактировать категорию' : 'Новая категория'}</div>
+          <div style="margin-top:12px;" class="field">
+            <label>Название</label>
+            <input id="modalCatName" value="${escapeHtml(catName)}" placeholder="Например: Любимое аниме">
+          </div>
+          <div style="margin-top:10px;" class="field">
+            <label>Подзаголовок</label>
+            <input id="modalCatSub" value="${escapeHtml(catSub)}" placeholder="Например: Топовые тайтлы">
+          </div>
+          <div style="margin-top:12px;" class="field">
+            <label>Цвет</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+              ${CAT_COLOR_PALETTE.map(c => `
+                <button type="button" class="cat-color-opt" data-color="${c}" style="width:32px;height:32px;border-radius:50%;background:${c};border:${selectedColor===c?'2px solid #fff':'none'};cursor:pointer;"></button>
+              `).join('')}
+            </div>
+          </div>
+          <div style="margin-top:12px;" class="field">
+            <label>Иконка</label>
+            <div class="cat-icon-grid">
+              ${CAT_ICON_OPTIONS.map(iName => `
+                <button type="button" class="cat-icon-opt ${selectedIcon===iName?'active':''}" data-icon-opt="${iName}">
+                  ${icon(iName, 20)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="modal-actions" style="margin-top:16px;display:flex;gap:8px;">
+            <button type="button" class="secondary-btn glass-flat" id="modalCatCancel">Отмена</button>
+            <button type="button" class="primary-btn" id="modalCatSave" style="margin-top:0;">Сохранить</button>
+          </div>
+          ${isEdit ? '<button type="button" class="danger-btn" id="modalCatDelete" style="margin-top:10px;width:100%;">Удалить категорию</button>' : ''}
+        </div>
+      `;
 
-    const renderModalContent = () => {
-      div.innerHTML = '<div class="modal">'
-        + '<div class="modal-title">'+(isEdit?'Редактировать категорию':'Новая категория')+'</div>'
-        + '<div style="margin:12px 0 16px;">'
-          + '<div class="field" style="margin-bottom:12px;"><label>Название</label><input id="modalCatName" value="'+escapeHtml(catName)+'" placeholder="Например: Любимые анимации"></div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Подпись</label><input id="modalCatSub" value="'+escapeHtml(catSub)+'" placeholder="Например: Шедеврыаниме"></div>'
-          + '<div class="field" style="margin-bottom:12px;"><label>Иконка</label><div class="cat-icon-grid">'
-            + CAT_ICON_OPTIONS.map(ic => '<button type="button" class="cat-icon-opt '+(selectedIcon===ic?'active':'')+'" data-select-icon="'+ic+'">'+icon(ic,20)+'</button>').join('')
-          + '</div></div>'
-          + '<div class="field" style="margin-bottom:16px;"><label>Цвет</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">'
-            + CAT_COLOR_PALETTE.map(col => '<button type="button" style="width:32px;height:32px;border-radius:50%;background:'+col+';border:'+(selectedColor===col?'2px solid #fff':'none')+';" data-select-color="'+col+'"></button>').join('')
-          + '</div></div>'
-        + '</div>'
-        + '<div class="modal-actions">'
-          + (isEdit ? '<button class="danger-btn" id="modalDeleteCat">Удалить</button>' : '')
-          + '<button class="secondary-btn glass-flat" id="modalCancelCat">Отмена</button>'
-          + '<button class="primary-btn" id="modalSaveCat" style="margin-top:0;">Сохранить</button>'
-        + '</div>'
-      + '</div>';
-
-      div.querySelectorAll('[data-select-icon]').forEach(b => {
-        b.onclick = () => { selectedIcon = b.getAttribute('data-select-icon'); renderModalContent(); };
-      });
-      div.querySelectorAll('[data-select-color]').forEach(b => {
-        b.onclick = () => { selectedColor = b.getAttribute('data-select-color'); renderModalContent(); };
-      });
-      div.querySelector('#modalCancelCat').onclick = () => div.remove();
-      if (isEdit && div.querySelector('#modalDeleteCat')){
-        div.querySelector('#modalDeleteCat').onclick = () => {
-          showConfirmModal('Удалить категорию?', 'Все фильмы из этой категории переместятся в «Избранное».', async () => {
-            state.movies.forEach(m => { if (m.status === catToEdit.v) m.status = 'favorite'; });
-            for (const m of state.movies){ await updateMovie(m); }
-            state.categories = state.categories.filter(c => c.v !== catToEdit.v);
-            await STORAGE.saveCategories(state.categories);
-            div.remove();
-            state.view = 'home';
-            render();
-          });
+      div.querySelectorAll('[data-color]').forEach(btn => {
+        btn.onclick = () => {
+          selectedColor = btn.getAttribute('data-color');
+          renderModalInner();
         };
-      }
-      div.querySelector('#modalSaveCat').onclick = async () => {
-        const nameInput = div.querySelector('#modalCatName').value.trim();
-        const subInput = div.querySelector('#modalCatSub').value.trim();
-        if (!nameInput){ customAlert('Введи название категории.'); return; }
+      });
+
+      div.querySelectorAll('[data-icon-opt]').forEach(btn => {
+        btn.onclick = () => {
+          selectedIcon = btn.getAttribute('data-icon-opt');
+          renderModalInner();
+        };
+      });
+
+      div.querySelector('#modalCatCancel').onclick = () => div.remove();
+      
+      div.querySelector('#modalCatSave').onclick = async () => {
+        const nameInput = div.querySelector('#modalCatName');
+        const subInput = div.querySelector('#modalCatSub');
+        const newName = nameInput.value.trim();
+        if (!newName) { customAlert('Введи название категории.'); return; }
         
         if (isEdit){
-          catToEdit.l = nameInput;
-          catToEdit.sub = subInput;
+          catToEdit.l = newName;
+          catToEdit.sub = subInput.value.trim();
           catToEdit.icon = selectedIcon;
           catToEdit.color = selectedColor;
         } else {
           const newV = 'cat_' + Date.now();
-          state.categories.push({ v: newV, l: nameInput, icon: selectedIcon, color: selectedColor, sub: subInput });
+          state.categories.push({
+            v: newV,
+            l: newName,
+            sub: subInput.value.trim(),
+            icon: selectedIcon,
+            color: selectedColor
+          });
         }
         await STORAGE.saveCategories(state.categories);
         div.remove();
         render();
       };
+
+      if (isEdit) {
+        div.querySelector('#modalCatDelete').onclick = async () => {
+          if (state.categories.length <= 1) {
+            customAlert('Нельзя удалить последнюю категорию.');
+            return;
+          }
+          state.categories = state.categories.filter(c => c.v !== catToEdit.v);
+          await STORAGE.saveCategories(state.categories);
+          state.view = 'home';
+          div.remove();
+          render();
+        };
+      }
     };
 
-    renderModalContent();
+    renderModalInner();
     document.body.appendChild(div);
-  }
-
-  function showConfirmModal(title, msg, onConfirm){
-    const div = document.createElement('div');
-    div.className = 'modal-overlay';
-    div.innerHTML = '<div class="modal" style="padding:24px;">'
-      + '<div class="modal-title" style="text-align:center;">'+escapeHtml(title)+'</div>'
-      + '<div class="modal-msg" style="text-align:center;">'+escapeHtml(msg)+'</div>'
-      + '<div class="modal-actions" style="margin-top:16px;">'
-        + '<button class="secondary-btn glass-flat" id="confCancel">Отмена</button>'
-        + '<button class="primary-btn" id="confOk" style="margin-top:0;background:linear-gradient(135deg,#ff5a6a,#ff2b3d);">Удалить</button>'
-      + '</div>'
-      + '</div>';
-    document.body.appendChild(div);
-    div.querySelector('#confCancel').onclick = () => div.remove();
-    div.querySelector('#confOk').onclick = () => { div.remove(); onConfirm(); };
   }
 
   loadTelegramSdkThenStart();
