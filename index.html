@@ -185,9 +185,12 @@
     box-shadow: 0 6px 16px var(--accent-glow);
   }
 
-  .section{padding:16px 0 4px;}
-  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;padding:0 16px;cursor:pointer;transition:opacity .12s ease;}
+  .section{padding:16px 0 4px;transition:transform .22s var(--ease);}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;padding:0 16px;cursor:pointer;transition:opacity .12s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
   .section-head:active{opacity:.6;}
+  .section.cat-dragging{position:relative;z-index:50;transition:none;opacity:.96;box-shadow:0 18px 38px rgba(0,0,0,.5);border-radius:var(--radius);background:rgba(255,255,255,.035);}
+  .section.cat-dragging .section-head{cursor:grabbing;opacity:1;}
+  #app.cat-reorder-active{overflow:hidden;touch-action:none;-webkit-overflow-scrolling:auto;}
   .section-title{display:flex;align-items:center;gap:9px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.9px;}
   .section-title .ic{width:19px;height:19px;display:flex;}
   .section-title .ic svg{width:19px;height:19px;}
@@ -1346,7 +1349,7 @@
     let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>';
     state.categories.forEach(s => {
       const list = getSortedMoviesByStatus(s.v);
-      html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+(s.shared ? ' <span style="opacity:.55;display:inline-flex;vertical-align:middle;margin-left:2px;">'+icon('users',13)+'</span>' : '')+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
+      html += '<div class="section" data-cat-section="'+s.v+'"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+(s.shared ? ' <span style="opacity:.55;display:inline-flex;vertical-align:middle;margin-left:2px;">'+icon('users',13)+'</span>' : '')+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
       html += list.length ? '<div class="row-scroll">'+list.map(card).join('')+'</div>' : '<div class="empty glass-flat">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
       html += '</div>';
     });
@@ -1822,6 +1825,135 @@
   function hapticErr(){
     try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error'); }catch(e){}
   }
+  function hapticSelect(){
+    try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); }catch(e){}
+  }
+  let catDragSuppressClick = false;
+
+  // Долгое нажатие на заголовок категории на главном экране запускает перетаскивание —
+  // вся секция (заголовок + ряд фильмов) следует за пальцем по вертикали, а соседние
+  // секции плавно расступаются, показывая, куда она встанет. Порядок сохраняется
+  // в state.categories при отпускании.
+  function initCategoryDragReorder(){
+    const app = document.getElementById('app');
+    if (!app) return;
+    document.querySelectorAll('.section-head[data-cat]').forEach(headEl => {
+      let pressTimer = null;
+      let longPressActive = false;
+      let startY = 0;
+      let dragCtx = null;
+
+      const cancelPress = () => { if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+
+      const beginDrag = (clientY) => {
+        const sectionEl = headEl.closest('.section[data-cat-section]');
+        if (!sectionEl) return;
+        const sections = Array.from(app.querySelectorAll('.section[data-cat-section]'));
+        const draggedIndex = sections.indexOf(sectionEl);
+        if (draggedIndex === -1) return;
+
+        longPressActive = true;
+        catDragSuppressClick = true;
+        hapticSelect();
+
+        const rects = sections.map(el => ({ el, top: el.offsetTop, height: el.offsetHeight }));
+        sectionEl.classList.add('cat-dragging');
+        app.classList.add('cat-reorder-active');
+
+        dragCtx = { sectionEl, rects, draggedIndex, targetIndex: draggedIndex, startClientY: clientY, draggedInfo: rects[draggedIndex] };
+      };
+
+      const onMove = (clientY) => {
+        if (!longPressActive){
+          if (pressTimer && Math.abs(clientY - startY) > 8) cancelPress();
+          return;
+        }
+        if (!dragCtx) return;
+        const dy = clientY - dragCtx.startClientY;
+        dragCtx.sectionEl.style.transform = 'translateY(' + dy + 'px)';
+
+        const draggedCenter = dragCtx.draggedInfo.top + dragCtx.draggedInfo.height / 2 + dy;
+        let newTarget = dragCtx.draggedIndex;
+
+        dragCtx.rects.forEach((r, i) => {
+          if (i === dragCtx.draggedIndex) return;
+          const siblingCenter = r.top + r.height / 2;
+          if (i < dragCtx.draggedIndex){
+            if (draggedCenter < siblingCenter){
+              r.el.style.transform = 'translateY(' + dragCtx.draggedInfo.height + 'px)';
+              newTarget = Math.min(newTarget, i);
+            } else {
+              r.el.style.transform = '';
+            }
+          } else if (i > dragCtx.draggedIndex){
+            if (draggedCenter > siblingCenter){
+              r.el.style.transform = 'translateY(-' + dragCtx.draggedInfo.height + 'px)';
+              newTarget = Math.max(newTarget, i);
+            } else {
+              r.el.style.transform = '';
+            }
+          }
+        });
+
+        dragCtx.targetIndex = newTarget;
+      };
+
+      const endDrag = () => {
+        cancelPress();
+        if (!longPressActive) return;
+        longPressActive = false;
+        const ctx = dragCtx;
+        dragCtx = null;
+        app.classList.remove('cat-reorder-active');
+        if (!ctx) return;
+
+        ctx.rects.forEach(r => { r.el.style.transform = ''; });
+        ctx.sectionEl.classList.remove('cat-dragging');
+
+        if (ctx.targetIndex !== ctx.draggedIndex){
+          const moved = state.categories.splice(ctx.draggedIndex, 1)[0];
+          state.categories.splice(ctx.targetIndex, 0, moved);
+          STORAGE.saveCategories(state.categories);
+          hapticOk();
+        }
+        render();
+        setTimeout(() => { catDragSuppressClick = false; }, 50);
+      };
+
+      headEl.addEventListener('contextmenu', e => e.preventDefault());
+
+      headEl.addEventListener('touchstart', e => {
+        e.stopPropagation();
+        const t = e.touches[0];
+        startY = t.clientY;
+        cancelPress();
+        pressTimer = setTimeout(() => beginDrag(t.clientY), 350);
+      }, {passive:true});
+
+      headEl.addEventListener('touchmove', e => {
+        const t = e.touches[0];
+        if (longPressActive) e.preventDefault();
+        onMove(t.clientY);
+      }, {passive:false});
+
+      headEl.addEventListener('touchend', endDrag);
+      headEl.addEventListener('touchcancel', endDrag);
+
+      headEl.addEventListener('mousedown', e => {
+        startY = e.clientY;
+        cancelPress();
+        pressTimer = setTimeout(() => beginDrag(e.clientY), 350);
+        const onMouseMove = ev => onMove(ev.clientY);
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          endDrag();
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    });
+  }
 
   async function exportLibrary(){
     if (!state.movies.length){
@@ -2143,6 +2275,7 @@
 
     document.querySelectorAll('.section-head[data-cat]').forEach(el => {
       el.onclick = () => {
+        if (catDragSuppressClick) return;
         state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
         pushNav();
         const catV = el.getAttribute('data-cat');
@@ -2158,6 +2291,7 @@
         }
       };
     });
+    initCategoryDragReorder();
 
     document.querySelectorAll('[data-open]').forEach(el => {
       el.onclick = () => openMovie(el.getAttribute('data-open'));
