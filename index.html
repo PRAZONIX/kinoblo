@@ -10,31 +10,46 @@
 <style>
   :root{
     --bg:#07070a;
-    --ink:#f5f5f6;
-    --ink-dim:#a4a4ac;
-    --ink-faint:#6c6c74;
+    --bg-soft:#0d0d11;
+    --ink:#f6f6f8;
+    --ink-dim:#9b9ba6;
+    --ink-faint:#5c5c66;
     --accent:#ff2b3d;
-    --accent-2:#ff5a6a;
-    --accent-glow:rgba(255,43,61,.42);
-    --glass:rgba(255,255,255,.055);
-    --glass-strong:rgba(255,255,255,.10);
-    --glass-border:rgba(255,255,255,.13);
-    --glass-border-soft:rgba(255,255,255,.07);
-    --radius:20px; --radius-sm:14px; --radius-pill:999px;
+    --accent-2:#ff5d6c;
+    --accent-deep:#c8101f;
+    --accent-glow:rgba(255,43,61,.38);
+    --gold:#f0c419;
+    --gold-glow:rgba(240,196,25,.32);
+    --glass:rgba(255,255,255,.05);
+    --glass-strong:rgba(255,255,255,.095);
+    --glass-border:rgba(255,255,255,.12);
+    --glass-border-soft:rgba(255,255,255,.065);
+    --radius:20px; --radius-sm:14px; --radius-lg:26px; --radius-pill:999px;
+    --ease:cubic-bezier(.22,.9,.32,1);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;width:100%;overflow:hidden;}
   body{
     background:
-      radial-gradient(52% 38% at 12% 6%, rgba(255,43,61,.16), transparent 60%),
-      radial-gradient(46% 34% at 92% 14%, rgba(120,90,255,.12), transparent 60%),
-      radial-gradient(60% 42% at 50% 100%, rgba(255,180,60,.07), transparent 60%),
+      radial-gradient(120% 46% at 50% -8%, rgba(255,43,61,.15), transparent 62%),
+      radial-gradient(80% 40% at 100% 100%, rgba(255,43,61,.05), transparent 60%),
       var(--bg);
     background-attachment:fixed;
     color:var(--ink);
     font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
     overscroll-behavior-y:none;
+    position:relative;
+  }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    z-index:600;
+    pointer-events:none;
+    opacity:.035;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   svg{display:block;flex-shrink:0;}
   #app{
@@ -44,42 +59,44 @@
     height:100vh;
     height:100dvh;
     overflow-y:auto;
-    padding-bottom:160px;
+    padding-bottom:168px;
     position:relative;
     -webkit-overflow-scrolling:touch;
   }
   ::-webkit-scrollbar{display:none;}
   a{color:inherit;text-decoration:none;}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;-webkit-tap-highlight-color:transparent;}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;}
   input,textarea,select{
     font-family:'Inter',inherit;color:var(--ink);
     background:var(--glass);
     backdrop-filter:blur(18px) saturate(140%);
     -webkit-backdrop-filter:blur(18px) saturate(140%);
     border:1px solid var(--glass-border-soft);
-    border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;width:100%;outline:none;
-    transition:border-color .15s ease, background .15s ease;
+    border-radius:var(--radius-sm);padding:13px 15px;font-size:14.5px;width:100%;outline:none;
+    transition:border-color .15s var(--ease), background .15s var(--ease);
     box-sizing:border-box;
   }
-  input:focus,textarea:focus{border-color:rgba(255,43,61,.55);background:var(--glass-strong);}
+  input:focus,textarea:focus{border-color:rgba(255,93,108,.55);background:var(--glass-strong);}
   textarea{resize:vertical;min-height:80px;}
   ::placeholder{color:var(--ink-faint);}
 
   .display{font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.03em;font-weight:400;}
-  .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-faint);}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--ink-faint);}
 
   .glass{
-    background:linear-gradient(155deg, rgba(255,255,255,.09), rgba(255,255,255,.02));
+    background:linear-gradient(155deg, rgba(255,255,255,.085), rgba(255,255,255,.018));
     backdrop-filter:blur(22px) saturate(150%);
     -webkit-backdrop-filter:blur(22px) saturate(150%);
     border:1px solid var(--glass-border);
-    box-shadow:0 12px 34px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.09);
+    box-shadow:0 14px 36px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.08);
   }
   .glass-flat{
     background:var(--glass);
     backdrop-filter:blur(18px) saturate(140%);
     -webkit-backdrop-filter:blur(18px) saturate(140%);
     border:1px solid var(--glass-border-soft);
+    transition:background .15s var(--ease), border-color .15s var(--ease);
   }
 
   /* Стили для анимированной капли-стрелочки */
@@ -107,74 +124,85 @@
     color: #fff;
   }
 
-  .topbar{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px 16px;text-align:center;}
-  .netflix-brand{display:flex;flex-direction:column;align-items:center;gap:6px;}
-  .netflix-logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px, 10vw, 46px);letter-spacing:4px;color:var(--ink);text-shadow:0 0 30px var(--accent-glow), 0 4px 12px rgba(0,0,0,0.8);line-height:1;}
+  .topbar{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px 18px;text-align:center;}
+  .netflix-brand{display:flex;flex-direction:column;align-items:center;gap:7px;}
+  .netflix-logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px, 11vw, 50px);letter-spacing:5px;color:var(--ink);text-shadow:0 0 34px var(--accent-glow), 0 4px 14px rgba(0,0,0,.85);line-height:1;}
   .netflix-logo span{color:var(--accent);}
   
-  .netflix-subtitle-row{display:flex;align-items:center;gap:8px;margin-top:2px;}
-  .netflix-prz{font-size:12px;color:var(--ink-dim);font-weight:700;letter-spacing:2.5px;text-transform:uppercase;}
+  .netflix-subtitle-row{display:flex;align-items:center;gap:8px;margin-top:1px;}
+  .netflix-prz{font-size:11.5px;color:var(--ink-dim);font-weight:700;letter-spacing:3px;text-transform:uppercase;}
   
   .cross-smile-icon {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.55));
+  }
+
+  /* Перфорация киноплёнки — фирменный разделитель под шапкой */
+  .topbar::after{
+    content:'';
+    display:block;
+    width:min(220px, 60%);
+    height:1px;
+    margin:18px auto 0;
+    background:repeating-linear-gradient(90deg, rgba(255,255,255,.22) 0 5px, transparent 5px 13px);
+    opacity:.55;
   }
 
   .genres-scroll-bar {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    padding: 0 16px 14px;
+    padding: 4px 16px 16px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
   }
   .genre-chip {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    padding: 8px 16px;
+    padding: 9px 17px;
     border-radius: var(--radius-pill);
     background: var(--glass);
     border: 1px solid var(--glass-border-soft);
     font-size: 13px;
     font-weight: 600;
     color: var(--ink-dim);
-    transition: all .15s ease;
+    transition: all .15s var(--ease);
     cursor: pointer;
     backdrop-filter: blur(12px);
   }
   .genre-chip:active {
-    transform: scale(0.95);
+    transform: scale(0.94);
   }
   .genre-chip.active {
-    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    background: linear-gradient(135deg, var(--accent-2), var(--accent-deep));
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 4px 14px var(--accent-glow);
+    box-shadow: 0 6px 16px var(--accent-glow);
   }
 
-  .section{padding:12px 0 6px;}
-  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;padding:0 16px;cursor:pointer;transition:opacity .12s ease;}
-  .section-head:active{opacity:.62;}
-  .section-title{display:flex;align-items:center;gap:9px;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.8px;}
+  .section{padding:16px 0 4px;}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;padding:0 16px;cursor:pointer;transition:opacity .12s ease;}
+  .section-head:active{opacity:.6;}
+  .section-title{display:flex;align-items:center;gap:9px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.9px;}
   .section-title .ic{width:19px;height:19px;display:flex;}
   .section-title .ic svg{width:19px;height:19px;}
-  .section-count{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-faint);font-weight:600;letter-spacing:.5px;}
-  .section-count svg{width:12px;height:12px;opacity:.8;}
+  .section-count{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-faint);font-weight:700;letter-spacing:.5px;}
+  .section-count svg{width:12px;height:12px;opacity:.75;}
 
   .movies-grid{
     display:grid;
     grid-template-columns:repeat(3, 1fr);
-    gap:10px;
-    padding:2px 16px 10px;
-    animation:pageIn .32s cubic-bezier(.2,.8,.2,1) both;
+    gap:12px;
+    padding:2px 16px 12px;
+    animation:pageIn .32s var(--ease) both;
   }
   .movies-grid .card{width:100%;flex:none;}
 
-  .row-scroll{display:flex;gap:12px;overflow-x:auto;padding:2px 16px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;animation:rowIn .4s ease both;}
+  .row-scroll{display:flex;gap:13px;overflow-x:auto;padding:2px 16px 12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;animation:rowIn .4s ease both;}
   @keyframes rowIn{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
   
   .card{
@@ -183,12 +211,12 @@
     border-radius:var(--radius-sm);
     overflow:visible;
     position:relative;
-    transition:transform .18s ease;
+    transition:transform .18s var(--ease);
     cursor:pointer;
   }
-  .card:active{transform:scale(.95);}
+  .card:active{transform:scale(.94);}
 
-  .poster-frame{border-radius:var(--radius-sm);overflow:hidden;position:relative;width:100%;}
+  .poster-frame{border-radius:var(--radius-sm);overflow:hidden;position:relative;width:100%;box-shadow:0 8px 22px rgba(0,0,0,.4);}
   .poster-frame.tier-none{padding:0;}
   .poster-frame.tier-poop{padding:3px;background:linear-gradient(135deg,#5b3a1c,#3a220e);box-shadow:0 0 12px rgba(91,58,28,.3);}
   .poster-frame.tier-poop .poster{opacity:0.45;filter:sepia(0.8) brightness(0.7);transition:all .3s ease;}
@@ -217,25 +245,26 @@
   }
   img.poster{display:block;padding:0;}
 
-  .poster-caption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:28px 8px 8px;background:linear-gradient(180deg, rgba(7,7,10,0) 0%, rgba(7,7,10,.48) 42%, rgba(7,7,10,.93) 100%);}
-  .poster-caption .card-title{font-size:12px;font-weight:700;line-height:1.25;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
-  .poster-caption .card-sub{margin-top:3px;font-size:9.5px;font-weight:600;letter-spacing:.3px;color:rgba(255,255,255,.66);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .poster-caption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:30px 9px 9px;background:linear-gradient(180deg, rgba(7,7,10,0) 0%, rgba(7,7,10,.52) 42%, rgba(7,7,10,.95) 100%);}
+  .poster-caption .card-title{font-size:12px;font-weight:700;line-height:1.28;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
+  .poster-caption .card-sub{margin-top:3px;font-size:9.5px;font-weight:600;letter-spacing:.3px;color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-  .rating-pill{position:absolute;top:6px;right:6px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3px 6px;border-radius:var(--radius-pill);background:rgba(9,9,11,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);}
-  .imdb-pill{position:absolute;top:6px;right:6px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3px 6px;border-radius:var(--radius-pill);background:rgba(9,9,11,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:#f5c518;}
-  .type-pill{position:absolute;top:6px;left:6px;z-index:3;font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;padding:3px 6px;border-radius:var(--radius-pill);background:rgba(9,9,11,.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--ink-dim);}
+  .rating-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);}
+  .imdb-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--gold);}
+  .type-pill{position:absolute;top:7px;left:7px;z-index:3;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--ink-dim);}
 
-  .empty{color:var(--ink-faint);font-size:13px;border-radius:var(--radius-sm);padding:20px 16px;text-align:center;line-height:1.5;margin:0 16px;border:1px dashed var(--glass-border-soft);}
+  .empty{color:var(--ink-faint);font-size:13px;border-radius:var(--radius-sm);padding:26px 18px;text-align:center;line-height:1.55;margin:0 16px;border:1px dashed var(--glass-border-soft);}
 
   .nav{position:fixed;left:0;right:0;bottom:16px;display:flex;justify-content:center;z-index:40;pointer-events:none;padding:0 16px;}
-  .nav-inner{pointer-events:auto;display:flex;gap:4px;padding:6px;border-radius:var(--radius-pill);width:100%;max-width:320px;justify-content:space-around;}
-  .nav button{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink-dim);flex:1;max-width:140px;padding:8px 4px;border-radius:var(--radius-pill);transition:color .15s ease, background .15s ease;}
-  .nav button.active{color:var(--ink);background:linear-gradient(135deg,var(--accent),#c8101f);box-shadow:0 6px 18px var(--accent-glow);}
+  .nav-inner{pointer-events:auto;display:flex;gap:4px;padding:7px;border-radius:var(--radius-pill);width:100%;max-width:320px;justify-content:space-around;box-shadow:0 16px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);}
+  .nav button{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-dim);flex:1;max-width:140px;padding:9px 4px;border-radius:var(--radius-pill);transition:color .15s var(--ease), background .15s var(--ease), transform .15s var(--ease);}
+  .nav button:active{transform:scale(.92);}
+  .nav button.active{color:#fff;background:linear-gradient(135deg,var(--accent-2),var(--accent-deep));box-shadow:0 8px 20px var(--accent-glow);}
   .nav svg{width:20px;height:20px;}
   .nav .nlabel{font-size:10px;font-weight:700;letter-spacing:.3px;}
 
-  .search-bar-bottom{position:fixed;left:0;right:0;bottom:84px;display:flex;justify-content:center;z-index:39;pointer-events:none;padding:0 16px;}
-  .search-bar-inner{pointer-events:auto;width:100%;max-width:488px;display:flex;align-items:center;gap:9px;padding:12px 16px;border-radius:var(--radius-pill);}
+  .search-bar-bottom{position:fixed;left:0;right:0;bottom:86px;display:flex;justify-content:center;z-index:39;pointer-events:none;padding:0 16px;}
+  .search-bar-inner{pointer-events:auto;width:100%;max-width:488px;display:flex;align-items:center;gap:10px;padding:13px 17px;border-radius:var(--radius-pill);box-shadow:0 14px 36px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);}
   .search-bar-inner svg{color:var(--ink-faint);flex:0 0 auto;}
   .search-bar-inner input{background:transparent;border:none;padding:2px 0;font-size:15px;backdrop-filter:none;-webkit-backdrop-filter:none;flex:1;min-width:0;}
   .search-bar-inner input:focus{border:none;background:transparent;}
@@ -247,48 +276,51 @@
     transform: translateX(-50%);
     width: calc(100% - 32px);
     max-width: 488px;
-    bottom: 144px;
+    bottom: 148px;
     max-height: 45dvh;
     overflow-y: auto;
     z-index: 38;
-    background: rgba(14, 14, 17, 0.82);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    background: rgba(13, 13, 17, 0.88);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius);
     padding: 10px;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.4);
+    box-shadow: 0 -14px 34px rgba(0,0,0,0.45);
     display: flex;
     flex-direction: column-reverse;
   }
 
   .discover-scroll-pad{height:2px;}
 
-  .field label{display:block;font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
+  .field label{display:block;font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px;}
 
-  .primary-btn{background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;font-weight:700;font-size:15px;padding:14px;border-radius:var(--radius-pill);text-align:center;margin-top:4px;box-shadow:0 10px 26px var(--accent-glow);transition:transform .12s ease, box-shadow .12s ease;width:100%;}
-  .primary-btn:active{transform:scale(.97);box-shadow:0 4px 14px var(--accent-glow);}
-  .secondary-btn{color:var(--ink);font-weight:600;font-size:14px;padding:13px;border-radius:var(--radius-pill);text-align:center;width:100%;}
-  .danger-btn{color:var(--accent-2);background:rgba(255,43,61,.08);border:1px solid rgba(255,43,61,.28);font-weight:700;padding:13px;border-radius:var(--radius-pill);text-align:center;backdrop-filter:blur(14px);width:100%;}
+  .primary-btn{background:linear-gradient(135deg,var(--accent-2),var(--accent-deep) 75%);color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:var(--radius-pill);text-align:center;margin-top:4px;box-shadow:0 12px 28px var(--accent-glow);transition:transform .12s var(--ease), box-shadow .12s var(--ease);width:100%;}
+  .primary-btn:active{transform:scale(.97);box-shadow:0 5px 14px var(--accent-glow);}
+  .secondary-btn{color:var(--ink);font-weight:600;font-size:14px;padding:14px;border-radius:var(--radius-pill);text-align:center;width:100%;transition:transform .12s var(--ease);}
+  .secondary-btn:active{transform:scale(.97);}
+  .danger-btn{color:var(--accent-2);background:rgba(255,43,61,.09);border:1px solid rgba(255,43,61,.3);font-weight:700;padding:14px;border-radius:var(--radius-pill);text-align:center;backdrop-filter:blur(14px);width:100%;transition:transform .12s var(--ease);}
+  .danger-btn:active{transform:scale(.97);}
 
-  .subbar{display:flex;align-items:center;gap:12px;padding:16px 16px 8px;}
-  .icon-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--ink);}
+  .subbar{display:flex;align-items:center;gap:12px;padding:18px 16px 10px;}
+  .icon-btn{width:39px;height:39px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--ink);transition:transform .12s var(--ease), background .12s var(--ease);}
+  .icon-btn:active{transform:scale(.9);}
   .icon-btn svg{width:18px;height:18px;}
-  .subtitle{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.6px;word-break:break-word;}
+  .subtitle{font-family:'Bebas Neue',sans-serif;font-size:23px;letter-spacing:.7px;word-break:break-word;}
 
-  .detail-page{position:relative;z-index:1;animation:pageIn .34s cubic-bezier(.2,.8,.2,1) both;touch-action:pan-y;min-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#07070a;width:100%;}
+  .detail-page{position:relative;z-index:1;animation:pageIn .34s var(--ease) both;touch-action:pan-y;min-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#07070a;width:100%;}
   @keyframes pageIn{0%{opacity:0;transform:translateY(30px) scale(.98);}100%{opacity:1;transform:translateY(0) scale(1);}}
   
-  .detail-hero-bg{position:absolute;inset:0;height:65dvh;z-index:0;overflow:hidden;}
+  .detail-hero-bg{position:absolute;inset:0;height:66dvh;z-index:0;overflow:hidden;}
   .detail-hero-bg img{width:100%;height:100%;object-fit:cover;}
-  .detail-hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg, rgba(7,7,10,0.15) 0%, rgba(7,7,10,0.7) 45%, #07070a 100%);}
+  .detail-hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg, rgba(7,7,10,0.12) 0%, rgba(7,7,10,0.72) 46%, #07070a 100%);}
   
   .detail-top-controls{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:16px;}
   
-  .detail-content{position:relative;z-index:5;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:auto;width:100%;}
-  .detail-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(30px, 8vw, 44px);line-height:1;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;text-shadow:0 2px 10px rgba(0,0,0,0.8);word-break:break-word;}
+  .detail-content{position:relative;z-index:5;padding:18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:auto;width:100%;}
+  .detail-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px, 8.5vw, 46px);line-height:1.02;letter-spacing:1px;margin-bottom:13px;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,0.85);word-break:break-word;}
   
-  .detail-overview{font-size:13px;line-height:1.5;color:rgba(255,255,255,0.85);margin-bottom:18px;width:100%;max-width:400px;text-align:center;transition:all 0.3s ease;word-break:break-word;}
+  .detail-overview{font-size:13.5px;line-height:1.55;color:rgba(255,255,255,0.86);margin-bottom:19px;width:100%;max-width:400px;text-align:center;transition:all 0.3s ease;word-break:break-word;}
   
   .overview-text-inner {
     display: inline;
@@ -310,9 +342,9 @@
     opacity: 0.7;
   }
   
-  .detail-meta-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.7);margin-bottom:24px;}
+  .detail-meta-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.68);margin-bottom:25px;}
   
-  .detail-action-area{position:relative;z-index:5;padding:0 16px 24px;width:100%;}
+  .detail-action-area{position:relative;z-index:5;padding:0 16px 26px;width:100%;}
   
   .movie-screenshots-scroll {
     display: flex;
@@ -333,7 +365,7 @@
     cursor: pointer;
     border: 1px solid var(--glass-border);
     background: var(--glass);
-    transition: transform .15s ease;
+    transition: transform .15s var(--ease);
   }
   .movie-screenshot-item:active {
     transform: scale(0.96);
@@ -399,18 +431,18 @@
   /* Адаптивная панель оценок: масштабируется под любую ширину экрана */
   .my-rating-box{
     border-radius:var(--radius-sm);
-    padding:12px 14px;
+    padding:14px 15px;
     transition:all .3s ease;
-    margin-bottom:14px;
+    margin-bottom:15px;
     width:100%;
     max-width:380px;
-    background:rgba(255,255,255,0.03);
+    background:rgba(255,255,255,0.032);
     border:1px solid var(--glass-border-soft);
     backdrop-filter:blur(14px);
     box-sizing:border-box;
   }
-  .my-rating-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-  .my-rating-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .my-rating-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
+  .my-rating-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;}
   .my-rating-val-mini{font-size:12px;font-weight:700;color:var(--ink-dim);}
   
   .rate-stars-row{
@@ -445,65 +477,87 @@
   }
   .rate-star-btn:active{transform:scale(0.85);}
   
-  .rate-star-btn.filled svg{fill:#f5c518;stroke:#f5c518;filter:drop-shadow(0 0 6px rgba(245,197,24,0.4));}
-  .rate-star-btn.selected-star svg{transform:scale(1.25);fill:#f5c518;stroke:#f5c518;filter:drop-shadow(0 0 10px rgba(245,197,24,0.7));}
+  .rate-star-btn.filled svg{fill:var(--gold);stroke:var(--gold);filter:drop-shadow(0 0 6px var(--gold-glow));}
+  .rate-star-btn.selected-star svg{transform:scale(1.25);fill:var(--gold);stroke:var(--gold);filter:drop-shadow(0 0 10px var(--gold-glow));}
 
-  .desc{font-size:13.5px;line-height:1.6;color:var(--ink-dim);white-space:pre-wrap;word-break:break-word;}
-  .desc-card{border-radius:var(--radius);padding:15px 16px;margin-bottom:16px;width:100%;max-width:380px;text-align:left;}
+  .desc{font-size:13.5px;line-height:1.62;color:var(--ink-dim);white-space:pre-wrap;word-break:break-word;}
+  .desc-card{border-radius:var(--radius);padding:16px 17px;margin-bottom:17px;width:100%;max-width:380px;text-align:left;}
 
-  .choose-wrap{padding:20px 16px 24px;display:flex;flex-direction:column;gap:12px;animation:pageIn .32s cubic-bezier(.2,.8,.2,1) both;width:100%;}
-  .choose-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;margin-bottom:2px;word-break:break-word;}
-  .choose-sub{font-size:13px;color:var(--ink-dim);margin-bottom:6px;}
-  .choose-btn{display:flex;align-items:center;gap:14px;border-radius:var(--radius);padding:16px;width:100%;}
-  .choose-btn:active{transform:scale(.98);}
-  .choose-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 8px 20px rgba(0,0,0,.35);}
+  .choose-wrap{padding:22px 16px 26px;display:flex;flex-direction:column;gap:12px;animation:pageIn .32s var(--ease) both;width:100%;}
+  .choose-title{font-family:'Bebas Neue',sans-serif;font-size:27px;letter-spacing:.6px;margin-bottom:3px;word-break:break-word;}
+  .choose-sub{font-size:13px;color:var(--ink-dim);margin-bottom:7px;}
+  .choose-btn{display:flex;align-items:center;gap:14px;border-radius:var(--radius);padding:17px;width:100%;transition:transform .12s var(--ease);}
+  .choose-btn:active{transform:scale(.97);}
+  .choose-icon{width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 8px 20px rgba(0,0,0,.4);}
   .choose-icon svg{width:20px;height:20px;color:#fff;}
   .choose-text{text-align:left;flex:1;min-width:0;word-break:break-word;}
   .choose-text .t1{font-size:15px;font-weight:700;}
   .choose-text .t2{font-size:12px;color:var(--ink-faint);margin-top:2px;}
 
-  .add-cat-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 16px 6px;width:calc(100% - 32px);}
+  .add-cat-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 16px 6px;width:calc(100% - 32px);}
+  .sync-btn-row{display:flex;gap:8px;margin:0 16px 26px;}
+  .sync-btn{flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px;border-radius:var(--radius-pill);font-weight:600;font-size:13px;color:var(--ink-dim);transition:transform .12s var(--ease);}
+  .sync-btn:active{transform:scale(.95);}
+  .sync-btn svg{width:16px;height:16px;flex-shrink:0;}
+  .paste-modal-textarea{width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.4;word-break:break-all;}
+  .copy-modal-textarea{width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.4;word-break:break-all;}
+  .sync-hint{font-size:12px;color:var(--ink-faint);margin-top:10px;line-height:1.5;}
   
   .cat-icon-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(40px, 1fr));
     gap:8px;
-    margin:4px 0 16px;
+    margin:5px 0 17px;
     max-height:220px;
     overflow-y:auto;
     padding-right:2px;
   }
-  .cat-icon-opt{aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--glass-border-soft);color:var(--ink-dim);transition:transform .12s ease;padding:6px;}
-  .cat-icon-opt:active{transform:scale(.9);}
-  .cat-icon-opt.active{background:linear-gradient(135deg,var(--accent-2),var(--accent) 70%);color:#fff;border-color:transparent;}
+  .cat-icon-opt{aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--glass-border-soft);color:var(--ink-dim);transition:transform .12s var(--ease), background .12s var(--ease);padding:6px;}
+  .cat-icon-opt:active{transform:scale(.88);}
+  .cat-icon-opt.active{background:linear-gradient(135deg,var(--accent-2),var(--accent-deep));color:#fff;border-color:transparent;}
 
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:80;display:flex;align-items:flex-end;justify-content:center;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:80;display:flex;align-items:flex-end;justify-content:center;animation:overlayIn .18s ease both;}
+  @keyframes overlayIn{0%{opacity:0;}100%{opacity:1;}}
   .modal{
     width:100%;
     max-width:520px;
-    border-radius:24px 24px 0 0;
-    padding:18px 16px;
+    border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    padding:22px 18px 20px;
     max-height:85dvh;
     overflow-y:auto;
-    background:linear-gradient(155deg, rgba(24,24,28,.94), rgba(14,14,17,.98));
-    backdrop-filter:blur(28px) saturate(160%);
-    -webkit-backdrop-filter:blur(28px) saturate(160%);
+    background:linear-gradient(165deg, rgba(25,25,29,.95), rgba(12,12,15,.985));
+    backdrop-filter:blur(30px) saturate(160%);
+    -webkit-backdrop-filter:blur(30px) saturate(160%);
     border:1px solid var(--glass-border);
     border-bottom:none;
-    box-shadow:0 -12px 40px rgba(0,0,0,.5);
+    box-shadow:0 -16px 44px rgba(0,0,0,.55);
     box-sizing:border-box;
+    position:relative;
+    animation:sheetIn .26s var(--ease) both;
   }
-  .modal-msg{font-size:14px;line-height:1.55;color:var(--ink-dim);padding:6px 2px 10px;}
-  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.5px;padding:2px 2px 4px;}
+  @keyframes sheetIn{0%{transform:translateY(24px);opacity:.4;}100%{transform:translateY(0);opacity:1;}}
+  .modal::before{
+    content:'';
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    width:38px;
+    height:4px;
+    border-radius:var(--radius-pill);
+    background:rgba(255,255,255,.16);
+  }
+  .modal-msg{font-size:14px;line-height:1.58;color:var(--ink-dim);padding:7px 2px 11px;}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.6px;padding:6px 2px 4px;}
   .modal-actions{display:flex;gap:8px;width:100%;}
   .modal-actions button{flex:1;}
   
-  .infinite-loader{display:block;width:100%;text-align:center;padding:16px 0;font-size:13px;color:var(--ink-faint);font-weight:600;}
+  .infinite-loader{display:block;width:100%;text-align:center;padding:18px 0;font-size:13px;color:var(--ink-faint);font-weight:600;}
   
-  .search-action-bar {display:flex; gap:10px; width:100%; margin-bottom:14px; max-width:380px;}
+  .search-action-bar {display:flex; gap:10px; width:100%; margin-bottom:15px; max-width:380px;}
   .search-action-bar select {flex:1; min-width:0;}
-  .search-fav-btn {width:52px; height:52px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; background:var(--glass); border:1px solid var(--glass-border-soft); flex:0 0 auto; color:var(--ink-dim); transition:all .15s ease;}
-  .search-fav-btn.active {background:var(--accent); color:#fff; border-color:transparent; box-shadow:0 4px 14px var(--accent-glow);}
+  .search-fav-btn {width:52px; height:52px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; background:var(--glass); border:1px solid var(--glass-border-soft); flex:0 0 auto; color:var(--ink-dim); transition:all .15s var(--ease);}
+  .search-fav-btn.active {background:linear-gradient(135deg,var(--accent-2),var(--accent-deep)); color:#fff; border-color:transparent; box-shadow:0 6px 16px var(--accent-glow);}
 </style>
 </head>
 <body>
@@ -579,7 +633,11 @@
     minimalPoop: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2 0-3.5 1.5-3.5 3.5 0 .8.3 1.5.8 2.1C8.2 9.5 7 11.1 7 13c0 2.2 1.8 4 4 4h2c2.2 0 4-1.8 4-4 0-1.9-1.2-3.5-2.3-4.4.5-.6.8-1.3.8-2.1C15.5 4.5 14 3 12 3z"/></svg>',
     minimalMinus: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>',
     minimalThumbUp: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
-    minimalFire: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-2-.5-3-1-4 2 1 3 3 3 5a6 6 0 1 1-12 0c0-3.5 2-6 5-11Z"/></svg>'
+    minimalFire: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-2-.5-3-1-4 2 1 3 3 3 5a6 6 0 1 1-12 0c0-3.5 2-6 5-11Z"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
+    clipboardPaste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1"/><path d="M8 5h8v2H8z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>',
+    users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M3 21v-5h5"/><path d="M21 3v5h-5"/></svg>'
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
@@ -611,6 +669,89 @@
   };
 
   const DEFAULT_TMDB_KEY = '786670e67582409aa0c3f4232a45c9d3';
+
+  // ===== Совместные категории =====
+  // Чтобы фича заработала, впиши сюда URL своей Firebase Realtime Database (бесплатно):
+  // 1. console.firebase.google.com -> Add project -> любое имя -> создать
+  // 2. Build -> Realtime Database -> Create Database -> Start in test mode
+  // 3. Скопируй URL вида https://xxxx-default-rtdb.firebaseio.com и вставь ниже
+  const FIREBASE_DB_URL = 'https://kinoblo-default-rtdb.firebaseio.com';
+
+  function sharedBackendReady(){ return !!FIREBASE_DB_URL; }
+  function fbUrl(path){ return FIREBASE_DB_URL.replace(/\/$/, '') + '/' + path + '.json'; }
+  async function fbGet(path){
+    if (!sharedBackendReady()) return null;
+    try{
+      const res = await fetch(fbUrl(path));
+      if (!res.ok) return null;
+      return await res.json();
+    }catch(e){ return null; }
+  }
+  async function fbSet(path, data){
+    if (!sharedBackendReady()) return false;
+    try{
+      const res = await fetch(fbUrl(path), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      return res.ok;
+    }catch(e){ return false; }
+  }
+  async function fbDelete(path){
+    if (!sharedBackendReady()) return false;
+    try{
+      const res = await fetch(fbUrl(path), { method:'DELETE' });
+      return res.ok;
+    }catch(e){ return false; }
+  }
+  function genShareCode(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let out = '';
+    for (let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  }
+  function isSharedCat(v){ return typeof v === 'string' && v.indexOf('shared_') === 0; }
+  function shareCodeOf(v){ return isSharedCat(v) ? v.slice(7) : null; }
+  async function copyTextToClipboard(text){
+    try{
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    }catch(e){}
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch(e){ return false; }
+  }
+  async function syncSharedCategoryMovies(code){
+    if (!sharedBackendReady() || !code) return;
+    const remote = await fbGet('shared/'+code+'/movies');
+    const catV = 'shared_'+code;
+    const remoteMovies = remote ? Object.keys(remote).map(k => remote[k]) : [];
+    const remoteIds = remoteMovies.map(m => m.id);
+    const staleLocal = state.movies.filter(m => m.status === catV && remoteIds.indexOf(m.id) === -1);
+    for (const m of staleLocal){ await STORAGE.deleteMovie(m.id); }
+    state.movies = state.movies.filter(m => m.status !== catV);
+    for (const m of remoteMovies){
+      state.movies.push(m);
+      await STORAGE.saveMovie(m);
+    }
+  }
+  async function syncSharedCategoryMeta(code){
+    if (!sharedBackendReady() || !code) return;
+    const meta = await fbGet('shared/'+code+'/meta');
+    if (!meta) return;
+    const cat = state.categories.find(c => c.code === code);
+    if (!cat) return;
+    let changed = false;
+    ['l','sub','icon','color'].forEach(k => { if (meta[k] && meta[k] !== cat[k]){ cat[k] = meta[k]; changed = true; } });
+    if (changed) STORAGE.saveCategories(state.categories);
+  }
 
   let state = {
     movies: [], categories: [], view: 'home', detailId: null, categoryFilter: null,
@@ -751,16 +892,20 @@
     if (!movie.addedAt) movie.addedAt = Date.now();
     const ok = await STORAGE.saveMovie(movie);
     if (!ok) reportStorageError('Не удалось сохранить фильм. Освободи немного места в хранилище.');
+    if (ok && isSharedCat(movie.status)) fbSet('shared/'+shareCodeOf(movie.status)+'/movies/'+movie.id, movie);
     return ok;
   }
   async function updateMovie(movie){
     const ok = await STORAGE.saveMovie(movie);
     if (!ok) reportStorageError('Не удалось сохранить изменения. Освободи немного места в хранилище.');
+    if (ok && isSharedCat(movie.status)) fbSet('shared/'+shareCodeOf(movie.status)+'/movies/'+movie.id, movie);
     return ok;
   }
   async function deleteMovie(id){
+    const existing = state.movies.find(x => x.id === id);
     const ok = await STORAGE.deleteMovie(id);
     if (!ok) reportStorageError('Не удалось удалить фильм. Попробуй ещё раз.');
+    if (ok && existing && isSharedCat(existing.status)) fbDelete('shared/'+shareCodeOf(existing.status)+'/movies/'+id);
     return ok;
   }
 
@@ -1156,18 +1301,25 @@
     let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>';
     state.categories.forEach(s => {
       const list = getSortedMoviesByStatus(s.v);
-      html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
+      html += '<div class="section"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+(s.shared ? ' <span style="opacity:.55;display:inline-flex;vertical-align:middle;margin-left:2px;">'+icon('users',13)+'</span>' : '')+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
       html += list.length ? '<div class="row-scroll">'+list.map(card).join('')+'</div>' : '<div class="empty glass-flat">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
       html += '</div>';
     });
     html += '<button class="secondary-btn glass-flat add-cat-btn" id="addCategoryBtn">'+icon('plus',16)+'Добавить категорию</button>';
+    html += '<div class="sync-btn-row">'
+      + '<button class="sync-btn glass-flat" id="exportLibraryBtn">'+icon('copy',16)+'Скопировать</button>'
+      + '<button class="sync-btn glass-flat" id="importLibraryBtn">'+icon('clipboardPaste',16)+'Вставить</button>'
+      + '</div>';
     return html;
   }
 
   function viewCategory(){
     const s = categoryMeta(state.categoryFilter);
     const list = getSortedMoviesByStatus(state.categoryFilter);
-    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle" style="display:flex;align-items:center;gap:8px;"><span style="color:'+(s.color||'var(--accent)')+';display:flex;">'+icon(s.icon,20)+'</span><span>'+escapeHtml(s.l)+'</span></div><button class="icon-btn glass-flat" id="editCatBtn" style="margin-left:auto;">'+icon('pencil',18)+'</button></div>';
+    const isShared = !!s.shared;
+    let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle" style="display:flex;align-items:center;gap:8px;"><span style="color:'+(s.color||'var(--accent)')+';display:flex;">'+icon(s.icon,20)+'</span><span>'+escapeHtml(s.l)+'</span>'+(isShared ? '<span style="opacity:.55;display:flex;">'+icon('users',14)+'</span>' : '')+'</div>'
+      + (isShared ? '<button class="icon-btn glass-flat" id="refreshSharedBtn" style="margin-left:auto;">'+icon('sync',17)+'</button>' : '')
+      + '<button class="icon-btn glass-flat" id="editCatBtn" style="margin-left:'+(isShared?'6px':'auto')+';">'+icon('pencil',18)+'</button></div>';
     html += list.length
       ? '<div class="movies-grid">'+list.map(card).join('')+'</div>'
       : '<div class="empty glass-flat" style="margin-top:16px;">Пусто. Найди фильм на вкладке «Поиск» и нажми на сердечко.</div>';
@@ -1443,6 +1595,245 @@
     div.querySelector('#alertOk').onclick = () => div.remove();
   }
 
+  // ===== Экспорт / импорт библиотеки (перенос фильмов между устройствами через буфер обмена) =====
+
+  const EXPORT_PREFIX = 'KINOBLO1:';
+
+  function buildExportPayload(){
+    return {
+      v: 1,
+      exportedAt: Date.now(),
+      categories: state.categories.map(c => ({ v:c.v, l:c.l, sub:c.sub||'', icon:c.icon, color:c.color })),
+      movies: state.movies.map(m => Object.assign({}, m))
+    };
+  }
+
+  function encodeExportPayload(payload){
+    const json = JSON.stringify(payload);
+    const b64 = btoa(unescape(encodeURIComponent(json)));
+    return EXPORT_PREFIX + b64;
+  }
+
+  function decodeExportPayload(str){
+    let s = (str || '').trim();
+    const idx = s.indexOf(EXPORT_PREFIX);
+    if (idx === -1) throw new Error('no-prefix');
+    s = s.slice(idx + EXPORT_PREFIX.length);
+    s = s.replace(/\s+/g, ''); // на случай переносов строк при вставке на телефоне
+    const json = decodeURIComponent(escape(atob(s)));
+    const payload = JSON.parse(json);
+    if (!payload || !Array.isArray(payload.movies) || !Array.isArray(payload.categories)) {
+      throw new Error('bad-shape');
+    }
+    return payload;
+  }
+
+  let _uidCounter = 0;
+  function makeLocalId(prefix){
+    _uidCounter++;
+    return prefix + '_' + Date.now() + '_' + _uidCounter + '_' + Math.random().toString(36).substr(2, 5);
+  }
+
+  function hapticOk(){
+    try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+  }
+  function hapticErr(){
+    try{ if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error'); }catch(e){}
+  }
+
+  async function exportLibrary(){
+    if (!state.movies.length){
+      customAlert('Пока нечего копировать — добавь хотя бы один фильм.');
+      return;
+    }
+    const code = encodeExportPayload(buildExportPayload());
+
+    let copiedAutomatically = false;
+    try{
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(code);
+        copiedAutomatically = true;
+      }
+    }catch(e){ copiedAutomatically = false; }
+
+    if (copiedAutomatically){
+      hapticOk();
+      customAlert('Скопировано! Открой Kinoblo на другом устройстве и нажми «Вставить».');
+      return;
+    }
+
+    hapticErr();
+    openCopyFallbackModal(code);
+  }
+
+  function openCopyFallbackModal(code){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Скопируй код вручную</div>'
+      + '<div class="sync-hint">Автокопирование недоступно. Выдели весь текст ниже и скопируй его (или нажми кнопку «Скопировать»).</div>'
+      + '<div style="margin-top:12px;" class="field"><textarea class="copy-modal-textarea" id="exportCodeArea" readonly></textarea></div>'
+      + '<div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;">'
+      + '<button type="button" class="secondary-btn glass-flat" id="exportCloseBtn">Закрыть</button>'
+      + '<button type="button" class="primary-btn" id="exportCopyBtn" style="margin-top:0;">Скопировать</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    const area = div.querySelector('#exportCodeArea');
+    area.value = code;
+    div.querySelector('#exportCloseBtn').onclick = () => div.remove();
+    div.querySelector('#exportCopyBtn').onclick = () => {
+      area.focus();
+      area.select();
+      area.setSelectionRange(0, area.value.length);
+      let ok = false;
+      try{ ok = document.execCommand('copy'); }catch(e){ ok = false; }
+      if (ok){
+        hapticOk();
+        div.remove();
+        customAlert('Скопировано!');
+      } else {
+        customAlert('Не получилось скопировать автоматически. Выдели текст пальцем и выбери «Копировать» из меню.');
+      }
+    };
+  }
+
+  async function importLibrary(){
+    let text = null;
+    try{
+      if (navigator.clipboard && navigator.clipboard.readText){
+        text = await navigator.clipboard.readText();
+      }
+    }catch(e){ text = null; }
+
+    if (text && text.indexOf(EXPORT_PREFIX) !== -1){
+      try{
+        const payload = decodeExportPayload(text);
+        confirmAndMergePayload(payload);
+        return;
+      }catch(e){ /* падаем в ручной ввод ниже */ }
+    }
+
+    if (tg && typeof tg.readTextFromClipboard === 'function'){
+      try{
+        tg.readTextFromClipboard(clip => {
+          if (clip && clip.indexOf(EXPORT_PREFIX) !== -1){
+            try{
+              const payload = decodeExportPayload(clip);
+              confirmAndMergePayload(payload);
+              return;
+            }catch(e){}
+          }
+          openPasteFallbackModal();
+        });
+        return;
+      }catch(e){}
+    }
+
+    openPasteFallbackModal();
+  }
+
+  function openPasteFallbackModal(){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Вставь код</div>'
+      + '<div class="sync-hint">Не удалось прочитать буфер обмена автоматически. Вставь скопированный на другом устройстве код в поле ниже (долгое нажатие → «Вставить»).</div>'
+      + '<div style="margin-top:12px;" class="field"><textarea class="paste-modal-textarea" id="importCodeArea" placeholder="'+EXPORT_PREFIX+'..."></textarea></div>'
+      + '<div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;">'
+      + '<button type="button" class="secondary-btn glass-flat" id="importCloseBtn">Отмена</button>'
+      + '<button type="button" class="primary-btn" id="importConfirmBtn" style="margin-top:0;">Вставить</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.querySelector('#importCloseBtn').onclick = () => div.remove();
+    div.querySelector('#importConfirmBtn').onclick = () => {
+      const raw = div.querySelector('#importCodeArea').value;
+      let payload;
+      try{
+        payload = decodeExportPayload(raw);
+      }catch(e){
+        customAlert('Код не распознан. Проверь, что скопировал его полностью, и попробуй снова.');
+        return;
+      }
+      div.remove();
+      confirmAndMergePayload(payload);
+    };
+  }
+
+  function confirmAndMergePayload(payload){
+    const movieCount = payload.movies.length;
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal" style="text-align:center;padding:24px;">'
+      + '<div class="modal-title">Добавить фильмы?</div>'
+      + '<div class="modal-msg">Во вставленном коде '+movieCount+' '+pluralMovies(movieCount)+'. Они добавятся в твою коллекцию, категории будут сопоставлены по названию (или созданы заново). Уже добавленные фильмы не задвоятся.</div>'
+      + '<div class="modal-actions" style="margin-top:16px;display:flex;gap:8px;">'
+      + '<button type="button" class="secondary-btn glass-flat" id="mergeCancelBtn">Отмена</button>'
+      + '<button type="button" class="primary-btn" id="mergeConfirmBtn" style="margin-top:0;">Добавить</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.querySelector('#mergeCancelBtn').onclick = () => div.remove();
+    div.querySelector('#mergeConfirmBtn').onclick = async () => {
+      div.remove();
+      await mergeImportedPayload(payload);
+    };
+  }
+
+  function pluralMovies(n){
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'фильм/сериал';
+    if ([2,3,4].indexOf(mod10) !== -1 && [12,13,14].indexOf(mod100) === -1) return 'фильма/сериала';
+    return 'фильмов/сериалов';
+  }
+
+  async function mergeImportedPayload(payload){
+    const catMap = {};
+    (payload.categories || []).forEach(importedCat => {
+      const existing = state.categories.find(c => c.l.trim().toLowerCase() === (importedCat.l||'').trim().toLowerCase());
+      if (existing){
+        catMap[importedCat.v] = existing.v;
+      } else {
+        const newV = makeLocalId('cat');
+        state.categories.push({
+          v: newV,
+          l: importedCat.l || 'Без названия',
+          sub: importedCat.sub || '',
+          icon: importedCat.icon || CAT_ICON_OPTIONS[0],
+          color: importedCat.color || CAT_COLOR_PALETTE[0]
+        });
+        catMap[importedCat.v] = newV;
+      }
+    });
+    await STORAGE.saveCategories(state.categories);
+
+    let added = 0, skipped = 0;
+    for (const importedMovie of (payload.movies || [])){
+      const dupe = importedMovie.tmdbId != null
+        ? state.movies.find(x => x.tmdbId === importedMovie.tmdbId && x.mediaType === importedMovie.mediaType)
+        : null;
+      if (dupe){ skipped++; continue; }
+
+      const newMovie = Object.assign({}, importedMovie);
+      newMovie.id = makeLocalId('m');
+      newMovie.status = catMap[importedMovie.status] || (state.categories[0] && state.categories[0].v);
+      if (!newMovie.addedAt) newMovie.addedAt = Date.now();
+
+      const ok = await addMovie(newMovie);
+      if (ok){
+        state.movies.push(newMovie);
+        added++;
+      } else {
+        skipped++;
+      }
+    }
+
+    render();
+    hapticOk();
+    customAlert('Готово! Добавлено: ' + added + (skipped ? ', пропущено (уже есть): ' + skipped : '') + '.');
+  }
+
   function openChooseForTmdb(tmdbId, mediaType){
     tmdbFetch('/' + mediaType + '/' + tmdbId, state.tmdbKey).then(async data => {
       const mapped = mapTmdbItem(data, mediaType);
@@ -1571,10 +1962,17 @@
     document.querySelectorAll('.section-head[data-cat]').forEach(el => {
       el.onclick = () => {
         state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
-        state.categoryFilter = el.getAttribute('data-cat');
+        const catV = el.getAttribute('data-cat');
+        state.categoryFilter = catV;
         state.view = 'category';
         render();
         document.getElementById('app').scrollTop = 0;
+        const cat = categoryMeta(catV);
+        if (cat.shared){
+          syncSharedCategoryMovies(cat.code).then(() => syncSharedCategoryMeta(cat.code)).then(() => {
+            if (state.view === 'category' && state.categoryFilter === catV) render();
+          });
+        }
       };
     });
 
@@ -1731,8 +2129,10 @@
         const newCat = e.target.value;
         const m = state.movies.find(x => x.id === state.detailId);
         if (!m) return;
+        const oldCat = m.status;
         m.status = newCat;
         saveMovieDebounced(m);
+        if (isSharedCat(oldCat) && oldCat !== newCat) fbDelete('shared/'+shareCodeOf(oldCat)+'/movies/'+m.id);
       };
     }
 
@@ -1802,7 +2202,7 @@
     const addCatBtn = document.getElementById('addCategoryBtn');
     if (addCatBtn){
       addCatBtn.onclick = () => {
-        openCategoryEditor(null);
+        openAddCategoryChooser();
       };
     }
 
@@ -1813,14 +2213,120 @@
         if (cat) openCategoryEditor(cat);
       };
     }
+
+    const refreshSharedBtn = document.getElementById('refreshSharedBtn');
+    if (refreshSharedBtn){
+      refreshSharedBtn.onclick = async () => {
+        if (refreshSharedBtn.dataset.busy === '1') return;
+        refreshSharedBtn.dataset.busy = '1';
+        refreshSharedBtn.style.opacity = '0.5';
+        const cat = state.categories.find(c => c.v === state.categoryFilter);
+        if (cat && cat.code){
+          await syncSharedCategoryMovies(cat.code);
+          await syncSharedCategoryMeta(cat.code);
+        }
+        refreshSharedBtn.dataset.busy = '0';
+        hapticOk();
+        render();
+      };
+    }
+
+    const exportBtn = document.getElementById('exportLibraryBtn');
+    if (exportBtn){
+      exportBtn.onclick = () => {
+        if (exportBtn.dataset.busy === '1') return;
+        exportBtn.dataset.busy = '1';
+        Promise.resolve(exportLibrary()).finally(() => { exportBtn.dataset.busy = '0'; });
+      };
+    }
+
+    const importBtn = document.getElementById('importLibraryBtn');
+    if (importBtn){
+      importBtn.onclick = () => {
+        if (importBtn.dataset.busy === '1') return;
+        importBtn.dataset.busy = '1';
+        Promise.resolve(importLibrary()).finally(() => { importBtn.dataset.busy = '0'; });
+      };
+    }
   }
 
-  function openCategoryEditor(catToEdit){
+  function openAddCategoryChooser(){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Новая категория</div>'
+      + '<div class="modal-msg">Выбери, что хочешь сделать</div>'
+      + '<button type="button" class="secondary-btn glass-flat" id="chooseNormalCat" style="margin-top:10px;display:flex;align-items:center;gap:8px;justify-content:center;">'+icon('bookmark',16)+'Обычная категория</button>'
+      + '<button type="button" class="secondary-btn glass-flat" id="chooseSharedCat" style="margin-top:8px;display:flex;align-items:center;gap:8px;justify-content:center;">'+icon('users',16)+'Совместная категория</button>'
+      + '<button type="button" class="secondary-btn glass-flat" id="chooseJoinCat" style="margin-top:8px;display:flex;align-items:center;gap:8px;justify-content:center;">'+icon('clipboardPaste',16)+'Присоединиться по коду</button>'
+      + '<button type="button" class="secondary-btn glass-flat" id="chooseCancelCat" style="margin-top:8px;">Отмена</button>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.querySelector('#chooseNormalCat').onclick = () => { div.remove(); openCategoryEditor(null, false); };
+    div.querySelector('#chooseSharedCat').onclick = () => { div.remove(); openCategoryEditor(null, true); };
+    div.querySelector('#chooseJoinCat').onclick = () => { div.remove(); openJoinSharedModal(); };
+    div.querySelector('#chooseCancelCat').onclick = () => div.remove();
+  }
+
+  function openShareCodeModal(code, name){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal" style="text-align:center;">'
+      + '<div class="modal-title">Категория создана</div>'
+      + '<div class="modal-msg">Отправь этот код тому, с кем хочешь делиться списком «'+escapeHtml(name)+'». Ему нужно нажать «Добавить категорию» → «Присоединиться по коду» и ввести его.</div>'
+      + '<div class="glass-flat" style="padding:16px;border-radius:14px;font-family:monospace;font-size:26px;letter-spacing:5px;margin:12px 0;">'+escapeHtml(code)+'</div>'
+      + '<button type="button" class="primary-btn" id="shareCodeCopyBtn" style="margin-top:0;">Скопировать код</button>'
+      + '<button type="button" class="secondary-btn glass-flat" id="shareCodeCloseBtn" style="margin-top:8px;">Готово</button>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.querySelector('#shareCodeCopyBtn').onclick = async () => {
+      const ok = await copyTextToClipboard(code);
+      if (ok){ hapticOk(); customAlert('Код скопирован!'); } else { customAlert('Не получилось скопировать. Выдели код пальцем и скопируй вручную: ' + code); }
+    };
+    div.querySelector('#shareCodeCloseBtn').onclick = () => div.remove();
+  }
+
+  function openJoinSharedModal(){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Присоединиться по коду</div>'
+      + '<div class="modal-msg">Введи код, который тебе прислали.</div>'
+      + '<div style="margin-top:8px;" class="field"><input id="joinCodeInput" placeholder="Например: X7K2QP" style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-family:monospace;"></div>'
+      + '<div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;">'
+      + '<button type="button" class="secondary-btn glass-flat" id="joinCancelBtn">Отмена</button>'
+      + '<button type="button" class="primary-btn" id="joinConfirmBtn" style="margin-top:0;">Присоединиться</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.querySelector('#joinCancelBtn').onclick = () => div.remove();
+    div.querySelector('#joinConfirmBtn').onclick = async () => {
+      const raw = div.querySelector('#joinCodeInput').value.trim().toUpperCase();
+      if (!raw){ customAlert('Введи код.'); return; }
+      if (!sharedBackendReady()){ customAlert('Совместные категории пока не настроены разработчиком приложения.'); return; }
+      if (state.categories.some(c => c.code === raw)){ customAlert('Эта категория уже есть у тебя в списке.'); div.remove(); return; }
+      const confirmBtn = div.querySelector('#joinConfirmBtn');
+      confirmBtn.textContent = 'Ищу...';
+      const meta = await fbGet('shared/'+raw+'/meta');
+      if (!meta){ customAlert('Категория с таким кодом не найдена. Проверь код и попробуй снова.'); confirmBtn.textContent = 'Присоединиться'; return; }
+      const newCat = { v:'shared_'+raw, l: meta.l || 'Совместная категория', sub: meta.sub || '', icon: meta.icon || 'users', color: meta.color || CAT_COLOR_PALETTE[0], shared: true, code: raw };
+      state.categories.push(newCat);
+      await STORAGE.saveCategories(state.categories);
+      div.remove();
+      await syncSharedCategoryMovies(raw);
+      hapticOk();
+      render();
+    };
+  }
+
+  function openCategoryEditor(catToEdit, createShared){
     const isEdit = !!catToEdit;
-    let selectedIcon = isEdit ? catToEdit.icon : CAT_ICON_OPTIONS[0];
+    const isShared = isEdit ? !!catToEdit.shared : !!createShared;
+    let selectedIcon = isEdit ? catToEdit.icon : (isShared ? 'users' : CAT_ICON_OPTIONS[0]);
     let selectedColor = isEdit ? catToEdit.color : CAT_COLOR_PALETTE[0];
     let catName = isEdit ? catToEdit.l : '';
     let catSub = isEdit ? (catToEdit.sub || '') : '';
+    const shareCode = isEdit ? catToEdit.code : null;
 
     const div = document.createElement('div');
     div.className = 'modal-overlay';
@@ -1828,7 +2334,9 @@
     const renderModalInner = () => {
       div.innerHTML = `
         <div class="modal">
-          <div class="modal-title">${isEdit ? 'Редактировать категорию' : 'Новая категория'}</div>
+          <div class="modal-title">${isEdit ? (isShared ? 'Совместная категория' : 'Редактировать категорию') : (isShared ? 'Новая совместная категория' : 'Новая категория')}</div>
+          ${isShared ? '<div class="modal-msg">Фильмы в этой категории видны всем, у кого есть код доступа.</div>' : ''}
+          ${(isEdit && isShared) ? '<div style="margin-top:6px;" class="field"><label>Код доступа</label><div style="display:flex;gap:8px;align-items:center;"><div class="glass-flat" style="flex:1;padding:12px 14px;border-radius:14px;font-family:monospace;font-size:18px;letter-spacing:3px;text-align:center;">'+escapeHtml(shareCode)+'</div><button type="button" class="icon-btn glass-flat" id="modalCatCopyCode">'+icon('copy',16)+'</button></div></div>' : ''}
           <div style="margin-top:12px;" class="field">
             <label>Название</label>
             <input id="modalCatName" value="${escapeHtml(catName)}" placeholder="Например: Любимое аниме">
@@ -1848,7 +2356,7 @@
           <div style="margin-top:12px;" class="field">
             <label>Иконка</label>
             <div class="cat-icon-grid">
-              ${CAT_ICON_OPTIONS.map(iName => `
+              ${CAT_ICON_OPTIONS.concat(isShared ? ['users'] : []).map(iName => `
                 <button type="button" class="cat-icon-opt ${selectedIcon===iName?'active':''}" data-icon-opt="${iName}">
                   ${icon(iName, 20)}
                 </button>
@@ -1859,7 +2367,7 @@
             <button type="button" class="secondary-btn glass-flat" id="modalCatCancel">Отмена</button>
             <button type="button" class="primary-btn" id="modalCatSave" style="margin-top:0;">Сохранить</button>
           </div>
-          ${isEdit ? '<button type="button" class="danger-btn" id="modalCatDelete" style="margin-top:10px;width:100%;">Удалить категорию</button>' : ''}
+          ${isEdit ? '<button type="button" class="danger-btn" id="modalCatDelete" style="margin-top:10px;width:100%;">'+(isShared ? 'Покинуть категорию' : 'Удалить категорию')+'</button>' : ''}
         </div>
       `;
 
@@ -1878,6 +2386,14 @@
       });
 
       div.querySelector('#modalCatCancel').onclick = () => div.remove();
+
+      if (isEdit && isShared){
+        const copyBtn = div.querySelector('#modalCatCopyCode');
+        if (copyBtn) copyBtn.onclick = async () => {
+          const ok = await copyTextToClipboard(shareCode);
+          if (ok){ hapticOk(); customAlert('Код скопирован: ' + shareCode); } else { customAlert('Не получилось скопировать. Код: ' + shareCode); }
+        };
+      }
       
       div.querySelector('#modalCatSave').onclick = async () => {
         const nameInput = div.querySelector('#modalCatName');
@@ -1890,8 +2406,25 @@
           catToEdit.sub = subInput.value.trim();
           catToEdit.icon = selectedIcon;
           catToEdit.color = selectedColor;
+          await STORAGE.saveCategories(state.categories);
+          if (isShared) fbSet('shared/'+catToEdit.code+'/meta', { l: catToEdit.l, sub: catToEdit.sub, icon: catToEdit.icon, color: catToEdit.color });
+          div.remove();
+          render();
+        } else if (isShared){
+          if (!sharedBackendReady()){ customAlert('Совместные категории пока не настроены разработчиком приложения.'); return; }
+          const saveBtn = div.querySelector('#modalCatSave');
+          saveBtn.textContent = 'Создаю...';
+          const code = genShareCode();
+          const newCat = { v:'shared_'+code, l:newName, sub: subInput.value.trim(), icon: selectedIcon, color: selectedColor, shared:true, code:code };
+          const metaOk = await fbSet('shared/'+code+'/meta', { l:newCat.l, sub:newCat.sub, icon:newCat.icon, color:newCat.color });
+          if (!metaOk){ customAlert('Не удалось создать совместную категорию. Проверь интернет-соединение и попробуй снова.'); saveBtn.textContent = 'Сохранить'; return; }
+          state.categories.push(newCat);
+          await STORAGE.saveCategories(state.categories);
+          div.remove();
+          render();
+          openShareCodeModal(code, newCat.l);
         } else {
-          const newV = 'cat_' + Date.now();
+          const newV = makeLocalId('cat');
           state.categories.push({
             v: newV,
             l: newName,
@@ -1899,10 +2432,10 @@
             icon: selectedIcon,
             color: selectedColor
           });
+          await STORAGE.saveCategories(state.categories);
+          div.remove();
+          render();
         }
-        await STORAGE.saveCategories(state.categories);
-        div.remove();
-        render();
       };
 
       if (isEdit) {
@@ -1913,6 +2446,11 @@
           }
           state.categories = state.categories.filter(c => c.v !== catToEdit.v);
           await STORAGE.saveCategories(state.categories);
+          if (isShared){
+            const localShared = state.movies.filter(m => m.status === catToEdit.v);
+            for (const m of localShared){ await STORAGE.deleteMovie(m.id); }
+            state.movies = state.movies.filter(m => m.status !== catToEdit.v);
+          }
           state.view = 'home';
           div.remove();
           render();
