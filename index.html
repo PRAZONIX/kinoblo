@@ -2564,6 +2564,10 @@
 
       div.querySelectorAll('[data-color]').forEach(btn => {
         btn.onclick = () => {
+          const nameEl = div.querySelector('#modalCatName');
+          const subEl = div.querySelector('#modalCatSub');
+          if (nameEl) catName = nameEl.value;
+          if (subEl) catSub = subEl.value;
           selectedColor = btn.getAttribute('data-color');
           renderModalInner();
         };
@@ -2571,6 +2575,10 @@
 
       div.querySelectorAll('[data-icon-opt]').forEach(btn => {
         btn.onclick = () => {
+          const nameEl = div.querySelector('#modalCatName');
+          const subEl = div.querySelector('#modalCatSub');
+          if (nameEl) catName = nameEl.value;
+          if (subEl) catSub = subEl.value;
           selectedIcon = btn.getAttribute('data-icon-opt');
           renderModalInner();
         };
