@@ -250,11 +250,32 @@
   }
 
   .section{padding:16px 0 4px;transition:transform .22s var(--ease);}
-  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;padding:0 16px;cursor:pointer;transition:opacity .12s ease;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;padding:0 16px;cursor:pointer;transition:opacity .12s ease;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
   .section-head:active{opacity:.6;}
   .section.cat-dragging{position:relative;z-index:50;transition:none;opacity:.96;box-shadow:0 18px 38px rgba(0,0,0,.5);border-radius:var(--radius);background:rgba(255,255,255,.035);}
   .section.cat-dragging .section-head{cursor:grabbing;opacity:1;}
-  #app.cat-reorder-active{overflow:hidden;touch-action:none;-webkit-overflow-scrolling:auto;}
+  #app.cat-reorder-active{overflow:hidden;touch-action:none;-webkit-overflow-scrolling:auto;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+
+  /* На время перетаскивания категории все ряды с постерами (и заглушки
+     пустых категорий) плавно схлопываются — остаются только заголовки,
+     чтобы двигать категорию было проще, не проезжая через постеры. */
+  .section[data-cat-section] > .row-scroll,
+  .section[data-cat-section] > .empty{
+    max-height:340px;
+    opacity:1;
+    transition:max-height .3s var(--ease), opacity .22s ease, margin .3s var(--ease), padding .3s var(--ease);
+  }
+  #app.cat-reorder-active .section[data-cat-section] > .row-scroll,
+  #app.cat-reorder-active .section[data-cat-section] > .empty{
+    max-height:0;
+    opacity:0;
+    margin-top:0;
+    margin-bottom:0;
+    padding-top:0;
+    padding-bottom:0;
+    overflow:hidden;
+    pointer-events:none;
+  }
   .section-title{display:flex;align-items:center;gap:9px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.9px;}
   .section-title .ic{width:19px;height:19px;display:flex;}
   .section-title .ic svg{width:19px;height:19px;}
@@ -313,6 +334,16 @@
   }
   img.poster{display:block;padding:0;}
 
+  /* Отключаем нативное меню iOS (Save Image / Copy) и выделение на удержании постеров */
+  img, .card, .poster-frame, .lp-card-img{
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    user-select:none;
+    -webkit-user-drag:none;
+    user-drag:none;
+  }
+
   .poster-caption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:30px 9px 9px;background:linear-gradient(180deg, rgba(7,7,10,0) 0%, rgba(7,7,10,.52) 42%, rgba(7,7,10,.95) 100%);}
   .poster-caption .card-title{font-size:12px;font-weight:700;line-height:1.28;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
   .poster-caption .card-sub{margin-top:3px;font-size:9.5px;font-weight:600;letter-spacing:.3px;color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -320,6 +351,88 @@
   .rating-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);}
   .imdb-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--gold);}
   .type-pill{position:absolute;top:7px;left:7px;z-index:3;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.65);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--ink-dim);}
+
+  /* ===== Долгое нажатие на постер: мини-карточка + выбор категории через сердечко ===== */
+  .lp-overlay{
+    position:fixed;inset:0;z-index:850;
+    background:rgba(3,3,6,0);
+    backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);
+    transition:background .25s var(--ease), backdrop-filter .25s var(--ease);
+    pointer-events:none;
+  }
+  .lp-overlay.show{
+    background:rgba(3,3,6,.62);
+    backdrop-filter:blur(6px) saturate(120%);-webkit-backdrop-filter:blur(6px) saturate(120%);
+  }
+  .lp-card{
+    position:fixed;z-index:851;border-radius:var(--radius-sm);overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08);
+    transition:left .28s var(--ease), top .28s var(--ease), width .28s var(--ease), height .28s var(--ease), border-radius .28s var(--ease);
+    pointer-events:none;background:var(--bg-soft);
+  }
+  .lp-card.grown{border-radius:var(--radius-lg);}
+  .lp-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .lp-card-noimg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;text-align:center;font-size:13px;font-weight:700;color:var(--ink-dim);}
+  .lp-card-caption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:38px 14px 14px;background:linear-gradient(180deg, rgba(7,7,10,0) 0%, rgba(7,7,10,.6) 45%, rgba(7,7,10,.96) 100%);}
+  .lp-card-title{font-size:15px;font-weight:800;line-height:1.28;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65);}
+  .lp-heart{
+    position:fixed;z-index:852;width:54px;height:54px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-dim);
+    background:linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+    box-shadow:0 10px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
+    opacity:0;transform:scale(.4);
+    transition:opacity .22s var(--ease), transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .18s var(--ease), background .18s var(--ease), color .18s var(--ease);
+    pointer-events:none;
+  }
+  .lp-heart.show{opacity:1;transform:scale(1);}
+  .lp-heart.hover{transform:scale(1.22);box-shadow:0 14px 34px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.3);background:linear-gradient(150deg, var(--accent-2), var(--accent));color:#fff;}
+  .lp-heart-filled{background:linear-gradient(150deg, var(--accent-2), var(--accent-deep));color:#fff;box-shadow:0 10px 26px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.25);}
+  .lp-heart-filled svg path{fill:currentColor;}
+  .lp-trash{
+    position:fixed;z-index:852;width:54px;height:54px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--ink-dim);
+    background:linear-gradient(150deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+    box-shadow:0 10px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
+    opacity:0;transform:scale(.4);
+    transition:opacity .22s var(--ease), transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .18s var(--ease), background .18s var(--ease), color .18s var(--ease);
+    pointer-events:none;
+  }
+  .lp-trash.show{opacity:1;transform:scale(1);}
+  .lp-trash.hover{transform:scale(1.22);box-shadow:0 14px 34px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.3);background:linear-gradient(150deg, var(--accent-2), var(--accent-deep));color:#fff;}
+  .lp-cat-panel{
+    position:fixed;z-index:852;
+    display:grid;grid-template-rows:repeat(2, auto);grid-auto-flow:column;grid-auto-columns:56px;
+    gap:14px 10px;
+    width:max-content;max-width:88vw;overflow-x:auto;overflow-y:hidden;
+    padding:14px 16px;border-radius:var(--radius-lg);
+    background:linear-gradient(155deg, rgba(255,255,255,.11), rgba(255,255,255,.03));
+    backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);
+    border:1px solid var(--glass-border);box-shadow:0 16px 40px rgba(0,0,0,.5);
+    opacity:0;transform:translateX(-50%) translateY(-10px) scale(.92);
+    transition:opacity .18s var(--ease), transform .18s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;
+  }
+  .lp-cat-panel.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
+  .lp-cat-chip{display:flex;flex-direction:column;align-items:center;gap:6px;width:56px;flex-shrink:0;}
+  .lp-cat-chip-icon{
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
+    box-shadow:0 6px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s var(--ease);
+  }
+  .lp-cat-chip-label{font-size:9.5px;font-weight:700;color:var(--ink-dim);text-align:center;line-height:1.15;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s var(--ease);}
+  .lp-cat-chip.active .lp-cat-chip-icon{transform:scale(1.22);box-shadow:0 10px 22px rgba(0,0,0,.5), 0 0 0 3px rgba(255,255,255,.55);}
+  .lp-cat-chip.active .lp-cat-chip-label{color:#fff;}
+  .lp-toast{
+    position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(10px);z-index:900;
+    padding:11px 18px;border-radius:var(--radius-pill);
+    background:linear-gradient(155deg, rgba(255,255,255,.13), rgba(255,255,255,.04));
+    backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+    border:1px solid var(--glass-border);box-shadow:0 12px 30px rgba(0,0,0,.5);
+    font-size:13px;font-weight:700;color:#fff;opacity:0;
+    transition:opacity .22s var(--ease), transform .22s var(--ease);
+    pointer-events:none;max-width:80vw;text-align:center;
+  }
+  .lp-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   .empty{color:var(--ink-faint);font-size:13px;border-radius:var(--radius-sm);padding:26px 18px;text-align:center;line-height:1.55;margin:0 16px;border:1px dashed var(--glass-border-soft);}
 
@@ -411,6 +524,25 @@
     transition: opacity 0.3s ease;
   }
 
+  .overview-extra {
+    display: block;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+    overflow: hidden;
+    transition: max-height 0.55s var(--ease), opacity 0.45s ease 0.05s, transform 0.45s var(--ease), margin-top 0.45s var(--ease);
+    margin-top: 0;
+  }
+  .detail-overview.expanded .overview-extra {
+    max-height: 800px;
+    opacity: 1;
+    transform: translateY(0);
+    margin-top: 6px;
+  }
+  .detail-overview.expanded .overview-ellipsis {
+    display: none;
+  }
+
   .read-more-btn {
     color: var(--accent-2);
     font-weight: 600;
@@ -421,6 +553,7 @@
     font-size: 13px;
     margin-left: 4px;
     display: inline;
+    transition: opacity 0.2s ease;
   }
   .read-more-btn:active {
     opacity: 0.7;
@@ -745,7 +878,8 @@
     clipboardPaste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1"/><path d="M8 5h8v2H8z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>',
     users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M3 21v-5h5"/><path d="M21 3v5h-5"/></svg>',
-    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
@@ -1970,13 +2104,13 @@
     if (m.description) {
       const words = m.description.trim().split(/\s+/);
       if (words.length > 25) {
-        const shortText = words.slice(0, 25).join(' ') + '...';
-        const fullText = m.description;
-        if (isOverviewExpanded) {
-          descriptionHtml = '<div class="detail-overview"><span class="overview-text-inner">' + escapeHtml(fullText) + '</span><button class="read-more-btn" id="toggleOverviewBtn">свернуть</button></div>';
-        } else {
-          descriptionHtml = '<div class="detail-overview"><span class="overview-text-inner">' + escapeHtml(shortText) + '</span><button class="read-more-btn" id="toggleOverviewBtn">еще</button></div>';
-        }
+        const shortText = words.slice(0, 25).join(' ');
+        const restText = words.slice(25).join(' ');
+        descriptionHtml = '<div class="detail-overview'+(isOverviewExpanded ? ' expanded' : '')+'" id="detailOverview">'
+          + '<span class="overview-text-inner">' + escapeHtml(shortText) + '<span class="overview-ellipsis">…</span></span>'
+          + '<span class="overview-extra" id="overviewExtra">' + escapeHtml(restText) + '</span>'
+          + '<button class="read-more-btn" id="toggleOverviewBtn">' + (isOverviewExpanded ? 'свернуть' : 'еще') + '</button>'
+          + '</div>';
       } else {
         descriptionHtml = '<div class="detail-overview"><span class="overview-text-inner">' + escapeHtml(m.description) + '</span></div>';
       }
@@ -2216,9 +2350,56 @@
       let pressTimer = null;
       let longPressActive = false;
       let startY = 0;
+      let prevTouchY = 0;
       let dragCtx = null;
+      let lastClientY = 0;
+      let autoScrollRAF = null;
+      let collapseTimer = null;
+      let draggedSectionEl = null;
+
+      const COLLAPSE_DURATION = 300;
 
       const cancelPress = () => { if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+
+      // Автопрокрутка: пока идёт перетаскивание и палец находится у верхней или
+      // нижней кромки видимой области, плавно прокручиваем #app в ту сторону —
+      // скорость нарастает по мере приближения к самому краю.
+      const AUTOSCROLL_EDGE = 190;
+      const AUTOSCROLL_MIN_SPEED = 6;
+      const AUTOSCROLL_MAX_SPEED = 26;
+
+      const stopAutoScroll = () => {
+        if (autoScrollRAF){ cancelAnimationFrame(autoScrollRAF); autoScrollRAF = null; }
+      };
+
+      const autoScrollTick = () => {
+        if (!dragCtx){ autoScrollRAF = null; return; }
+        const appRect = app.getBoundingClientRect();
+        const distFromTop = lastClientY - appRect.top;
+        const distFromBottom = appRect.bottom - lastClientY;
+        let speed = 0;
+        if (distFromTop >= 0 && distFromTop < AUTOSCROLL_EDGE){
+          const ratio = 1 - distFromTop / AUTOSCROLL_EDGE;
+          speed = -(AUTOSCROLL_MIN_SPEED + (AUTOSCROLL_MAX_SPEED - AUTOSCROLL_MIN_SPEED) * ratio);
+        } else if (distFromBottom >= 0 && distFromBottom < AUTOSCROLL_EDGE){
+          const ratio = 1 - distFromBottom / AUTOSCROLL_EDGE;
+          speed = AUTOSCROLL_MIN_SPEED + (AUTOSCROLL_MAX_SPEED - AUTOSCROLL_MIN_SPEED) * ratio;
+        }
+        if (speed !== 0){
+          const maxScrollTop = app.scrollHeight - app.clientHeight;
+          const prevScrollTop = app.scrollTop;
+          const nextScrollTop = Math.max(0, Math.min(maxScrollTop, prevScrollTop + speed));
+          const actualDelta = nextScrollTop - prevScrollTop;
+          if (actualDelta !== 0){
+            app.scrollTop = nextScrollTop;
+            // Компенсируем смещение контента прокруткой, чтобы перетаскиваемая
+            // секция визуально оставалась под пальцем.
+            dragCtx.startClientY -= actualDelta;
+            onMove(lastClientY);
+          }
+        }
+        autoScrollRAF = requestAnimationFrame(autoScrollTick);
+      };
 
       const beginDrag = (clientY) => {
         const sectionEl = headEl.closest('.section[data-cat-section]');
@@ -2230,19 +2411,41 @@
         longPressActive = true;
         catDragSuppressClick = true;
         hapticSelect();
+        lastClientY = clientY;
+        draggedSectionEl = sectionEl;
 
-        const rects = sections.map(el => ({ el, top: el.offsetTop, height: el.offsetHeight }));
         sectionEl.classList.add('cat-dragging');
         app.classList.add('cat-reorder-active');
 
-        dragCtx = { sectionEl, rects, draggedIndex, targetIndex: draggedIndex, startClientY: clientY, draggedInfo: rects[draggedIndex] };
+        // Даём рядам с постерами схлопнуться (см. CSS у .cat-reorder-active) и
+        // только после этого включаем расчёт перетаскивания — уже по высоте
+        // компактных заголовков, а не полных рядов с постерами.
+        clearTimeout(collapseTimer);
+        collapseTimer = setTimeout(() => {
+          if (!longPressActive || draggedSectionEl !== sectionEl) return;
+          const rects = sections.map(el => ({ el, top: el.offsetTop, height: el.offsetHeight }));
+          dragCtx = { sectionEl, rects, draggedIndex, targetIndex: draggedIndex, startClientY: lastClientY, draggedInfo: rects[draggedIndex] };
+          stopAutoScroll();
+          autoScrollRAF = requestAnimationFrame(autoScrollTick);
+        }, COLLAPSE_DURATION);
       };
 
       const onMove = (clientY) => {
         if (!longPressActive){
+          // Заголовок специально не отдаёт жест браузеру (touch-action:none),
+          // чтобы тот не перехватывал его на середине перетаскивания — поэтому
+          // пока долгое нажатие ещё не сработало, прокручиваем страницу вручную,
+          // как обычный свайп.
+          const delta = prevTouchY - clientY;
+          prevTouchY = clientY;
           if (pressTimer && Math.abs(clientY - startY) > 8) cancelPress();
+          const maxScrollTop = app.scrollHeight - app.clientHeight;
+          if (maxScrollTop > 0){
+            app.scrollTop = Math.max(0, Math.min(maxScrollTop, app.scrollTop + delta));
+          }
           return;
         }
+        lastClientY = clientY;
         if (!dragCtx) return;
         const dy = clientY - dragCtx.startClientY;
         dragCtx.sectionEl.style.transform = 'translateY(' + dy + 'px)';
@@ -2275,39 +2478,47 @@
 
       const endDrag = () => {
         cancelPress();
+        stopAutoScroll();
+        clearTimeout(collapseTimer);
         if (!longPressActive) return;
         longPressActive = false;
         const ctx = dragCtx;
         dragCtx = null;
         app.classList.remove('cat-reorder-active');
-        if (!ctx) return;
-
-        ctx.rects.forEach(r => { r.el.style.transform = ''; });
-        ctx.sectionEl.classList.remove('cat-dragging');
-
-        if (ctx.targetIndex !== ctx.draggedIndex){
-          const moved = state.categories.splice(ctx.draggedIndex, 1)[0];
-          state.categories.splice(ctx.targetIndex, 0, moved);
-          STORAGE.saveCategories(state.categories);
-          hapticOk();
+        if (draggedSectionEl){
+          draggedSectionEl.classList.remove('cat-dragging');
+          draggedSectionEl = null;
         }
-        render();
+
+        if (ctx){
+          ctx.rects.forEach(r => { r.el.style.transform = ''; });
+
+          if (ctx.targetIndex !== ctx.draggedIndex){
+            const moved = state.categories.splice(ctx.draggedIndex, 1)[0];
+            state.categories.splice(ctx.targetIndex, 0, moved);
+            STORAGE.saveCategories(state.categories);
+            hapticOk();
+          }
+          render();
+        }
         setTimeout(() => { catDragSuppressClick = false; }, 50);
       };
 
       headEl.addEventListener('contextmenu', e => e.preventDefault());
+      headEl.addEventListener('selectstart', e => e.preventDefault());
 
       headEl.addEventListener('touchstart', e => {
         e.stopPropagation();
         const t = e.touches[0];
         startY = t.clientY;
+        prevTouchY = t.clientY;
         cancelPress();
         pressTimer = setTimeout(() => beginDrag(t.clientY), 350);
       }, {passive:true});
 
       headEl.addEventListener('touchmove', e => {
         const t = e.touches[0];
-        if (longPressActive) e.preventDefault();
+        e.preventDefault();
         onMove(t.clientY);
       }, {passive:false});
 
@@ -2316,6 +2527,7 @@
 
       headEl.addEventListener('mousedown', e => {
         startY = e.clientY;
+        prevTouchY = e.clientY;
         cancelPress();
         pressTimer = setTimeout(() => beginDrag(e.clientY), 350);
         const onMouseMove = ev => onMove(ev.clientY);
@@ -2870,7 +3082,11 @@
     if (toggleBtn){
       toggleBtn.onclick = () => {
         isOverviewExpanded = !isOverviewExpanded;
-        render();
+        const overviewDiv = document.getElementById('detailOverview');
+        if (overviewDiv){
+          overviewDiv.classList.toggle('expanded', isOverviewExpanded);
+        }
+        toggleBtn.textContent = isOverviewExpanded ? 'свернуть' : 'еще';
       };
     }
 
@@ -3188,6 +3404,411 @@
     renderModalInner();
     document.body.appendChild(div);
   }
+
+  // ===== Долгое нажатие на постер (в любом разделе): мини-карточка + выбор категории через сердечко =====
+
+  let lpState = null;
+  let lpSuppressNextClick = false;
+  let lpLastTouchTs = 0;
+
+  function lpResolveRef(cardEl){
+    if (cardEl.hasAttribute('data-open')){
+      const id = cardEl.getAttribute('data-open');
+      if (!state.movies.some(x => x.id === id)) return null;
+      return { kind:'library', id:id };
+    }
+    if (cardEl.hasAttribute('data-discover-pick')){
+      const tmdbId = cardEl.getAttribute('data-discover-pick');
+      const mediaType = cardEl.getAttribute('data-discover-type');
+      // Если фильм из поиска/discover уже сохранён в библиотеке (есть в какой-то категории),
+      // резолвим его как library-ссылку, чтобы сердечко в мини-карточке закрашивалось
+      // и корзина для удаления работала как для обычных карточек библиотеки.
+      const existing = state.movies.find(x => String(x.tmdbId) === String(tmdbId));
+      if (existing) return { kind:'library', id: existing.id };
+      return { kind:'tmdb', tmdbId, mediaType };
+    }
+    return null;
+  }
+
+  function lpExtractVisual(cardEl){
+    const imgEl = cardEl.querySelector('img.poster');
+    const posterSrc = imgEl ? imgEl.getAttribute('src') : '';
+    const titleEl = cardEl.querySelector('.card-title');
+    const title = titleEl ? titleEl.textContent : '';
+    const pillEl = cardEl.querySelector('.rating-pill, .imdb-pill');
+    const pillHtml = pillEl ? pillEl.outerHTML : '';
+    return { posterSrc, title, pillHtml };
+  }
+
+  function lpStartPress(cardEl, x, y){
+    lpAbort();
+    const ref = lpResolveRef(cardEl);
+    if (!ref) return;
+    lpState = {
+      cardEl, ref, startX:x, startY:y, active:false, timer:null,
+      overlayEl:null, cardEl2:null, heartEl:null, panelEl:null, trashEl:null,
+      heartRect:null, trashRect:null, catRects:[], highlightedCatIndex:-1, panelVisible:false, trashHover:false
+    };
+    lpState.timer = setTimeout(lpActivate, 600);
+  }
+
+  function lpActivate(){
+    if (!lpState) return;
+    const cardEl = lpState.cardEl;
+    const rect = cardEl.getBoundingClientRect();
+    const visual = lpExtractVisual(cardEl);
+    lpState.active = true;
+    hapticSelect();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'lp-overlay';
+    document.body.appendChild(overlay);
+
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const targetW = Math.min(228, vw * 0.6);
+    const targetH = targetW * 1.5;
+    const targetLeft = (vw - targetW) / 2;
+    const targetTop = Math.max(20, vh * 0.15);
+
+    const preview = document.createElement('div');
+    preview.className = 'lp-card';
+    preview.style.left = rect.left + 'px';
+    preview.style.top = rect.top + 'px';
+    preview.style.width = rect.width + 'px';
+    preview.style.height = rect.height + 'px';
+    preview.innerHTML =
+      (visual.posterSrc ? '<img class="lp-card-img" src="'+escapeHtml(visual.posterSrc)+'">' : '<div class="lp-card-noimg">'+escapeHtml(visual.title)+'</div>')
+      + '<div class="lp-card-caption"><div class="lp-card-title">'+escapeHtml(visual.title)+'</div></div>'
+      + visual.pillHtml;
+    document.body.appendChild(preview);
+
+    // Мусорка показывается только для фильмов, уже находящихся в какой-то категории
+    // (то есть уже сохранённых в библиотеке) — у элементов discover/tmdb статуса ещё нет.
+    const showTrash = lpState.ref && lpState.ref.kind === 'library';
+    const btnGap = 16;
+    const heartTop = targetTop + targetH + 22;
+    const pairWidth = showTrash ? (54 + btnGap + 54) : 54;
+    const pairLeft = vw/2 - pairWidth/2;
+    const heartLeft = pairLeft;
+    const trashLeft = pairLeft + 54 + btnGap;
+
+    const heart = document.createElement('div');
+    heart.className = 'lp-heart' + (showTrash ? ' lp-heart-filled' : '');
+    heart.style.left = heartLeft + 'px';
+    heart.style.top = heartTop + 'px';
+    heart.innerHTML = icon('heart', 22);
+    document.body.appendChild(heart);
+
+    lpState.overlayEl = overlay;
+    lpState.cardEl2 = preview;
+    lpState.heartEl = heart;
+    lpState.heartRect = { left:heartLeft, top:heartTop, width:54, height:54 };
+
+    let trash = null;
+    if (showTrash){
+      trash = document.createElement('div');
+      trash.className = 'lp-trash';
+      trash.style.left = trashLeft + 'px';
+      trash.style.top = heartTop + 'px';
+      trash.innerHTML = icon('trash', 20);
+      document.body.appendChild(trash);
+      lpState.trashEl = trash;
+      lpState.trashRect = { left:trashLeft, top:heartTop, width:54, height:54 };
+    }
+
+    requestAnimationFrame(() => {
+      overlay.classList.add('show');
+      preview.style.left = targetLeft + 'px';
+      preview.style.top = targetTop + 'px';
+      preview.style.width = targetW + 'px';
+      preview.style.height = targetH + 'px';
+      preview.classList.add('grown');
+      heart.classList.add('show');
+      if (trash) trash.classList.add('show');
+    });
+  }
+
+  function lpOpenCatPanel(){
+    if (!lpState || lpState.panelEl) return;
+    const panel = document.createElement('div');
+    panel.className = 'lp-cat-panel';
+    panel.innerHTML = state.categories.map((c,i) =>
+      '<div class="lp-cat-chip" data-cat-idx="'+i+'">'
+      + '<div class="lp-cat-chip-icon" style="background:'+(c.color||'var(--accent)')+';">'+icon(c.icon,18)+'</div>'
+      + '<div class="lp-cat-chip-label">'+escapeHtml(c.l)+'</div>'
+      + '</div>'
+    ).join('');
+    const hr = lpState.heartRect;
+    const minTop = hr.top + hr.height + 16;
+    panel.style.left = '50%';
+    panel.style.top = minTop + 'px';
+    document.body.appendChild(panel);
+    lpState.panelEl = panel;
+
+    const measure = () => {
+      if (!lpState || lpState.panelEl !== panel) return;
+      // Если панель не помещается по высоте до низа экрана — сдвигаем её выше, но не выше сердечка.
+      const h = panel.getBoundingClientRect().height;
+      const maxTop = window.innerHeight - h - 16;
+      panel.style.top = Math.min(minTop, maxTop) + 'px';
+      lpState.catRects = Array.from(panel.querySelectorAll('.lp-cat-chip')).map(el => el.getBoundingClientRect());
+    };
+    requestAnimationFrame(() => { panel.classList.add('show'); measure(); });
+    setTimeout(measure, 220);
+    lpState.panelVisible = true;
+  }
+
+  function lpMove(x, y){
+    if (!lpState) return;
+    if (!lpState.active){
+      if (Math.hypot(x - lpState.startX, y - lpState.startY) > 14) lpAbort();
+      return;
+    }
+    const hr = lpState.heartRect;
+    const pad = 18;
+    const overHeart = hr && x > hr.left-pad && x < hr.left+hr.width+pad && y > hr.top-pad && y < hr.top+hr.height+pad;
+
+    let overPanel = false;
+    if (lpState.panelEl){
+      const pr = lpState.panelEl.getBoundingClientRect();
+      overPanel = x > pr.left-6 && x < pr.right+6 && y > pr.top-6 && y < pr.bottom+6;
+    }
+
+    if (overHeart){
+      lpState.heartEl.classList.add('hover');
+      if (!lpState.panelEl){
+        hapticSelect();
+        lpOpenCatPanel();
+      } else if (!lpState.panelVisible){
+        hapticSelect();
+        lpState.panelEl.classList.add('show');
+        lpState.panelVisible = true;
+      }
+    } else if (!overPanel && lpState.panelVisible){
+      // Палец отвели с сердечка обратно на постер (или мимо панели) — прячем панель категорий,
+      // пока пользователь снова не наведётся на сердечко.
+      lpState.heartEl.classList.remove('hover');
+      lpState.panelEl.classList.remove('show');
+      lpState.panelVisible = false;
+      lpState.highlightedCatIndex = -1;
+      lpState.panelEl.querySelectorAll('.lp-cat-chip').forEach(c => c.classList.remove('active'));
+    }
+
+    if (lpState.panelVisible){
+      let hoveredIdx = -1;
+      lpState.catRects.forEach((r, i) => {
+        if (x > r.left-6 && x < r.right+6 && y > r.top-6 && y < r.bottom+6) hoveredIdx = i;
+      });
+      if (hoveredIdx !== lpState.highlightedCatIndex){
+        const chips = lpState.panelEl.querySelectorAll('.lp-cat-chip');
+        chips.forEach((c,i) => c.classList.toggle('active', i===hoveredIdx));
+        if (hoveredIdx !== -1) hapticSelect();
+        lpState.highlightedCatIndex = hoveredIdx;
+      }
+    }
+
+    if (lpState.trashEl){
+      const tr = lpState.trashRect;
+      const pad = 18;
+      const overTrash = tr && x > tr.left-pad && x < tr.left+tr.width+pad && y > tr.top-pad && y < tr.top+tr.height+pad;
+      if (overTrash !== lpState.trashHover){
+        lpState.trashEl.classList.toggle('hover', overTrash);
+        if (overTrash) hapticSelect();
+        lpState.trashHover = overTrash;
+      }
+    }
+  }
+
+  function lpTeardownDom(st){
+    if (st.panelEl) st.panelEl.remove();
+    if (st.heartEl) st.heartEl.remove();
+    if (st.trashEl) st.trashEl.remove();
+    if (st.cardEl2) st.cardEl2.remove();
+    if (st.overlayEl) st.overlayEl.remove();
+  }
+
+  function lpAbort(){
+    if (!lpState) return;
+    if (lpState.timer) clearTimeout(lpState.timer);
+    if (lpState.active){
+      lpSuppressNextClick = true;
+      lpTeardownDom(lpState);
+    }
+    lpState = null;
+  }
+
+  function lpRelease(){
+    if (!lpState) return;
+    if (!lpState.active){
+      clearTimeout(lpState.timer);
+      const cardEl = lpState.cardEl;
+      lpState = null;
+      // Короткое касание (палец отпущен раньше, чем сработал долгий тап) —
+      // открываем карточку сами, не дожидаясь нативного click от браузера.
+      // На части устройств/веб-вью нативный click после touch иногда
+      // «съедается», если браузер посчитал жест похожим на скролл —
+      // из-за этого обычное нажатие на постер срабатывало через раз.
+      lpTriggerTap(cardEl);
+      return;
+    }
+    lpFinish();
+  }
+
+  function lpTriggerTap(cardEl){
+    if (!cardEl) return;
+    lpSuppressNextClick = true;
+    if (cardEl.hasAttribute('data-open')){
+      const id = cardEl.getAttribute('data-open');
+      if (state.movies.some(x => x.id === id)) openMovie(id);
+    } else if (cardEl.hasAttribute('data-discover-pick')){
+      previewTmdb(cardEl.getAttribute('data-discover-pick'), cardEl.getAttribute('data-discover-type'));
+    }
+  }
+
+  async function lpFinish(){
+    const st = lpState;
+    if (!st) return;
+    lpSuppressNextClick = true;
+    const trashHover = st.trashHover;
+    const idx = st.highlightedCatIndex;
+    const cat = (idx >= 0 && state.categories[idx]) ? state.categories[idx] : null;
+    const ref = st.ref;
+    lpTeardownDom(st);
+    lpState = null;
+
+    if (trashHover){
+      const ok = await lpDeleteFromCategory(ref);
+      if (ok){
+        hapticOk();
+        lpToast('Удалено из категорий');
+        render();
+        if (state.view === 'search') renderSearchDropdown();
+      } else {
+        hapticErr();
+        lpToast('Не удалось удалить фильм');
+      }
+      return;
+    }
+
+    if (!cat) return;
+    const ok = await lpAddToCategory(ref, cat.v);
+    if (ok){
+      hapticOk();
+      lpToast('Добавлено в «' + cat.l + '»');
+      render();
+      if (state.view === 'search') renderSearchDropdown();
+    } else {
+      hapticErr();
+      lpToast('Не удалось добавить фильм');
+    }
+  }
+
+  async function lpDeleteFromCategory(ref){
+    if (!ref || ref.kind !== 'library') return false;
+    const m = state.movies.find(x => x.id === ref.id);
+    if (!m) return false;
+    const ok = await deleteMovie(m.id);
+    if (ok) state.movies = state.movies.filter(x => x.id !== m.id);
+    return ok;
+  }
+
+  async function lpAddToCategory(ref, catValue){
+    if (!ref) return false;
+    if (ref.kind === 'library'){
+      const m = state.movies.find(x => x.id === ref.id);
+      if (!m) return false;
+      if (m.status === catValue) return true;
+      const oldCat = m.status;
+      m.status = catValue;
+      const ok = await updateMovie(m);
+      if (ok && isSharedCat(oldCat) && oldCat !== catValue) fbDelete('shared/'+shareCodeOf(oldCat)+'/movies/'+m.id);
+      return ok;
+    }
+    if (ref.kind === 'tmdb'){
+      const existing = state.movies.find(x => String(x.tmdbId) === String(ref.tmdbId));
+      if (existing){
+        if (existing.status === catValue) return true;
+        const oldCat = existing.status;
+        existing.status = catValue;
+        const ok = await updateMovie(existing);
+        if (ok && isSharedCat(oldCat) && oldCat !== catValue) fbDelete('shared/'+shareCodeOf(oldCat)+'/movies/'+existing.id);
+        return ok;
+      }
+      try{
+        const data = await tmdbFetch('/' + ref.mediaType + '/' + ref.tmdbId, state.tmdbKey);
+        const mapped = mapTmdbItem(data, ref.mediaType);
+        mapped.id = 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        mapped.status = catValue;
+        mapped.addedAt = Date.now();
+        const ok = await addMovie(mapped);
+        if (ok) state.movies.push(mapped);
+        return ok;
+      }catch(e){ return false; }
+    }
+    return false;
+  }
+
+  function lpToast(msg){
+    const t = document.createElement('div');
+    t.className = 'lp-toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => {
+      t.classList.remove('show');
+      setTimeout(() => t.remove(), 260);
+    }, 1500);
+  }
+
+  function initLongPressPreview(){
+    document.addEventListener('touchstart', function(e){
+      lpLastTouchTs = Date.now();
+      const cardEl = e.target.closest('[data-open], [data-discover-pick]');
+      if (!cardEl || e.target.closest('[data-quick-fav]')) return;
+      const t = e.touches[0];
+      lpStartPress(cardEl, t.clientX, t.clientY);
+    }, {passive:true});
+
+    document.addEventListener('touchmove', function(e){
+      if (!lpState) return;
+      const t = e.touches[0];
+      if (lpState.active) e.preventDefault();
+      lpMove(t.clientX, t.clientY);
+    }, {passive:false});
+
+    document.addEventListener('touchend', function(){ lpRelease(); }, {passive:true});
+    document.addEventListener('touchcancel', function(){ lpAbort(); }, {passive:true});
+
+    document.addEventListener('mousedown', function(e){
+      if (e.button !== 0) return;
+      if (Date.now() - lpLastTouchTs < 700) return;
+      const cardEl = e.target.closest('[data-open], [data-discover-pick]');
+      if (!cardEl || e.target.closest('[data-quick-fav]')) return;
+      lpStartPress(cardEl, e.clientX, e.clientY);
+      const onMove = ev => lpMove(ev.clientX, ev.clientY);
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        lpRelease();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    document.addEventListener('contextmenu', function(e){
+      if (lpState && lpState.active) e.preventDefault();
+    });
+
+    document.addEventListener('click', function(e){
+      if (lpSuppressNextClick){
+        lpSuppressNextClick = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+  }
+
+  initLongPressPreview();
 
   loadTelegramSdkThenStart();
 })();
