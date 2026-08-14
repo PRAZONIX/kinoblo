@@ -63,6 +63,7 @@
     position:relative;
     -webkit-overflow-scrolling:touch;
   }
+  #app.search-scroll-locked{overflow:hidden;touch-action:none;-webkit-overflow-scrolling:auto;}
   ::-webkit-scrollbar{display:none;}
   a{color:inherit;text-decoration:none;}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;-webkit-tap-highlight-color:transparent;}
@@ -263,21 +264,24 @@
   .nav svg{width:20px;height:20px;}
   .nav .nlabel{font-size:10px;font-weight:700;letter-spacing:.3px;}
 
-  .search-bar-bottom{position:fixed;left:0;right:0;bottom:86px;display:flex;justify-content:center;z-index:39;pointer-events:none;padding:0 16px;}
-  .search-bar-inner{pointer-events:auto;width:100%;max-width:488px;display:flex;align-items:center;gap:10px;padding:13px 17px;border-radius:var(--radius-pill);box-shadow:0 14px 36px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);}
-  .search-bar-inner svg{color:var(--ink-faint);flex:0 0 auto;}
-  .search-bar-inner input{background:transparent;border:none;padding:2px 0;font-size:15px;backdrop-filter:none;-webkit-backdrop-filter:none;flex:1;min-width:0;}
+  .search-bar-bottom{position:fixed;left:0;right:0;bottom:102px;display:flex;justify-content:center;z-index:39;pointer-events:none;padding:0 16px;}
+  .search-bar-inner{pointer-events:auto;width:100%;max-width:230px;display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:var(--radius-pill);background:rgba(255,255,255,.1);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:1px solid rgba(255,255,255,.15);box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22);transition:max-width .55s cubic-bezier(.16,1.35,.32,1), background .4s var(--ease), box-shadow .4s var(--ease), border-color .4s var(--ease);}
+  .search-bar-inner.expanded{max-width:468px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.22);box-shadow:0 12px 32px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.32);}
+  .search-bar-inner:focus-within{background:rgba(255,255,255,.14);box-shadow:0 12px 32px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.32);}
+  .search-bar-inner svg{color:var(--ink-faint);flex:0 0 auto;width:15px;height:15px;transition:transform .5s cubic-bezier(.16,1.35,.32,1);}
+  .search-bar-inner.expanded svg{transform:scale(1.05);}
+  .search-bar-inner input{background:transparent;border:none;padding:2px 0;font-size:13px;backdrop-filter:none;-webkit-backdrop-filter:none;flex:1;min-width:0;}
   .search-bar-inner input:focus{border:none;background:transparent;}
   .search-bar-inner input:focus-visible{outline:none;}
-  .search-bar-inner .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);background:rgba(255,255,255,.08);}
+  .search-bar-inner .sb-clear{flex:0 0 auto;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);background:rgba(255,255,255,.14);}
   
   .search-results-dropdown {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);
-    max-width: 488px;
-    bottom: 148px;
+    max-width: 468px;
+    bottom: 154px;
     max-height: 45dvh;
     overflow-y: auto;
     z-index: 38;
@@ -293,6 +297,11 @@
   }
 
   .discover-scroll-pad{height:2px;}
+
+  #searchBgContent{transition: filter .18s var(--ease);}
+  #searchBgContent.search-bg-blurred{
+    filter: blur(14px) brightness(.5) saturate(115%);
+  }
 
   .field label{display:block;font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px;}
 
@@ -1066,7 +1075,7 @@
       state.discover.cache[cat.key] = [];
     }
     state.discover.loading[cat.key] = false;
-    render();
+    renderDiscoverCategoryRow(cat.key);
   }
 
   async function loadDiscoverFullPage(key){
@@ -1402,6 +1411,42 @@
     });
   }
 
+  // Блюр фонового контента вкладки "Поиск", пока строка поиска в фокусе или что-то введено,
+  // и выход из поиска по клику по этому фону. Блюрится именно #searchBgContent (топбар + подборки) —
+  // строка поиска, нижние кнопки Главная/Поиск и список результатов лежат вне этого контейнера
+  // и поэтому никогда не блюрятся и не перехватывают клик.
+  let searchFocused = false;
+
+  function searchShouldBlur(){
+    return state.view === 'search' && (searchFocused || !!(state.tmdbQuery && state.tmdbQuery.trim()));
+  }
+
+  function syncSearchBlur(){
+    const bg = document.getElementById('searchBgContent');
+    const shouldBlur = searchShouldBlur();
+    if (bg) bg.classList.toggle('search-bg-blurred', shouldBlur);
+    const app = document.getElementById('app');
+    if (app) app.classList.toggle('search-scroll-locked', shouldBlur);
+  }
+
+  function handleSearchBgClick(e){
+    if (searchShouldBlur()){
+      e.stopPropagation();
+      e.preventDefault();
+      exitSearch();
+    }
+  }
+
+  function exitSearch(){
+    state.tmdbQuery = '';
+    state.tmdbResults = null;
+    searchFocused = false;
+    const qInput = document.getElementById('tmdbQueryBottom');
+    if (qInput) qInput.blur();
+    renderSearchDropdown();
+    syncSearchBlur();
+  }
+
   function renderSearchDropdown(){
     const bar = document.querySelector('.search-bar-bottom');
     if (!bar || !bar.parentNode) return false;
@@ -1409,6 +1454,7 @@
     let container = document.getElementById('searchResultsDropdownContainer');
     if (!searching){
       if (container) container.remove();
+      syncSearchBlur();
       return true;
     }
     if (!container){
@@ -1421,18 +1467,58 @@
       ? renderTmdbResults(state.tmdbResults)
       : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>';
     bindSearchDropdownEvents(container);
+    syncSearchBlur();
     return true;
+  }
+
+  function discoverCategoryBodyHtml(cat){
+    const list = state.discover.cache[cat.key];
+    if (!list) return '<div class="empty glass-flat" style="margin:0 16px;">Загрузка…</div>';
+    if (!list.length) return '<div class="empty glass-flat" style="margin:0 16px;">Не удалось загрузить.</div>';
+    return '<div class="row-scroll">'+list.map(discoverCard).join('')+'</div>';
   }
 
   function discoverRowsHtml(){
     return DISCOVER_CATEGORIES.map(cat => {
-      const list = state.discover.cache[cat.key];
-      let body;
-      if (!list) body = '<div class="empty glass-flat" style="margin:0 16px;">Загрузка…</div>';
-      else if (!list.length) body = '<div class="empty glass-flat" style="margin:0 16px;">Не удалось загрузить.</div>';
-      else body = '<div class="row-scroll">'+list.map(discoverCard).join('')+'</div>';
-      return '<div class="section"><div class="section-head" data-discover-cat="'+cat.key+'"><div class="section-title">'+escapeHtml(cat.label)+'</div><div class="section-count">'+icon('chevron',12)+'</div></div>'+body+'</div>';
+      return '<div class="section"><div class="section-head" data-discover-cat="'+cat.key+'"><div class="section-title">'+escapeHtml(cat.label)+'</div><div class="section-count">'+icon('chevron',12)+'</div></div><div class="discover-row-body" id="discoverBody_'+cat.key+'">'+discoverCategoryBodyHtml(cat)+'</div></div>';
     }).join('') + '<div class="discover-scroll-pad"></div>';
+  }
+
+  // Точечное обновление одного ряда подборки (без полной перерисовки страницы), чтобы во время
+  // фоновой подгрузки категорий не пересоздавался DOM карточек, по которым в этот момент кто-то тапает.
+  function bindDiscoverRowEvents(container){
+    container.querySelectorAll('[data-discover-pick]').forEach(el => {
+      el.onclick = e => {
+        if (e.target.closest('[data-quick-fav]')) return;
+        previewTmdb(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+      };
+    });
+    container.querySelectorAll('[data-quick-fav]').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const tmdbId = btn.getAttribute('data-quick-fav');
+        const mediaType = btn.getAttribute('data-quick-type');
+        const existing = state.movies.find(x => x.tmdbId === Number(tmdbId) || x.tmdbId === tmdbId);
+        if (existing) {
+          deleteMovie(existing.id).then(() => {
+            state.movies = state.movies.filter(x => x.id !== existing.id);
+            DISCOVER_CATEGORIES.forEach(cat => renderDiscoverCategoryRow(cat.key));
+          });
+        } else {
+          openChooseForTmdb(tmdbId, mediaType);
+        }
+      };
+    });
+  }
+
+  function renderDiscoverCategoryRow(key){
+    const body = document.getElementById('discoverBody_' + key);
+    if (!body) return false;
+    const cat = discoverCatByKey(key);
+    if (!cat) return false;
+    body.innerHTML = discoverCategoryBodyHtml(cat);
+    bindDiscoverRowEvents(body);
+    return true;
   }
 
   function viewDiscoverList(){
@@ -1465,8 +1551,8 @@
         + '</div>';
     }
 
-    return dropdownHtml + '<div class="search-bar-bottom"><div class="search-bar-inner glass">'
-    + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+    return dropdownHtml + '<div class="search-bar-bottom"><div class="search-bar-inner'+(searching ? ' expanded' : '')+'">'
+    + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
     + '<input id="tmdbQueryBottom" placeholder="Найти фильм или сериал…" value="'+escapeHtml(state.tmdbQuery)+'">'
     + '<button type="button" class="sb-clear" id="tmdbQueryBottomClear" style="'+(state.tmdbQuery ? '' : 'display:none;')+'">'+icon('close',13)+'</button>'
     + '</div></div>';
@@ -1477,9 +1563,11 @@
       '<button class="genre-chip" data-discover-cat="'+cat.key+'">'+escapeHtml(cat.label)+'</button>'
     ).join('') + '</div>';
 
-    return '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>' 
+    return '<div id="searchBgContent">'
+      + '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('crossSmile', 22) + '</span></div></div></div>' 
       + genresBarHtml 
-      + discoverRowsHtml();
+      + discoverRowsHtml()
+      + '</div>';
   }
 
   function viewDetail(){
@@ -1621,6 +1709,14 @@
         setTimeout(() => app.scrollTop = pos, 10);
       }
     }
+    if (state.view === 'search'){
+      const bgContent = document.getElementById('searchBgContent');
+      if (bgContent) {
+        bgContent.addEventListener('click', handleSearchBgClick, true);
+        bgContent.addEventListener('touchmove', e => { if (searchShouldBlur()) e.preventDefault(); }, { passive:false });
+      }
+    }
+    syncSearchBlur();
   }
 
   function focusSearchInput(){
@@ -2106,12 +2202,22 @@
         }, 350);
       };
       qInput.onfocus = () => {
+        searchFocused = true;
+        syncSearchBlur();
+        const inner = qInput.closest('.search-bar-inner');
+        if (inner) inner.classList.add('expanded');
         if (state.tmdbQuery && !state.tmdbResults){
           tmdbSearch(state.tmdbQuery, state.tmdbKey).then(res => {
             state.tmdbResults = res;
             renderSearchDropdown();
           });
         }
+      };
+      qInput.onblur = () => {
+        searchFocused = false;
+        syncSearchBlur();
+        const inner = qInput.closest('.search-bar-inner');
+        if (inner && !state.tmdbQuery) inner.classList.remove('expanded');
       };
     }
 
