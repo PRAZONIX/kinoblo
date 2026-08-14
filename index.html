@@ -575,7 +575,30 @@
   let tg = null;
   let tmdbSearchTimer = null;
   let isOverviewExpanded = false; 
-  let previousView = 'home'; 
+  let navStack = []; // стек предыдущих экранов для корректной работы "назад" (свайп/кнопка) при вложенных переходах
+
+  function pushNav(){
+    navStack.push({
+      view: state.view,
+      detailId: state.detailId,
+      previewItem: state.previewItem,
+      categoryFilter: state.categoryFilter,
+      discoverListKey: state.discoverListKey
+    });
+  }
+
+  function popNav(){
+    if (navStack.length){
+      const prev = navStack.pop();
+      state.view = prev.view;
+      state.detailId = prev.detailId;
+      state.previewItem = prev.previewItem;
+      state.categoryFilter = prev.categoryFilter;
+      state.discoverListKey = prev.discoverListKey;
+    } else {
+      state.view = 'home';
+    }
+  }
 
   function initTelegram(){
     try{
@@ -930,6 +953,16 @@
     }
   });
 
+  async function syncAllSharedCategories(){
+    const sharedCats = state.categories.filter(c => c.shared && c.code);
+    if (!sharedCats.length) return;
+    for (const cat of sharedCats){
+      await syncSharedCategoryMovies(cat.code);
+      await syncSharedCategoryMeta(cat.code);
+    }
+    render();
+  }
+
   async function loadAll(){
     await STORAGE.init();
     state.movies = await loadMovies();
@@ -942,6 +975,7 @@
     render();
     initSwipeBack();
     initInfiniteScroll();
+    syncAllSharedCategories();
   }
 
   async function tmdbFetch(path, key){
@@ -1121,6 +1155,7 @@
 
   function openDiscoverList(key){
     state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    pushNav();
     state.discoverListKey = key;
     state.view = 'discoverList';
     render();
@@ -1545,8 +1580,8 @@
 
   async function openMovie(id){ 
     isOverviewExpanded = false; 
-    previousView = state.view; 
     state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    pushNav();
     state.detailId = id; 
     state.previewItem = null; 
     
@@ -1560,8 +1595,8 @@
 
   async function previewTmdb(tmdbId, mediaType){
     isOverviewExpanded = false;
-    previousView = state.view;
     state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    pushNav();
     
     state.tmdbQuery = '';
     state.tmdbResults = null;
@@ -1840,6 +1875,7 @@
       const backdrops = await tmdbImages(tmdbId, mediaType, state.tmdbKey);
       mapped.screenshots = backdrops.slice(0, 6);
       state.pendingMovie = mapped;
+      pushNav();
       state.view = 'choose';
       render();
     }).catch(() => customAlert('Не удалось загрузить данные фильма.'));
@@ -1917,10 +1953,8 @@
           app.style.transition = '';
           app.style.transform = '';
           app.style.opacity = '';
-          if (state.view === 'detail') {
-            state.view = previousView;
-          } else if (state.view === 'category' || state.view === 'discoverList' || state.view === 'choose') {
-            state.view = 'home';
+          if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose') {
+            popNav();
           } else if (state.view === 'search') {
             state.view = 'home';
           }
@@ -1949,6 +1983,7 @@
           return;
         }
         state.scrollPositions[state.view] = 0;
+        navStack = [];
         state.view = v;
         if (v === 'search'){
           state.tmdbQuery = '';
@@ -1962,6 +1997,7 @@
     document.querySelectorAll('.section-head[data-cat]').forEach(el => {
       el.onclick = () => {
         state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+        pushNav();
         const catV = el.getAttribute('data-cat');
         state.categoryFilter = catV;
         state.view = 'category';
@@ -1983,10 +2019,8 @@
     const backBtn = document.getElementById('backBtn');
     if (backBtn){
       backBtn.onclick = () => {
-        if (state.view === 'detail'){
-          state.view = previousView;
-        } else if (state.view === 'category' || state.view === 'discoverList' || state.view === 'choose'){
-          state.view = 'home';
+        if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose'){
+          popNav();
         }
         render();
       };
@@ -2104,6 +2138,7 @@
         const m = state.previewItem;
         if (!m) return;
         state.pendingMovie = m;
+        pushNav();
         state.view = 'choose';
         render();
       };
@@ -2117,7 +2152,7 @@
         const ok = await deleteMovie(m.id);
         if (ok){
           state.movies = state.movies.filter(x => x.id !== m.id);
-          state.view = previousView || 'home';
+          popNav();
           render();
         }
       };
