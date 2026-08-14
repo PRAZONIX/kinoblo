@@ -161,28 +161,92 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
   }
+  /* ===== Liquid glass — общий минималистичный стиль для чипов и кнопок-фильтров =====
+     Более прозрачная версия: ниже плотность заливки и границ, но сохраняем лёгкую
+     подсветку (brightness/saturate) и мягкий блик сверху, чтобы стекло не терялось
+     на чёрном фоне, а выглядело деликатно и приятно, а не плотным пятном. */
   .genre-chip {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    padding: 9px 17px;
+    padding: 7px 13px;
     border-radius: var(--radius-pill);
-    background: var(--glass);
-    border: 1px solid var(--glass-border-soft);
-    font-size: 13px;
+    background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.012));
+    border: 1px solid rgba(255,255,255,.11);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -8px 14px -10px rgba(255,255,255,.05), 0 5px 14px rgba(0,0,0,.22);
+    font-size: 12.5px;
     font-weight: 600;
     color: var(--ink-dim);
-    transition: all .15s var(--ease);
+    transition: all .18s var(--ease);
     cursor: pointer;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(24px) saturate(170%) brightness(1.15);
+    -webkit-backdrop-filter: blur(24px) saturate(170%) brightness(1.15);
   }
   .genre-chip:active {
-    transform: scale(0.94);
+    transform: scale(0.95);
   }
+  .discover-filter-bar{display:flex;gap:6px;padding:10px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .discover-filter-btn{
+    flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:var(--radius-pill);
+    background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.012));
+    border:1px solid rgba(255,255,255,.11);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 5px 14px rgba(0,0,0,.18);
+    font-size:12px;font-weight:600;color:var(--ink-dim);
+    backdrop-filter:blur(24px) saturate(170%) brightness(1.15);-webkit-backdrop-filter:blur(24px) saturate(170%) brightness(1.15);
+    transition:all .18s var(--ease);white-space:nowrap;
+  }
+  .discover-filter-btn svg{width:13px;height:13px;flex:0 0 auto;}
+  .discover-filter-btn.active{
+    background:linear-gradient(160deg, rgba(255,110,122,.22), rgba(255,43,61,.08));
+    color:#fff;border-color:rgba(255,140,150,.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 5px 16px rgba(255,43,61,.15);
+  }
+  .discover-filter-btn:active{transform:scale(.94);}
+  .discover-filter-reset{
+    flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.012));
+    border:1px solid rgba(255,255,255,.11);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 5px 12px rgba(0,0,0,.18);
+    color:var(--ink-dim);backdrop-filter:blur(24px) saturate(170%) brightness(1.15);-webkit-backdrop-filter:blur(24px) saturate(170%) brightness(1.15);
+    transition:all .18s var(--ease);
+  }
+  .discover-filter-reset:active{transform:scale(.9);}
+  .filter-type-opt.active{
+    border-color:rgba(255,140,150,.35);
+    background:linear-gradient(160deg, rgba(255,110,122,.16), rgba(255,43,61,.05));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.26);
+  }
+  .filter-year-opt.active, .filter-country-opt.active, .filter-genre-opt.active{
+    background:linear-gradient(160deg, rgba(255,110,122,.22), rgba(255,43,61,.08));
+    color:#fff;border-color:rgba(255,140,150,.35);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 5px 16px rgba(255,43,61,.15);
+  }
+
+  .year-wheel-wrap{position:relative;margin-top:12px;}
+  .year-wheel{
+    height:176px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
+    border-radius:var(--radius-sm);
+    background:linear-gradient(160deg, rgba(255,255,255,.032), rgba(255,255,255,.007));
+    border:1px solid rgba(255,255,255,.09);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+    backdrop-filter:blur(24px) saturate(170%) brightness(1.12);-webkit-backdrop-filter:blur(24px) saturate(170%) brightness(1.12);
+    padding:69px 0;box-sizing:border-box;
+  }
+  .year-wheel::-webkit-scrollbar{display:none;}
+  .year-wheel-item{height:38px;display:flex;align-items:center;justify-content:center;font-size:15.5px;font-weight:600;color:var(--ink-faint);scroll-snap-align:center;scroll-snap-stop:always;user-select:none;-webkit-user-select:none;transition:color .15s var(--ease), font-size .15s var(--ease);}
+  .year-wheel-item.center-active{color:var(--ink);font-size:19px;font-weight:800;}
+  .year-wheel-indicator{
+    position:absolute;left:6px;right:6px;top:50%;height:38px;transform:translateY(-50%);
+    border-radius:11px;pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.018));
+    border:1px solid rgba(255,255,255,.15);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.22);
+  }
+
   .genre-chip.active {
-    background: linear-gradient(135deg, var(--accent-2), var(--accent-deep));
+    background: linear-gradient(160deg, rgba(255,110,122,.22), rgba(255,43,61,.08));
     color: #fff;
-    border-color: transparent;
-    box-shadow: 0 6px 16px var(--accent-glow);
+    border-color: rgba(255,140,150,.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 5px 16px rgba(255,43,61,.15);
   }
 
   .section{padding:16px 0 4px;transition:transform .22s var(--ease);}
@@ -308,8 +372,15 @@
 
   .field label{display:block;font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px;}
 
-  .primary-btn{background:linear-gradient(135deg,var(--accent-2),var(--accent-deep) 75%);color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:var(--radius-pill);text-align:center;margin-top:4px;box-shadow:0 12px 28px var(--accent-glow);transition:transform .12s var(--ease), box-shadow .12s var(--ease);width:100%;}
-  .primary-btn:active{transform:scale(.97);box-shadow:0 5px 14px var(--accent-glow);}
+  .primary-btn{
+    background:linear-gradient(160deg, rgba(255,93,108,.22), rgba(200,16,31,.1));
+    backdrop-filter:blur(24px) saturate(170%) brightness(1.1);-webkit-backdrop-filter:blur(24px) saturate(170%) brightness(1.1);
+    border:1px solid rgba(255,120,130,.28);
+    color:#fff;font-weight:700;font-size:15px;padding:15px;border-radius:var(--radius-pill);text-align:center;margin-top:4px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 20px rgba(255,43,61,.12);
+    transition:transform .12s var(--ease), box-shadow .12s var(--ease);width:100%;
+  }
+  .primary-btn:active{transform:scale(.97);box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 4px 12px rgba(255,43,61,.1);}
   .secondary-btn{color:var(--ink);font-weight:600;font-size:14px;padding:14px;border-radius:var(--radius-pill);text-align:center;width:100%;transition:transform .12s var(--ease);}
   .secondary-btn:active{transform:scale(.97);}
   .danger-btn{color:var(--accent-2);background:rgba(255,43,61,.09);border:1px solid rgba(255,43,61,.3);font-weight:700;padding:14px;border-radius:var(--radius-pill);text-align:center;backdrop-filter:blur(14px);width:100%;transition:transform .12s var(--ease);}
@@ -535,15 +606,15 @@
     width:100%;
     max-width:520px;
     border-radius:var(--radius-lg) var(--radius-lg) 0 0;
-    padding:22px 18px 20px;
+    padding:18px 16px 18px;
     max-height:85dvh;
     overflow-y:auto;
-    background:linear-gradient(165deg, rgba(25,25,29,.95), rgba(12,12,15,.985));
-    backdrop-filter:blur(30px) saturate(160%);
-    -webkit-backdrop-filter:blur(30px) saturate(160%);
-    border:1px solid var(--glass-border);
+    background:linear-gradient(165deg, rgba(38,38,45,.4), rgba(16,16,20,.46));
+    backdrop-filter:blur(44px) saturate(180%) brightness(1.1);
+    -webkit-backdrop-filter:blur(44px) saturate(180%) brightness(1.1);
+    border:1px solid rgba(255,255,255,.1);
     border-bottom:none;
-    box-shadow:0 -16px 44px rgba(0,0,0,.55);
+    box-shadow:0 -16px 44px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
     box-sizing:border-box;
     position:relative;
     animation:sheetIn .26s var(--ease) both;
@@ -673,7 +744,8 @@
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
     clipboardPaste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1"/><path d="M8 5h8v2H8z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>',
     users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M3 21v-5h5"/><path d="M21 3v5h-5"/></svg>'
+    sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M3 21v-5h5"/><path d="M21 3v5h-5"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
@@ -793,7 +865,7 @@
     movies: [], categories: [], view: 'home', detailId: null, categoryFilter: null,
     pendingMovie: null, previewItem: null, loaded: false,
     tmdbKey: '', tmdbResults: null, tmdbQuery: '',
-    discover: { cache: {}, loading: {}, lgbtKeywordIds: null, full: {}, fullLoading: {}, fullPage: {}, fullDone: {} },
+    discover: { cache: {}, loading: {}, lgbtKeywordIds: null, full: {}, fullLoading: {}, fullPage: {}, fullDone: {}, filters: {} },
     discoverListKey: null,
     scrollPositions: {}
   };
@@ -1036,6 +1108,105 @@
   ];
   function discoverCatByKey(key){ return DISCOVER_CATEGORIES.find(c => c.key === key); }
 
+  // Категории, у которых "тип" (фильм/сериал/аниме/мультик) уже зафиксирован самой подборкой —
+  // для них селектор "Тип" в фильтрах ленты не показываем, т.к. он дублировал бы саму подборку.
+  const DISCOVER_FIXED_TYPE_CATS = ['movies', 'series', 'cartoon', 'anime'];
+
+  const DISCOVER_TYPE_OPTIONS = [
+    {key:'movie', label:'Фильм'},
+    {key:'series', label:'Сериал'},
+    {key:'anime', label:'Аниме'},
+    {key:'cartoon', label:'Мультик'}
+  ];
+
+  const DISCOVER_COUNTRY_OPTIONS = [
+    {code:'RU', label:'Россия'}, {code:'US', label:'США'}, {code:'GB', label:'Великобритания'},
+    {code:'FR', label:'Франция'}, {code:'DE', label:'Германия'}, {code:'IT', label:'Италия'},
+    {code:'ES', label:'Испания'}, {code:'JP', label:'Япония'}, {code:'KR', label:'Южная Корея'},
+    {code:'CN', label:'Китай'}, {code:'IN', label:'Индия'}, {code:'CA', label:'Канада'},
+    {code:'BR', label:'Бразилия'}, {code:'TR', label:'Турция'}
+  ];
+
+  // Список жанров для фильтра ленты — id соответствуют жанрам TMDB (movie).
+  // При запросе к /discover/tv эти же id используются как best-effort (у TMDB частично совпадают жанры movie/tv).
+  const DISCOVER_GENRE_OPTIONS = [
+    {id:28, label:'Боевик'}, {id:12, label:'Приключения'}, {id:16, label:'Мультфильм'},
+    {id:35, label:'Комедия'}, {id:80, label:'Криминал'}, {id:99, label:'Документальный'},
+    {id:18, label:'Драма'}, {id:10751, label:'Семейный'}, {id:14, label:'Фэнтези'},
+    {id:36, label:'История'}, {id:27, label:'Ужасы'}, {id:10402, label:'Мюзикл'},
+    {id:9648, label:'Детектив'}, {id:10749, label:'Мелодрама / Романтика'}, {id:878, label:'Фантастика'},
+    {id:53, label:'Триллер'}, {id:10752, label:'Военный'}, {id:37, label:'Вестерн'}
+  ];
+
+  function getDiscoverFilters(key){
+    if (!state.discover.filters[key]) state.discover.filters[key] = { year: null, type: null, country: null, genre: null };
+    return state.discover.filters[key];
+  }
+
+  function resetDiscoverListCache(key){
+    state.discover.full[key] = [];
+    state.discover.fullPage[key] = 0;
+    state.discover.fullDone[key] = false;
+    state.discover.fullLoading[key] = false;
+  }
+
+  function applyDiscoverFilterChange(key){
+    resetDiscoverListCache(key);
+    render();
+    document.getElementById('app').scrollTop = 0;
+    loadDiscoverFullPage(key);
+  }
+
+  function resetDiscoverFilters(key){
+    state.discover.filters[key] = { year: null, type: null, country: null, genre: null };
+    applyDiscoverFilterChange(key);
+  }
+
+  // Строит запросы к TMDB /discover для подборки cat с учётом выбранных фильтров (год/тип/страна).
+  // Возвращает массив {kind, url} — по одному на каждый нужный вид контента (movie и/или tv).
+  function buildDiscoverRequests(cat, filters, page){
+    let kinds;
+    if (filters.type === 'movie') kinds = ['movie'];
+    else if (filters.type === 'series') kinds = ['tv'];
+    else if (filters.type === 'cartoon') kinds = ['movie'];
+    else if (filters.type === 'anime') kinds = ['tv'];
+    else if (cat.kind === 'mixed') kinds = ['movie', 'tv'];
+    else kinds = [cat.kind];
+
+    return kinds.map(kind => {
+      const params = new URLSearchParams();
+      let simpleEndpoint = null;
+
+      if (cat.provider || cat.company){
+        if (cat.provider){ params.set('with_watch_providers', String(cat.provider)); params.set('watch_region', 'US'); }
+        if (cat.company){ params.set('with_companies', String(cat.company)); }
+      } else if (cat.path){
+        const qIdx = cat.path.indexOf('?');
+        const basePath = qIdx === -1 ? cat.path : cat.path.slice(0, qIdx);
+        const qs = qIdx === -1 ? '' : cat.path.slice(qIdx + 1);
+        if (basePath.indexOf('/discover/') === 0){
+          if (qs) new URLSearchParams(qs).forEach((v, k) => params.set(k, v));
+        } else if (kind === cat.kind && !filters.year && !filters.country && !filters.type && !filters.genre){
+          simpleEndpoint = basePath;
+        }
+      }
+
+      if (filters.type === 'cartoon'){ params.set('with_genres', '16'); params.delete('with_original_language'); }
+      else if (filters.type === 'anime'){ params.set('with_genres', '16'); params.set('with_original_language', 'ja'); }
+
+      if (filters.genre) params.set('with_genres', String(filters.genre));
+
+      if (filters.year) params.set(kind === 'tv' ? 'first_air_date_year' : 'primary_release_year', String(filters.year));
+      if (filters.country) params.set('with_origin_country', filters.country);
+
+      if (simpleEndpoint) return { kind, url: simpleEndpoint + '?page=' + page };
+
+      if (!params.has('sort_by')) params.set('sort_by', 'popularity.desc');
+      params.set('page', String(page));
+      return { kind, url: '/discover/' + kind + '?' + params.toString() };
+    });
+  }
+
   async function loadDiscoverCategory(cat){
     if (state.discover.cache[cat.key] || state.discover.loading[cat.key]) return;
     state.discover.loading[cat.key] = true;
@@ -1089,15 +1260,11 @@
     const loader = document.getElementById('infiniteLoader');
     if (loader) loader.style.display = 'block';
 
+    const filters = getDiscoverFilters(key);
     const page = (state.discover.fullPage[key] || 0) + 1;
     let items = [];
     try{
-      if (cat.path){
-        const sep = cat.path.indexOf('?') > -1 ? '&' : '?';
-        const data = await tmdbFetch(cat.path + sep + 'page=' + page, state.tmdbKey);
-        items = (data.results || []).map(r => mapTmdbItem(r, cat.kind));
-        if (page >= (data.total_pages || 1)) state.discover.fullDone[key] = true;
-      } else if (cat.special === 'lgbt'){
+      if (cat.special === 'lgbt'){
         let kwIds = state.discover.lgbtKeywordIds;
         if (!kwIds){
           const [kw1, kw2] = await Promise.all([
@@ -1111,24 +1278,37 @@
         }
         if (kwIds.length){
           const kwParam = kwIds.join('|');
-          const [mv, tv] = await Promise.all([
-            tmdbFetch('/discover/movie?with_keywords=' + kwParam + '&sort_by=popularity.desc&primary_release_date.gte=2015-01-01&page=' + page, state.tmdbKey),
-            tmdbFetch('/discover/tv?with_keywords=' + kwParam + '&sort_by=popularity.desc&first_air_date.gte=2015-01-01&page=' + page, state.tmdbKey)
-          ]);
-          items = (mv.results||[]).map(r=>mapTmdbItem(r,'movie')).concat((tv.results||[]).map(r=>mapTmdbItem(r,'tv')));
-          items.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
-          const maxPages = Math.max(mv.total_pages||1, tv.total_pages||1);
+          let kinds;
+          if (filters.type === 'movie' || filters.type === 'cartoon') kinds = ['movie'];
+          else if (filters.type === 'series' || filters.type === 'anime') kinds = ['tv'];
+          else kinds = ['movie', 'tv'];
+          const reqs = kinds.map(kind => {
+            const params = new URLSearchParams();
+            params.set('with_keywords', kwParam);
+            params.set('sort_by', 'popularity.desc');
+            params.set('page', String(page));
+            if (filters.type === 'cartoon'){ params.set('with_genres', '16'); }
+            else if (filters.type === 'anime'){ params.set('with_genres', '16'); params.set('with_original_language', 'ja'); }
+            if (filters.genre) params.set('with_genres', String(filters.genre));
+            if (filters.year) params.set(kind === 'tv' ? 'first_air_date_year' : 'primary_release_year', String(filters.year));
+            else params.set(kind === 'tv' ? 'first_air_date.gte' : 'primary_release_date.gte', '2015-01-01');
+            if (filters.country) params.set('with_origin_country', filters.country);
+            return { kind, url: '/discover/' + kind + '?' + params.toString() };
+          });
+          const results = await Promise.all(reqs.map(r => tmdbFetch(r.url, state.tmdbKey)));
+          items = [];
+          results.forEach((data, i) => { items = items.concat((data.results || []).map(r => mapTmdbItem(r, reqs[i].kind))); });
+          if (reqs.length > 1) items.sort((a,b) => (b.popularity||0) - (a.popularity||0));
+          const maxPages = Math.max.apply(null, results.map(d => d.total_pages || 1));
           if (page >= maxPages || page >= 20) state.discover.fullDone[key] = true;
         } else { state.discover.fullDone[key] = true; }
-      } else if (cat.provider || cat.company){
-        const param = cat.provider ? ('with_watch_providers=' + cat.provider + '&watch_region=US') : ('with_companies=' + cat.company);
-        const [mv, tv] = await Promise.all([
-          tmdbFetch('/discover/movie?' + param + '&sort_by=popularity.desc&page=' + page, state.tmdbKey),
-          tmdbFetch('/discover/tv?' + param + '&sort_by=popularity.desc&page=' + page, state.tmdbKey)
-        ]);
-        items = (mv.results||[]).map(r=>mapTmdbItem(r,'movie')).concat((tv.results||[]).map(r=>mapTmdbItem(r,'tv')));
-        items.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
-        const maxPages = Math.max(mv.total_pages||1, tv.total_pages||1);
+      } else {
+        const reqs = buildDiscoverRequests(cat, filters, page);
+        const results = await Promise.all(reqs.map(r => tmdbFetch(r.url, state.tmdbKey)));
+        items = [];
+        results.forEach((data, i) => { items = items.concat((data.results || []).map(r => mapTmdbItem(r, reqs[i].kind))); });
+        if (reqs.length > 1) items.sort((a,b) => (b.popularity||0) - (a.popularity||0));
+        const maxPages = Math.max.apply(null, results.map(d => d.total_pages || 1));
         if (page >= maxPages || page >= 20) state.discover.fullDone[key] = true;
       }
       const existing = state.discover.full[key] || [];
@@ -1524,6 +1704,200 @@
     return true;
   }
 
+  function discoverFilterBarHtml(key){
+    const cat = discoverCatByKey(key);
+    if (!cat) return '';
+    const f = getDiscoverFilters(key);
+    const showType = DISCOVER_FIXED_TYPE_CATS.indexOf(key) === -1;
+    const yearLabel = f.year ? String(f.year) : 'Год';
+    const typeOpt = f.type ? DISCOVER_TYPE_OPTIONS.find(t => t.key === f.type) : null;
+    const typeLbl = typeOpt ? typeOpt.label : 'Тип';
+    const genreOpt = f.genre ? DISCOVER_GENRE_OPTIONS.find(g => g.id === f.genre) : null;
+    const genreLbl = genreOpt ? genreOpt.label : 'Жанр';
+    const countryOpt = f.country ? DISCOVER_COUNTRY_OPTIONS.find(c => c.code === f.country) : null;
+    const countryLbl = countryOpt ? countryOpt.label : (f.country || 'Страна');
+
+    let html = '<div class="discover-filter-bar">';
+    html += '<button type="button" class="discover-filter-btn'+(f.year?' active':'')+'" data-discover-filter="year" data-discover-filter-key="'+key+'">'+icon('calendar',14)+'<span>'+escapeHtml(yearLabel)+'</span></button>';
+    if (showType){
+      html += '<button type="button" class="discover-filter-btn'+(f.type?' active':'')+'" data-discover-filter="type" data-discover-filter-key="'+key+'">'+icon('film',14)+'<span>'+escapeHtml(typeLbl)+'</span></button>';
+    }
+    html += '<button type="button" class="discover-filter-btn'+(f.genre?' active':'')+'" data-discover-filter="genre" data-discover-filter-key="'+key+'">'+icon('sparkles',14)+'<span>'+escapeHtml(genreLbl)+'</span></button>';
+    html += '<button type="button" class="discover-filter-btn'+(f.country?' active':'')+'" data-discover-filter="country" data-discover-filter-key="'+key+'">'+icon('globe',14)+'<span>'+escapeHtml(countryLbl)+'</span></button>';
+    if (f.year || f.type || f.genre || f.country){
+      html += '<button type="button" class="discover-filter-reset" data-discover-filter="reset" data-discover-filter-key="'+key+'" title="Сбросить фильтры">'+icon('close',13)+'</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function openYearFilterModal(key){
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear + 5; y >= currentYear - 60; y--) years.push(y);
+
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Год выпуска</div>'
+      + '<div class="field" style="margin-top:10px;"><label>Крути колесо ниже или введи год вручную</label>'
+      +   '<input id="yearFilterInput" type="number" placeholder="Например: 2021" inputmode="numeric" min="1900" max="'+(currentYear+5)+'" style="margin-top:6px;padding:11px 13px;font-size:14px;">'
+      + '</div>'
+      + '<div class="year-wheel-wrap">'
+      +   '<div class="year-wheel-indicator"></div>'
+      +   '<div class="year-wheel" id="yearWheel">'
+      +     years.map(y => '<div class="year-wheel-item" data-wheel-year="'+y+'">'+y+'</div>').join('')
+      +   '</div>'
+      + '</div>'
+      + '<div class="modal-actions" style="margin-top:14px;">'
+      +   '<button type="button" class="primary-btn" id="yearApplyBtn" style="margin-top:0;padding:13px;display:flex;align-items:center;justify-content:center;gap:7px;">'+icon('check',16)+'<span>Применить</span></button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.onclick = e => { if (e.target === div) div.remove(); };
+
+    const wheel = div.querySelector('#yearWheel');
+    const items = Array.from(wheel.querySelectorAll('.year-wheel-item'));
+    const currentIdx = years.indexOf(currentYear);
+
+    const markCenterActive = () => {
+      const center = wheel.scrollTop + wheel.clientHeight / 2;
+      let closestIdx = 0, closestDist = Infinity;
+      items.forEach((it, i) => {
+        const itemCenter = it.offsetTop + it.offsetHeight / 2;
+        const dist = Math.abs(itemCenter - center);
+        if (dist < closestDist){ closestDist = dist; closestIdx = i; }
+      });
+      items.forEach((it, i) => it.classList.toggle('center-active', i === closestIdx));
+      return closestIdx;
+    };
+
+    // При каждом открытии колесо всегда стартует с текущего года, а не с ранее выбранного.
+    requestAnimationFrame(() => {
+      if (currentIdx > -1 && items[currentIdx]){
+        wheel.scrollTop = items[currentIdx].offsetTop - (wheel.clientHeight / 2 - items[currentIdx].offsetHeight / 2);
+      }
+      markCenterActive();
+    });
+
+    // Скролл (пальцем, тачпадом или колёсиком мыши) только подсвечивает год по центру —
+    // применяется он только по нажатию общей кнопки "Применить", без авто-закрытия.
+    wheel.addEventListener('scroll', () => { markCenterActive(); }, { passive: true });
+
+    // Прокрутка колёсиком мыши/трекпада — листаем список по одному году за "тик",
+    // с плавной анимацией, как будто крутишь настоящее колесо выбора.
+    let wheelBusy = false;
+    wheel.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (wheelBusy) return;
+      wheelBusy = true;
+      const itemH = items[0].offsetHeight;
+      const dir = e.deltaY > 0 ? 1 : -1;
+      wheel.scrollBy({ top: dir * itemH, behavior: 'smooth' });
+      setTimeout(() => { wheelBusy = false; }, 110);
+    }, { passive: false });
+
+    items.forEach(it => {
+      it.onclick = () => { it.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+    });
+
+    // Общая кнопка "Применить": если в поле введён год вручную — берём его,
+    // иначе — год, выбранный прокруткой колеса (по центру).
+    const input = div.querySelector('#yearFilterInput');
+    const applyYear = () => {
+      const raw = input.value.trim();
+      const val = raw ? parseInt(raw, 10) : NaN;
+      const year = (raw && !isNaN(val)) ? val : years[markCenterActive()];
+      const f2 = getDiscoverFilters(key);
+      f2.year = year;
+      div.remove();
+      applyDiscoverFilterChange(key);
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ applyYear(); }
+    });
+    div.querySelector('#yearApplyBtn').onclick = applyYear;
+  }
+
+  function openTypeFilterModal(key){
+    const f = getDiscoverFilters(key);
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Тип</div>'
+      + '<div style="display:flex;flex-direction:column;gap:7px;margin-top:10px;">'
+      + DISCOVER_TYPE_OPTIONS.map(t => '<button type="button" class="choose-btn glass-flat filter-type-opt'+(f.type===t.key?' active':'')+'" data-type-opt="'+t.key+'" style="padding:11px 12px;text-align:left;">'+escapeHtml(t.label)+'</button>').join('')
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.onclick = e => { if (e.target === div) div.remove(); };
+    div.querySelectorAll('[data-type-opt]').forEach(btn => {
+      btn.onclick = () => {
+        const f2 = getDiscoverFilters(key);
+        const val = btn.getAttribute('data-type-opt');
+        f2.type = (f2.type === val) ? null : val;
+        div.remove();
+        applyDiscoverFilterChange(key);
+      };
+    });
+  }
+
+  function openGenreFilterModal(key){
+    const f = getDiscoverFilters(key);
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Жанр</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:280px;overflow-y:auto;">'
+      + DISCOVER_GENRE_OPTIONS.map(g => '<button type="button" class="genre-chip filter-genre-opt'+(f.genre===g.id?' active':'')+'" data-genre-opt="'+g.id+'">'+escapeHtml(g.label)+'</button>').join('')
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.onclick = e => { if (e.target === div) div.remove(); };
+    div.querySelectorAll('[data-genre-opt]').forEach(btn => {
+      btn.onclick = () => {
+        const f2 = getDiscoverFilters(key);
+        const val = parseInt(btn.getAttribute('data-genre-opt'), 10);
+        f2.genre = (f2.genre === val) ? null : val;
+        div.remove();
+        applyDiscoverFilterChange(key);
+      };
+    });
+  }
+
+  function openCountryFilterModal(key){
+    const f = getDiscoverFilters(key);
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = '<div class="modal">'
+      + '<div class="modal-title">Страна выпуска</div>'
+      + '<div class="field" style="margin-top:10px;"><label>Код страны вручную и нажми Enter (например RU, US)</label><input id="countryFilterInput" placeholder="RU" maxlength="2" value="'+(f.country||'')+'" style="text-transform:uppercase;padding:11px 13px;font-size:14px;"></div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:220px;overflow-y:auto;">'
+      + DISCOVER_COUNTRY_OPTIONS.map(c => '<button type="button" class="genre-chip filter-country-opt'+(f.country===c.code?' active':'')+'" data-country-opt="'+c.code+'">'+escapeHtml(c.label)+'</button>').join('')
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(div);
+    div.onclick = e => { if (e.target === div) div.remove(); };
+    div.querySelectorAll('[data-country-opt]').forEach(btn => {
+      btn.onclick = () => {
+        const f2 = getDiscoverFilters(key);
+        f2.country = btn.getAttribute('data-country-opt');
+        div.remove();
+        applyDiscoverFilterChange(key);
+      };
+    });
+    const input = div.querySelector('#countryFilterInput');
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){
+        const val = input.value.trim().toUpperCase();
+        const f2 = getDiscoverFilters(key);
+        f2.country = val ? val : null;
+        div.remove();
+        applyDiscoverFilterChange(key);
+      }
+    });
+  }
+
   function viewDiscoverList(){
     const cat = discoverCatByKey(state.discoverListKey);
     if (!cat){ state.view = 'search'; return viewSearch(); }
@@ -1531,6 +1905,7 @@
     const loading = state.discover.fullLoading[cat.key];
     const done = state.discover.fullDone[cat.key];
     let html = '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(cat.label)+'</div></div>';
+    html += discoverFilterBarHtml(cat.key);
     if (!list.length && loading){
       html += '<div class="empty glass-flat" style="margin-top:16px;">Загрузка…</div>';
     } else if (!list.length){
@@ -2399,6 +2774,25 @@
       el.onclick = e => {
         if (e.target.closest('[data-quick-fav]')) return;
         previewTmdb(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+      };
+    });
+
+    document.querySelectorAll('[data-discover-filter]').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const kind = btn.getAttribute('data-discover-filter');
+        const key = btn.getAttribute('data-discover-filter-key');
+        if (kind === 'reset'){ resetDiscoverFilters(key); return; }
+        const f = getDiscoverFilters(key);
+        if (f[kind]){
+          f[kind] = null;
+          applyDiscoverFilterChange(key);
+          return;
+        }
+        if (kind === 'year') openYearFilterModal(key);
+        else if (kind === 'type') openTypeFilterModal(key);
+        else if (kind === 'genre') openGenreFilterModal(key);
+        else if (kind === 'country') openCountryFilterModal(key);
       };
     });
 
