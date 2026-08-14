@@ -268,6 +268,7 @@
   .search-bar-inner svg{color:var(--ink-faint);flex:0 0 auto;}
   .search-bar-inner input{background:transparent;border:none;padding:2px 0;font-size:15px;backdrop-filter:none;-webkit-backdrop-filter:none;flex:1;min-width:0;}
   .search-bar-inner input:focus{border:none;background:transparent;}
+  .search-bar-inner input:focus-visible{outline:none;}
   .search-bar-inner .sb-clear{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);background:rgba(255,255,255,.08);}
   
   .search-results-dropdown {
@@ -1373,6 +1374,56 @@
     }).join('') + '</div>';
   }
 
+  // Точечное обновление дропдауна результатов поиска без перерисовки всей страницы.
+  // Так input с фокусом не пересоздаётся при каждом кейстроке — фокус и курсор сохраняются,
+  // и вкладка не "прыгает" (например, пробел в конце слова случайно активирует другую кнопку из-за потери фокуса).
+  function bindSearchDropdownEvents(container){
+    container.querySelectorAll('[data-tmdb-preview]').forEach(btn => {
+      btn.onclick = e => {
+        if (e.target.closest('[data-quick-fav]')) return;
+        previewTmdb(btn.getAttribute('data-tmdb-preview'), btn.getAttribute('data-tmdb-type'));
+      };
+    });
+    container.querySelectorAll('[data-quick-fav]').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const tmdbId = btn.getAttribute('data-quick-fav');
+        const mediaType = btn.getAttribute('data-quick-type');
+        const existing = state.movies.find(x => x.tmdbId === Number(tmdbId) || x.tmdbId === tmdbId);
+        if (existing) {
+          deleteMovie(existing.id).then(() => {
+            state.movies = state.movies.filter(x => x.id !== existing.id);
+            renderSearchDropdown();
+          });
+        } else {
+          openChooseForTmdb(tmdbId, mediaType);
+        }
+      };
+    });
+  }
+
+  function renderSearchDropdown(){
+    const bar = document.querySelector('.search-bar-bottom');
+    if (!bar || !bar.parentNode) return false;
+    const searching = state.tmdbQuery && state.tmdbQuery.trim();
+    let container = document.getElementById('searchResultsDropdownContainer');
+    if (!searching){
+      if (container) container.remove();
+      return true;
+    }
+    if (!container){
+      container = document.createElement('div');
+      container.id = 'searchResultsDropdownContainer';
+      container.className = 'search-results-dropdown';
+      bar.parentNode.insertBefore(container, bar);
+    }
+    container.innerHTML = state.tmdbResults
+      ? renderTmdbResults(state.tmdbResults)
+      : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>';
+    bindSearchDropdownEvents(container);
+    return true;
+  }
+
   function discoverRowsHtml(){
     return DISCOVER_CATEGORIES.map(cat => {
       const list = state.discover.cache[cat.key];
@@ -2037,20 +2088,20 @@
         if (tmdbSearchTimer) clearTimeout(tmdbSearchTimer);
         if (!val.trim()){
           state.tmdbResults = null;
-          render();
-          focusSearchInput();
+          renderSearchDropdown();
           return;
         }
         tmdbSearchTimer = setTimeout(async () => {
+          const queryAtRequest = val;
           try{
             const res = await tmdbSearch(val, state.tmdbKey);
+            if (state.tmdbQuery !== queryAtRequest) return; // пользователь уже печатает дальше — устаревший ответ игнорируем
             state.tmdbResults = res;
-            render();
-            focusSearchInput();
+            renderSearchDropdown();
           }catch(err){
+            if (state.tmdbQuery !== queryAtRequest) return;
             state.tmdbResults = [];
-            render();
-            focusSearchInput();
+            renderSearchDropdown();
           }
         }, 350);
       };
@@ -2058,8 +2109,7 @@
         if (state.tmdbQuery && !state.tmdbResults){
           tmdbSearch(state.tmdbQuery, state.tmdbKey).then(res => {
             state.tmdbResults = res;
-            render();
-            focusSearchInput();
+            renderSearchDropdown();
           });
         }
       };
