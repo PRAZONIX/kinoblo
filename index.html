@@ -6,6 +6,11 @@
 <title>KINOBLO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.themoviedb.org">
+<link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+<link rel="dns-prefetch" href="https://api.themoviedb.org">
+<link rel="dns-prefetch" href="https://image.tmdb.org">
+<link rel="preconnect" href="https://telegram.org">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -1550,13 +1555,39 @@
     syncAllSharedCategories();
   }
 
+  // Короткоживущий кэш ответов TMDB + дедупликация параллельных одинаковых запросов.
+  // Экономит сеть при обычной навигации (открыл фильм → назад → открыл снова,
+  // переключение между категориями "Поиска" туда-обратно и т.п.), при этом TTL
+  // (3 мин) намного короче интервалов плановой проверки обновлений подборок
+  // (10-15 мин), так что логика "есть новинки" по-прежнему всегда видит свежие данные.
+  const TMDB_CACHE_TTL_MS = 3 * 60 * 1000;
+  const tmdbCache = new Map();
+  const tmdbInFlight = new Map();
+
   async function tmdbFetch(path, key){
     const base = 'https://api.themoviedb.org/3';
     const sep = path.indexOf('?') > -1 ? '&' : '?';
     const url = base + path + sep + 'api_key=' + encodeURIComponent(key) + '&language=ru-RU';
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('TMDB HTTP ' + res.status);
-    return res.json();
+
+    const cached = tmdbCache.get(url);
+    if (cached && (Date.now() - cached.time) < TMDB_CACHE_TTL_MS) return cached.data;
+
+    const inFlight = tmdbInFlight.get(url);
+    if (inFlight) return inFlight;
+
+    const req = (async () => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('TMDB HTTP ' + res.status);
+      const data = await res.json();
+      tmdbCache.set(url, { time: Date.now(), data });
+      return data;
+    })();
+    tmdbInFlight.set(url, req);
+    try{
+      return await req;
+    } finally {
+      tmdbInFlight.delete(url);
+    }
   }
 
   function mapTmdbItem(r, forcedKind){
@@ -2028,6 +2059,15 @@
 
   function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  // Подгоняет размер картинки TMDB под реальный размер отображения — маленькие
+  // карточки в сетке/рядах не нуждаются в w500, а полноразмерный w500 в 1.5-2 раза
+  // тяжелее нужного и заметно замедляет первую отрисовку списков на мобильном интернете.
+  // Для полноэкранных мест (хиро-баннер, фон детальной страницы) размер не трогаем.
+  function tmdbImgSize(url, size){
+    if (!url) return url;
+    return url.replace(/\/t\/p\/(w\d+|original)\//, '/t/p/' + size + '/');
+  }
+
   function openExternal(url){
     if (!url) return;
     if (tg && typeof tg.openLink === 'function'){
@@ -2072,7 +2112,7 @@
   function card(m){
     const tier = (m.myRating != null) ? tierMeta(m.myRating) : null;
     const frameCls = 'poster-frame ' + (tier ? 'tier-'+tier.key : 'tier-none');
-    const posterHtml = m.poster ? '<img class="poster" src="'+escapeHtml(m.poster)+'" alt="" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(m.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(m.title)+'</div>';
+    const posterHtml = m.poster ? '<img class="poster" src="'+escapeHtml(tmdbImgSize(m.poster,'w342'))+'" alt="" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(m.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(m.title)+'</div>';
     const typePill = m.type ? '<div class="type-pill">'+typeLabel(m.type)+'</div>' : '';
     const gArr = genresOf(m);
     const subLine = [typeLabel(m.type), gArr.slice(0,2).join(', ')].filter(Boolean).join(' · ');
@@ -2086,7 +2126,7 @@
 
   function discoverCard(item){
     const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
-    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(item.poster)+'" alt="" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
+    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(tmdbImgSize(item.poster,'w342'))+'" alt="" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
     const typePill = '<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div>';
     const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(item.title)+'</div>'+(item.year?'<div class="card-sub">'+item.year+'</div>':'')+'</div>';
     const newBadge = item.isNew ? '<div class="new-badge">Новое</div>' : '';
@@ -2313,7 +2353,7 @@
     return '<div style="display:flex;flex-direction:column;gap:8px;">' + list.map(item => {
       const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
       return '<button type="button" class="choose-btn search-result-glass" data-tmdb-preview="'+item.tmdbId+'" data-tmdb-type="'+item.mediaType+'" style="padding:10px;text-align:left;display:flex;align-items:center;position:relative;">'
-      + (item.poster ? '<img src="'+escapeHtml(item.poster)+'" loading="lazy" decoding="async" style="width:42px;height:63px;object-fit:cover;border-radius:8px;flex:0 0 auto;">' : '<div style="width:42px;height:63px;border-radius:8px;background:var(--glass);flex:0 0 auto;"></div>')
+      + (item.poster ? '<img src="'+escapeHtml(tmdbImgSize(item.poster,'w185'))+'" loading="lazy" decoding="async" style="width:42px;height:63px;object-fit:cover;border-radius:8px;flex:0 0 auto;">' : '<div style="width:42px;height:63px;border-radius:8px;background:var(--glass);flex:0 0 auto;"></div>')
       + '<div class="choose-text" style="flex:1;margin-left:12px;"><div class="t1" style="font-size:14px;">'+escapeHtml(item.title)+'</div><div class="t2">'+escapeHtml(item.year||'')+(item.mediaType==='tv'?' · Сериал':' · Фильм')+'</div></div>'
       + '<div class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" title="Выбрать категорию" style="width:38px;height:38px;border-radius:50%;">'+icon('heart',18)+'</div>'
       + '</button>';
