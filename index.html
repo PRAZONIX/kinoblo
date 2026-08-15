@@ -48,6 +48,8 @@
     -webkit-font-smoothing:antialiased;
     overscroll-behavior-y:none;
     position:relative;
+    transition:transform .12s ease-out;
+    will-change:transform;
   }
   body::before{
     content:'';
@@ -4859,15 +4861,30 @@
   // Telegram есть свой API: событие 'viewportChanged' и tg.viewportHeight /
   // tg.viewportStableHeight (последняя — высота БЕЗ учёта клавиатуры, она же
   // ориентир). Используем оба источника и берём максимум — какой сработает,
-  // тот и победит. Двигаем только нижнюю панель поиска, сам #app не трогаем.
+  // тот и победит. Нижняя панель поиска поднимается вместе с клавиатурой
+  // (через --kb-inset), а сам #app не трогаем.
+  //
+  // Отдельная проблема чисто в Safari/WebKit (в т.ч. WKWebView без нативного API
+  // Telegram): при фокусе на поле ввода WebKit сам панорамирует (сдвигает) видимую
+  // область страницы вверх, чтобы "protagoniste" поле было видно над клавиатурой —
+  // это panning visualViewport, а не изменение его размера. Из-за этого паннинга
+  // визуально "уезжает" вся страница целиком (шапка, лого и т.д.), а не только
+  // клавиатура поднимает то, что должно. window.visualViewport.offsetTop как раз
+  // хранит величину этого паннинга — компенсируем его, сдвигая <body> на ту же
+  // величину в обратную сторону (translateY). Трансформация на body, помимо этого,
+  // делает все дочерние position:fixed элементы (нижнюю панель поиска, нав-бар)
+  // зафиксированными относительно body, а не «сырого» визуального вьюпорта —
+  // поэтому они больше не разъезжаются с остальным контентом при паннинге, и уже
+  // отдельно поднимаются на высоту клавиатуры через --kb-inset, как и раньше.
   function initKeyboardAwareViewport(){
     const root = document.documentElement;
-    let kbTg = 0, kbVv = 0;
+    let kbTg = 0, kbVv = 0, vvOffset = 0;
 
     function applyFinal(){
       const kb = Math.max(kbTg, kbVv);
       root.style.setProperty('--kb-inset', kb + 'px');
       document.body.classList.toggle('kb-open', kb > 60);
+      document.body.style.transform = vvOffset ? ('translateY(' + (-vvOffset) + 'px)') : '';
     }
 
     function bindTelegram(){
@@ -4898,6 +4915,7 @@
       const applyVv = () => {
         raf = null;
         kbVv = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+        vvOffset = Math.round(vv.offsetTop || 0);
         applyFinal();
       };
       const onChange = () => { if (raf) return; raf = requestAnimationFrame(applyVv); };
