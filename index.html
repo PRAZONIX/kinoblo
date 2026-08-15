@@ -48,8 +48,6 @@
     -webkit-font-smoothing:antialiased;
     overscroll-behavior-y:none;
     position:relative;
-    transition:transform .12s ease-out;
-    will-change:transform;
   }
   body::before{
     content:'';
@@ -527,7 +525,8 @@
   .nav button.active svg{transform:scale(1.08);}
   .nav .nlabel{font-family:var(--font-label);font-size:10px;font-weight:700;letter-spacing:.3px;}
   body.kb-open .nav{opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .16s ease, transform .16s ease;}
-  .nav{transition:opacity .16s ease, transform .16s ease;}
+  .nav{transition:opacity .16s ease, transform .16s ease, filter .18s var(--ease);}
+  .nav.search-bg-blurred{filter:blur(14px) brightness(.5) saturate(115%);pointer-events:none;}
 
   .search-bar-bottom{position:fixed;left:0;right:0;bottom:calc(102px + var(--kb-inset));display:flex;justify-content:center;z-index:39;pointer-events:none;padding:0 16px;transition:bottom .12s ease-out;}
   .search-bar-inner{pointer-events:auto;width:100%;max-width:230px;display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:var(--radius-pill);background:rgba(255,255,255,.1);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);border:1px solid rgba(255,255,255,.15);box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22);transition:max-width .55s cubic-bezier(.16,1.35,.32,1), background .4s var(--ease), box-shadow .4s var(--ease), border-color .4s var(--ease);}
@@ -550,16 +549,32 @@
     max-height: 45dvh;
     overflow-y: auto;
     z-index: 38;
-    background: rgba(13, 13, 17, 0.88);
-    backdrop-filter: blur(22px) saturate(150%);
-    -webkit-backdrop-filter: blur(22px) saturate(150%);
-    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,.1);
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border: 1px solid rgba(255,255,255,.15);
     border-radius: var(--radius);
     padding: 10px;
-    box-shadow: 0 -14px 34px rgba(0,0,0,0.45);
+    box-shadow: 0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22), 0 -14px 34px rgba(0,0,0,0.45);
     display: flex;
     flex-direction: column-reverse;
     transition: bottom .12s ease-out;
+  }
+
+  /* Карточки вариантов в результатах поиска — тот же "liquid glass", что и сама
+     строка поиска (та же прозрачность, blur+saturate и обводка со световым бликом). */
+  .search-result-glass{
+    background:rgba(255,255,255,.1);
+    backdrop-filter:blur(26px) saturate(180%);
+    -webkit-backdrop-filter:blur(26px) saturate(180%);
+    border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22);
+    transition:background .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease), transform .12s var(--ease);
+  }
+  .search-result-glass:active{
+    background:rgba(255,255,255,.16);
+    border-color:rgba(255,255,255,.24);
+    box-shadow:0 12px 28px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.3);
   }
 
   .discover-scroll-pad{height:2px;}
@@ -2297,7 +2312,7 @@
     if (!list.length) return '<div style="font-size:12.5px;color:var(--ink-faint);padding:6px 10px;">Ничего не нашлось.</div>';
     return '<div style="display:flex;flex-direction:column;gap:8px;">' + list.map(item => {
       const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
-      return '<button type="button" class="choose-btn glass-flat" data-tmdb-preview="'+item.tmdbId+'" data-tmdb-type="'+item.mediaType+'" style="padding:10px;text-align:left;display:flex;align-items:center;position:relative;">'
+      return '<button type="button" class="choose-btn search-result-glass" data-tmdb-preview="'+item.tmdbId+'" data-tmdb-type="'+item.mediaType+'" style="padding:10px;text-align:left;display:flex;align-items:center;position:relative;">'
       + (item.poster ? '<img src="'+escapeHtml(item.poster)+'" loading="lazy" decoding="async" style="width:42px;height:63px;object-fit:cover;border-radius:8px;flex:0 0 auto;">' : '<div style="width:42px;height:63px;border-radius:8px;background:var(--glass);flex:0 0 auto;"></div>')
       + '<div class="choose-text" style="flex:1;margin-left:12px;"><div class="t1" style="font-size:14px;">'+escapeHtml(item.title)+'</div><div class="t2">'+escapeHtml(item.year||'')+(item.mediaType==='tv'?' · Сериал':' · Фильм')+'</div></div>'
       + '<div class="search-fav-btn '+(isAlreadyAddedAnywhere?'active':'')+'" data-quick-fav="'+item.tmdbId+'" data-quick-type="'+item.mediaType+'" title="Выбрать категорию" style="width:38px;height:38px;border-radius:50%;">'+icon('heart',18)+'</div>'
@@ -2334,9 +2349,12 @@
   }
 
   // Блюр фонового контента вкладки "Поиск", пока строка поиска в фокусе или что-то введено,
-  // и выход из поиска по клику по этому фону. Блюрится именно #searchBgContent (топбар + подборки) —
-  // строка поиска, нижние кнопки Главная/Поиск и список результатов лежат вне этого контейнера
-  // и поэтому никогда не блюрятся и не перехватывают клик.
+  // и выход из поиска по тапу вне зоны поиска. Блюрится #searchBgContent (топбар + подборки)
+  // И нижние кнопки Главная/Поиск (.nav) — строка поиска и список результатов остаются
+  // не заблюренными и кликабельными. Пока блюр активен, тап в любом другом месте экрана
+  // не доходит до своей обычной цели (не открывает карточку, не переключает вкладку и т.д.),
+  // а просто закрывает поиск — обрабатывается один раз глобально на document в фазе capture,
+  // поэтому перехватывает клики и по .nav, и по всему остальному фону разом.
   let searchFocused = false;
 
   function searchShouldBlur(){
@@ -2349,14 +2367,36 @@
     if (bg) bg.classList.toggle('search-bg-blurred', shouldBlur);
     const app = document.getElementById('app');
     if (app) app.classList.toggle('search-scroll-locked', shouldBlur);
+    const navEl = document.querySelector('.nav');
+    if (navEl) navEl.classList.toggle('search-bg-blurred', shouldBlur);
   }
 
-  function handleSearchBgClick(e){
-    if (searchShouldBlur()){
-      e.stopPropagation();
-      e.preventDefault();
-      exitSearch();
-    }
+  // Разрешённые зоны, тап по которым НЕ закрывает поиск: сама строка поиска
+  // (с кнопкой очистки и т.д.) и список результатов/вариантов под ней.
+  function isInsideSearchAllowedArea(target){
+    return !!target.closest('.search-bar-bottom, #searchResultsDropdownContainer');
+  }
+
+  function handleGlobalSearchBlurClick(e){
+    if (!searchShouldBlur()) return;
+    if (isInsideSearchAllowedArea(e.target)) return;
+    e.stopPropagation();
+    e.preventDefault();
+    exitSearch();
+  }
+
+  function handleGlobalSearchBlurTouchMove(e){
+    if (!searchShouldBlur()) return;
+    if (isInsideSearchAllowedArea(e.target)) return;
+    e.preventDefault();
+  }
+
+  // Вешаем один раз на весь документ в фазе capture — так перехватываются клики
+  // по любому элементу под блюром (нав, топбар, подборки), не только по контейнеру
+  // фона поиска, который каждый render() пересоздаётся заново.
+  function initSearchBlurGlobalGuard(){
+    document.addEventListener('click', handleGlobalSearchBlurClick, true);
+    document.addEventListener('touchmove', handleGlobalSearchBlurTouchMove, { capture:true, passive:false });
   }
 
   function exitSearch(){
@@ -3022,13 +3062,6 @@
       const pos = state.scrollPositions[state.view] || 0;
       if (pos > 0) {
         setTimeout(() => app.scrollTop = pos, 10);
-      }
-    }
-    if (state.view === 'search'){
-      const bgContent = document.getElementById('searchBgContent');
-      if (bgContent) {
-        bgContent.addEventListener('click', handleSearchBgClick, true);
-        bgContent.addEventListener('touchmove', e => { if (searchShouldBlur()) e.preventDefault(); }, { passive:false });
       }
     }
     syncSearchBlur();
@@ -4861,30 +4894,15 @@
   // Telegram есть свой API: событие 'viewportChanged' и tg.viewportHeight /
   // tg.viewportStableHeight (последняя — высота БЕЗ учёта клавиатуры, она же
   // ориентир). Используем оба источника и берём максимум — какой сработает,
-  // тот и победит. Нижняя панель поиска поднимается вместе с клавиатурой
-  // (через --kb-inset), а сам #app не трогаем.
-  //
-  // Отдельная проблема чисто в Safari/WebKit (в т.ч. WKWebView без нативного API
-  // Telegram): при фокусе на поле ввода WebKit сам панорамирует (сдвигает) видимую
-  // область страницы вверх, чтобы "protagoniste" поле было видно над клавиатурой —
-  // это panning visualViewport, а не изменение его размера. Из-за этого паннинга
-  // визуально "уезжает" вся страница целиком (шапка, лого и т.д.), а не только
-  // клавиатура поднимает то, что должно. window.visualViewport.offsetTop как раз
-  // хранит величину этого паннинга — компенсируем его, сдвигая <body> на ту же
-  // величину в обратную сторону (translateY). Трансформация на body, помимо этого,
-  // делает все дочерние position:fixed элементы (нижнюю панель поиска, нав-бар)
-  // зафиксированными относительно body, а не «сырого» визуального вьюпорта —
-  // поэтому они больше не разъезжаются с остальным контентом при паннинге, и уже
-  // отдельно поднимаются на высоту клавиатуры через --kb-inset, как и раньше.
+  // тот и победит. Двигаем только нижнюю панель поиска, сам #app не трогаем.
   function initKeyboardAwareViewport(){
     const root = document.documentElement;
-    let kbTg = 0, kbVv = 0, vvOffset = 0;
+    let kbTg = 0, kbVv = 0;
 
     function applyFinal(){
       const kb = Math.max(kbTg, kbVv);
       root.style.setProperty('--kb-inset', kb + 'px');
       document.body.classList.toggle('kb-open', kb > 60);
-      document.body.style.transform = vvOffset ? ('translateY(' + (-vvOffset) + 'px)') : '';
     }
 
     function bindTelegram(){
@@ -4915,7 +4933,6 @@
       const applyVv = () => {
         raf = null;
         kbVv = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
-        vvOffset = Math.round(vv.offsetTop || 0);
         applyFinal();
       };
       const onChange = () => { if (raf) return; raf = requestAnimationFrame(applyVv); };
@@ -4928,6 +4945,7 @@
   initLongPressPreview();
   initDiscoverAutoUpdate();
   initKeyboardAwareViewport();
+  initSearchBlurGlobalGuard();
 
   loadTelegramSdkThenStart();
 })();
