@@ -2353,8 +2353,16 @@
   // И нижние кнопки Главная/Поиск (.nav) — строка поиска и список результатов остаются
   // не заблюренными и кликабельными. Пока блюр активен, тап в любом другом месте экрана
   // не доходит до своей обычной цели (не открывает карточку, не переключает вкладку и т.д.),
-  // а просто закрывает поиск — обрабатывается один раз глобально на document в фазе capture,
-  // поэтому перехватывает клики и по .nav, и по всему остальному фону разом.
+  // а просто закрывает поиск.
+  //
+  // ВАЖНО про порядок событий: тап по карточке вне поля ввода сначала снимает фокус
+  // с этого поля (событие blur у input срабатывает раньше click), а onblur сбрасывает
+  // searchFocused. Поэтому проверять searchShouldBlur() в обработчике click — уже поздно:
+  // на момент click состояние успевает "разблюриться" и клик по карточке проходит.
+  // Решение — перехватывать на touchstart/mousedown (в фазе capture, ДО того как браузер
+  // вообще обработает смену фокуса), там же сразу гасить событие и выходить из поиска.
+  // Обработчик click оставлен вторым эшелоном на случай активации без mousedown/touchstart
+  // (например, Enter с клавиатуры на сфокусированном элементе).
   let searchFocused = false;
 
   function searchShouldBlur(){
@@ -2377,11 +2385,11 @@
     return !!target.closest('.search-bar-bottom, #searchResultsDropdownContainer');
   }
 
-  function handleGlobalSearchBlurClick(e){
+  function handleGlobalSearchBlurIntercept(e){
     if (!searchShouldBlur()) return;
     if (isInsideSearchAllowedArea(e.target)) return;
     e.stopPropagation();
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     exitSearch();
   }
 
@@ -2391,11 +2399,13 @@
     e.preventDefault();
   }
 
-  // Вешаем один раз на весь документ в фазе capture — так перехватываются клики
+  // Вешаем один раз на весь документ в фазе capture — так перехватываются тапы
   // по любому элементу под блюром (нав, топбар, подборки), не только по контейнеру
   // фона поиска, который каждый render() пересоздаётся заново.
   function initSearchBlurGlobalGuard(){
-    document.addEventListener('click', handleGlobalSearchBlurClick, true);
+    document.addEventListener('touchstart', handleGlobalSearchBlurIntercept, { capture:true, passive:false });
+    document.addEventListener('mousedown', handleGlobalSearchBlurIntercept, true);
+    document.addEventListener('click', handleGlobalSearchBlurIntercept, true);
     document.addEventListener('touchmove', handleGlobalSearchBlurTouchMove, { capture:true, passive:false });
   }
 
