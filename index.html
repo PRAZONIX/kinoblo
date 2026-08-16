@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>KINOBLO</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2030%2030'><rect%20width='30'%20height='30'%20rx='7'%20fill='%23050308'/><g%20transform='translate(3,0)'><path%20d='M8.8%2015.5C7%2015.5%204.5%2014%203.3%2010.5C2.3%207.5%202.6%203.5%204.3%201.6C4.9%200.9%205.8%200.9%206.4%201.7C8.6%204.5%2010.3%209.5%2010.3%2013.2C10.3%2014.6%209.9%2015.5%208.8%2015.5Z'%20fill='%23fff'/><path%20d='M14.6%2016C13.5%2016%2013%2015%2013.1%2013.5C13.3%2010%2014.9%205.3%2017%202.7C17.6%202%2018.5%202%2019.1%202.6C20.7%204.3%2020.9%207.9%2019.8%2010.6C19.1%2012.3%2017.7%2013.7%2016.4%2013.9C16.7%2014.4%2016.9%2015%2016.6%2015.5C16.3%2015.9%2015.5%2016%2014.6%2016Z'%20fill='%23fff'/><ellipse%20cx='12'%20cy='21.5'%20rx='7.2'%20ry='6.8'%20fill='%23fff'/><path%20d='M8.6%2019.3L11%2021.7M11%2019.3L8.6%2021.7'%20stroke='%2307070a'%20stroke-width='1.3'%20stroke-linecap='round'/><path%20d='M13.5%2019.3L15.9%2021.7M15.9%2019.3L13.5%2021.7'%20stroke='%2307070a'%20stroke-width='1.3'%20stroke-linecap='round'/></g></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://api.themoviedb.org">
@@ -154,6 +155,21 @@
   }
   @keyframes brandSheen{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
   .netflix-logo span{background:linear-gradient(120deg, var(--accent), var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+
+  /* Заголовки "Мои категории" / "Аккаунт" — тот же фирменный шрифт, что и у
+     KINOBLO на "Поиске", но на телефоне он на весь экран выглядит слишком
+     громоздко для обычного слова-заголовка. Уменьшаем размер и компенсируем
+     потерю "веса" псевдо-обводкой (у Bebas Neue нет жирного начертания,
+     поэтому -webkit-text-stroke — единственный способ визуально утолщить
+     буквы, не меняя сам шрифт). На ПК заголовок остаётся прежнего размера
+     (см. десктопный @media выше). */
+  @media (max-width: 899px){
+    .netflix-logo.compact{
+      font-size:clamp(26px, 7.6vw, 34px);
+      letter-spacing:4px;
+      -webkit-text-stroke:0.6px rgba(255,255,255,.85);
+    }
+  }
 
   .netflix-subtitle-row{display:flex;align-items:center;gap:8px;margin-top:2px;}
   .netflix-prz{font-family:var(--font-label);font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:3.4px;text-transform:uppercase;}
@@ -329,6 +345,18 @@
 
   .row-scroll{display:flex;gap:13px;overflow-x:auto;padding:2px 16px 12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;animation:rowIn .4s ease both;}
   @keyframes rowIn{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
+
+  /* Ряды с фильмами в разделах (Избранное, Смотреть позже и т.д.): когда
+     карточек много и ряд не помещается целиком (значит center уступает
+     место обычному выравниванию по левому краю — см. правило "safe center"
+     в десктопном @media ниже, а на телефоне так вообще всегда), первая
+     карточка раньше начиналась почти вплотную к краю экрана. Добавляем
+     этому ряду чуть больше отступа слева/справа, чем у обычного .row-scroll
+     (Похожее, Топ недели и т.п.), — так о край экрана ничего не трётся. */
+  .section[data-cat-section] > .row-scroll{
+    padding-left:22px;
+    padding-right:22px;
+  }
   
   .card{
     flex:0 0 clamp(110px, 32vw, 138px);
@@ -522,7 +550,7 @@
 
   .nav{position:fixed;left:0;right:0;bottom:16px;display:flex;justify-content:center;z-index:40;pointer-events:none;padding:0 16px;}
   .nav-inner{
-    pointer-events:auto;display:flex;gap:4px;padding:7px;border-radius:var(--radius-pill);width:100%;max-width:320px;justify-content:space-around;
+    pointer-events:auto;display:flex;gap:4px;padding:7px;border-radius:var(--radius-pill);width:100%;max-width:380px;justify-content:space-around;
     background:linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.025));
     backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
     border:1px solid rgba(255,255,255,.14);
@@ -975,6 +1003,51 @@
   .paste-modal-textarea{width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.4;word-break:break-all;}
   .copy-modal-textarea{width:100%;min-height:120px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.4;word-break:break-all;}
   .sync-hint{font-size:12px;color:var(--ink-faint);margin-top:10px;line-height:1.5;}
+
+  /* Экран "Аккаунт" — вход по нику + 4-значному пинкоду */
+  .pin-input{
+    text-align:center;font-size:26px;letter-spacing:14px;font-weight:700;
+    padding:13px 15px 13px 25px;font-family:'Manrope','Inter',sans-serif;
+  }
+  .account-hero{padding:34px 16px 18px;text-align:center;}
+  .account-hero .account-avatar{
+    width:76px;height:76px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent-2),var(--violet));box-shadow:0 10px 26px var(--accent-glow);color:#fff;
+    position:relative;overflow:hidden;
+  }
+  .account-hero .account-avatar svg{width:34px;height:34px;}
+  .account-hero .account-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  /* Кликабельная аватарка — доступна и с аккаунтом, и без него, одинаково
+     на телефоне и на ПК: нажатие открывает системный выбор картинки из
+     галереи устройства (или файлового проводника на ПК). */
+  .account-avatar.avatar-clickable{cursor:pointer;transition:transform .15s var(--ease), box-shadow .15s var(--ease);}
+  .account-avatar.avatar-clickable:active{transform:scale(.94);}
+  .account-avatar-badge{
+    position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    background:var(--bg-soft);border:2px solid var(--bg);box-shadow:0 4px 10px rgba(0,0,0,.5);
+  }
+  .account-avatar-badge svg{width:13px;height:13px;}
+  @media (hover:hover){
+    .account-avatar.avatar-clickable:hover{box-shadow:0 12px 30px var(--accent-glow);}
+  }
+  .account-hero .account-nick{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.6px;}
+  .account-hero .account-sub{font-size:13px;color:var(--ink-faint);margin-top:4px;}
+  .account-live-badge{
+    display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:6px 13px;border-radius:var(--radius-pill);
+    font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--ink-faint);
+    background:var(--glass);border:1px solid var(--glass-border-soft);
+  }
+  .account-live-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint);flex-shrink:0;}
+  .account-live-badge.on{color:#4ee2ab;border-color:rgba(78,226,171,.35);background:rgba(78,226,171,.08);}
+  .account-live-badge.on .dot{background:#4ee2ab;box-shadow:0 0 8px rgba(78,226,171,.7);animation:liveDotPulse 1.8s ease-in-out infinite;}
+  @keyframes liveDotPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.55;transform:scale(.75);}}
+  .account-actions{display:flex;flex-direction:column;gap:10px;padding:0 16px;margin-top:6px;}
+  .account-guest-actions{display:flex;flex-direction:column;gap:12px;padding:8px 16px 0;margin-top:10px;}
+  .account-stats{display:flex;gap:10px;padding:18px 16px 4px;}
+  .account-stat{flex:1;text-align:center;padding:14px 8px;border-radius:var(--radius-sm);}
+  .account-stat .num{font-family:'Bebas Neue',sans-serif;font-size:22px;}
+  .account-stat .lbl{font-size:11px;color:var(--ink-faint);margin-top:2px;}
   
   .cat-icon-grid{
     display:grid;
@@ -1222,6 +1295,20 @@
     .row-scroll{ padding:2px 32px 16px; gap:16px; }
     .genres-scroll-bar{ padding-left:32px; padding-right:32px; }
 
+    /* Ряды с фильмами в разделах (Избранное, Смотреть позже и т.д.) на ПК:
+       если фильмов мало и ряд не упирается в край экрана — центрируем карточки,
+       выглядит опрятнее, чем прижатые к левому краю. Как только карточек
+       становится достаточно, чтобы ряд не помещался целиком — "safe center"
+       сам откатывается к обычному выравниванию по левому краю (новые фильмы
+       слева, лишнее уезжает за правый край под скролл), как было раньше —
+       это и есть смысл ключевого слова "safe": браузер не даёт центрированию
+       обрезать/прятать карточки, если они не влезают. */
+    .section[data-cat-section] > .row-scroll{
+      justify-content: safe center;
+      padding-left: clamp(56px, 6vw, 140px);
+      padding-right: clamp(56px, 6vw, 140px);
+    }
+
     /* Hero-баннер вверху "Поиска" — на телефоне высота считалась от aspect-ratio
        16/10 к ширине карточки, но на широком контейнере (1180px+) это превращает
        баннер в гигантский блок под 800px высотой, который перекрывает всё
@@ -1283,6 +1370,49 @@
       max-width:340px;
       margin-left:auto;
       margin-right:auto;
+    }
+
+    /* Раздел "Аккаунт" — по той же причине, что и .add-cat-btn выше: без
+       ограничения ширины кнопки входа/регистрации/выхода и карточки
+       статистики растягивались на весь широкий экран. Собираем всё в
+       компактную колонку по центру, как в остальном ПК-раскладке. */
+    .account-hero,
+    .account-actions,
+    .account-guest-actions,
+    .account-stats{
+      max-width:360px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    .account-actions .secondary-btn,
+    .account-actions .danger-btn,
+    .account-guest-actions .primary-btn,
+    .account-guest-actions .secondary-btn{
+      font-size:13.5px;
+      padding:13px;
+    }
+    .sync-hint{
+      max-width:360px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    /* Аватарка на вкладке "Аккаунт" — на ПК крупнее, чем на телефоне,
+       раз места вокруг неё хватает с запасом. */
+    .account-hero .account-avatar{
+      width:132px;
+      height:132px;
+    }
+    .account-hero .account-avatar svg{
+      width:58px;
+      height:58px;
+    }
+    .account-avatar-badge{
+      width:36px;
+      height:36px;
+    }
+    .account-avatar-badge svg{
+      width:18px;
+      height:18px;
     }
 
     /* Фильтры (год/тип/жанр/страна) на экране открытого раздела вроде
@@ -1610,6 +1740,7 @@
 
   const ICONS = {
     home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>',
+    menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
     plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
@@ -1655,7 +1786,8 @@
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
     play: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5.5v13a1 1 0 0 0 1.53.85l10.5-6.5a1 1 0 0 0 0-1.7l-10.5-6.5A1 1 0 0 0 8 5.5Z"/></svg>',
-    volumeMute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>'
+    volumeMute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.6-4 5-6 8-6s6.4 2 8 6"/></svg>'
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
@@ -1705,10 +1837,10 @@
       return await res.json();
     }catch(e){ return null; }
   }
-  async function fbSet(path, data){
+  async function fbSet(path, data, opts){
     if (!sharedBackendReady()) return false;
     try{
-      const res = await fetch(fbUrl(path), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      const res = await fetch(fbUrl(path), Object.assign({ method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) }, opts || {}));
       return res.ok;
     }catch(e){ return false; }
   }
@@ -1727,6 +1859,24 @@
   }
   function isSharedCat(v){ return typeof v === 'string' && v.indexOf('shared_') === 0; }
   function shareCodeOf(v){ return isSharedCat(v) ? v.slice(7) : null; }
+  // Совместность категории раньше держалась только на полях c.shared/c.code —
+  // если они где-то терялись (например, при синке аккаунта до этого фикса),
+  // категория выглядела как обычная и переставала попадать в автосинк
+  // (см. syncAllSharedCategories, фильтр "c.shared && c.code"), хотя её id
+  // (c.v) по-прежнему начинался с "shared_<код>". Здесь на каждой загрузке
+  // категорий эти поля восстанавливаются прямо из c.v, так что раз возникшая
+  // "поломка" сама себя чинит и больше не повторяется.
+  function repairSharedCategoryFlags(cats){
+    let changed = false;
+    (cats || []).forEach(c => {
+      if (c && isSharedCat(c.v) && (!c.shared || c.code !== shareCodeOf(c.v))){
+        c.shared = true;
+        c.code = shareCodeOf(c.v);
+        changed = true;
+      }
+    });
+    return changed;
+  }
 
   // ===== Мульти-категории =====
   // Фильм теперь может состоять сразу в нескольких категориях (m.categories — массив),
@@ -1810,7 +1960,7 @@
   }
 
   let state = {
-    movies: [], categories: [], view: 'home', detailId: null, categoryFilter: null,
+    movies: [], categories: [], view: 'search', detailId: null, categoryFilter: null,
     pendingMovie: null, previewItem: null, loaded: false,
     tmdbKey: '', tmdbResults: null, tmdbQuery: '',
     discover: { cache: {}, loading: {}, lgbtKeywordIds: null, full: {}, fullLoading: {}, fullPage: {}, fullDone: {}, filters: {}, cacheTime: {}, checkingUpdate: {} },
@@ -1818,7 +1968,9 @@
     scrollPositions: {},
     similarCache: {}, similarLoading: {},
     trailerCache: {}, trailerLoading: {},
-    banner: { items: [], index: 0, loadedAt: 0 }
+    banner: { items: [], index: 0, loadedAt: 0 },
+    account: { nick: null },
+    avatarDataUrl: null
   };
   let bannerLoadingFlag = false;
 
@@ -1889,12 +2041,14 @@
       if (!ok) return false;
       const ids = await this.getMovieIds();
       if (ids.indexOf(movie.id) === -1){ ids.push(movie.id); await this.saveMovieIds(ids); }
+      scheduleAccountSync();
       return true;
     },
     async deleteMovie(id){
       await rawRemove(movieKey(id));
       const ids = await this.getMovieIds();
       const ok = await this.saveMovieIds(ids.filter(x => x !== id));
+      if (ok) scheduleAccountSync();
       return ok;
     },
     async loadAllMovies(){
@@ -1908,7 +2062,7 @@
       if (!raw) return null;
       try{ const arr = JSON.parse(raw); return Array.isArray(arr) && arr.length ? arr : null; }catch(e){ return null; }
     },
-    async saveCategories(cats){ return rawSet(CAT_KEY, JSON.stringify(cats)); },
+    async saveCategories(cats){ const ok = await rawSet(CAT_KEY, JSON.stringify(cats)); if (ok) scheduleAccountSync(); return ok; },
     async getSetting(key){ return rawGet('kinoblo_setting_' + key); },
     async setSetting(key, value){ return rawSet('kinoblo_setting_' + key, value); },
     async migrate(){
@@ -2008,16 +2162,20 @@
     let cats = await STORAGE.getCategories();
     if (!cats){ cats = DEFAULT_CATEGORIES.slice(); await STORAGE.saveCategories(cats); }
     state.categories = cats;
+    if (repairSharedCategoryFlags(state.categories)) await STORAGE.saveCategories(state.categories);
     // Приводим старые записи (с одиночным m.status) к новому формату с массивом категорий.
     state.movies.forEach(m => normalizeMovieCats(m));
     const savedTmdbKey = await STORAGE.getSetting('tmdb_key');
     state.tmdbKey = savedTmdbKey || DEFAULT_TMDB_KEY;
+    state.avatarDataUrl = await STORAGE.getSetting('avatar_v1') || null;
+    await initAccountFromLocal();
     state.loaded = true;
     render();
     initSwipeBack();
     initPullDownToClose();
     initInfiniteScroll();
     syncAllSharedCategories();
+    recoverMissingPosters();
   }
 
   // Короткоживущий кэш ответов TMDB + дедупликация параллельных одинаковых запросов.
@@ -3054,7 +3212,7 @@
   }
 
   function viewHome(){
-    let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo">KINO<span>BLO</span></div><div class="netflix-subtitle-row"><span class="netflix-prz">prz</span><span class="cross-smile-icon">' + icon('bunnyProz', 22) + '</span></div></div></div>';
+    let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo compact">МОИ КАТЕГОРИИ</div></div></div>';
     state.categories.forEach(s => {
       const list = getSortedMoviesByStatus(s.v);
       html += '<div class="section" data-cat-section="'+s.v+'"><div class="section-head" data-cat="'+s.v+'"><div class="section-title">'+sectionIcon(s.icon, s.color)+escapeHtml(s.l)+(s.shared ? ' <span style="opacity:.55;display:inline-flex;vertical-align:middle;margin-left:2px;">'+icon('users',13)+'</span>' : '')+'</div><div class="section-count">'+list.length+icon('chevron',12)+'</div></div>';
@@ -3062,10 +3220,6 @@
       html += '</div>';
     });
     html += '<button class="secondary-btn glass-flat add-cat-btn" id="addCategoryBtn">'+icon('plus',16)+'Добавить категорию</button>';
-    html += '<div class="sync-btn-row">'
-      + '<button class="sync-btn glass-flat" id="exportLibraryBtn">'+icon('copy',16)+'Скопировать</button>'
-      + '<button class="sync-btn glass-flat" id="importLibraryBtn">'+icon('clipboardPaste',16)+'Вставить</button>'
-      + '</div>';
     return html;
   }
 
@@ -3522,6 +3676,20 @@
     };
   }
 
+  // Прогревает кэш браузера всеми картинками баннера ещё до того, как карусель
+  // вообще отрисуется. Слайдов немного (до 8), поэтому грузим их все сразу одним
+  // Image()-объектом на каждую — когда карусель дойдёт до клона первого баннера
+  // в конце ленты (замыкание цикла), эта же картинка уже будет в кэше и подставится
+  // мгновенно, без пустого кадра.
+  function preloadBannerImages(items){
+    items.forEach(it => {
+      const src = it.backdrop || it.poster;
+      if (!src) return;
+      const im = new Image();
+      im.src = src;
+    });
+  }
+
   async function loadBannerItems(force){
     if (bannerLoadingFlag) return;
     if (!force && state.banner.items.length && (Date.now() - state.banner.loadedAt) < BANNER_REFRESH_MS) return;
@@ -3529,7 +3697,10 @@
     try{
       const data = await tmdbFetch('/trending/all/day', state.tmdbKey);
       const items = (data.results || []).filter(r => r.backdrop_path).slice(0, 8).map(mapTmdbBannerItem);
-      if (items.length) { state.banner.items = items; state.banner.index = 0; }
+      if (items.length) {
+        preloadBannerImages(items);
+        state.banner.items = items; state.banner.index = 0;
+      }
       state.banner.loadedAt = Date.now();
     }catch(e){
       // не удалось обновить — оставляем то, что уже было (если было)
@@ -3540,7 +3711,13 @@
 
   function bannerSlideHtml(item){
     const bg = item.backdrop || item.poster || '';
-    const img = bg ? '<img class="hero-banner-img" src="'+escapeHtml(bg)+'" alt="" loading="lazy" draggable="false">' : '';
+    // Раньше здесь стоял loading="lazy" — картинок в баннере всего до 8 штук, и та,
+    // что должна появиться при закольцовывании карусели (клон первого/последнего
+    // слайда на противоположном краю трека), из-за ленивой загрузки не всегда
+    // успевала подгрузиться к моменту, когда до неё долистывали — карусель на секунду
+    // показывала пустоту. Теперь все баннерные картинки грузятся сразу (см. также
+    // preloadBannerImages ниже, которая прогревает кэш ещё до первой отрисовки).
+    const img = bg ? '<img class="hero-banner-img" src="'+escapeHtml(bg)+'" alt="" draggable="false">' : '';
     const meta = [item.year, typeLabel(item.type)].filter(Boolean).join(' · ');
     return '<div class="hero-banner-slide" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'" data-poster-src="'+escapeHtml(item.poster || '')+'">'
       + img
@@ -3935,8 +4112,9 @@
 
   function viewNav(){
     return '<div class="nav"><div class="nav-inner glass">'
-    + '<button data-nav="home" class="'+(state.view==='home'?'active':'')+'">'+icon('home',20)+'<span class="nlabel">Главная</span></button>'
+    + '<button data-nav="home" class="'+(state.view==='home'?'active':'')+'">'+icon('menu',20)+'<span class="nlabel">Разделы</span></button>'
     + '<button data-nav="search" class="'+(state.view==='search'?'active':'')+'">'+icon('search',20)+'<span class="nlabel">Поиск</span></button>'
+    + '<button data-nav="account" class="'+(state.view==='account'?'active':'')+'">'+icon('user',20)+'<span class="nlabel">Аккаунт</span></button>'
     + '</div></div>';
   }
 
@@ -3955,9 +4133,26 @@
     });
   }
 
+  // Отслеживаем реальную смену раздела между вызовами render() (а не просто
+  // локальную переменную prevView ниже — та выставляется уже ПОСЛЕ смены
+  // state.view вызывающим кодом и потому бесполезна для сравнения). Как только
+  // раздел действительно поменялся — самое время отправить на сервер накопленные
+  // с прошлого раза изменения аккаунта (см. flushAccountSyncNow/scheduleAccountSync).
+  let _lastRenderedView = null;
   function render(){
     const app = document.getElementById('app');
     if (!state.loaded){ app.innerHTML = '<div style="text-align:center;color:var(--ink-faint);padding-top:80px;font-size:13px;">Загружаю KINOBLO…</div>'; return; }
+    if (_lastRenderedView !== null && _lastRenderedView !== state.view) flushAccountSyncNow();
+    _lastRenderedView = state.view;
+    // Запоминаем прокрутку и экран ДО перерисовки. Раньше любое точечное действие
+    // (оценка, избранное, заметка и т.п.) вызывало полный render(), после которого
+    // страница дёргалась в самый верх — визуально это выглядело точь-в-точь как
+    // "обновление страницы". Никакой настоящей перезагрузки в приложении нет (это
+    // не сайт, а SPA без единого location.reload/href), просто внутренний рендер не
+    // сохранял позицию. Если экран не поменялся — возвращаем прокрутку туда, где
+    // она была, и никакого "прыжка" не происходит.
+    const prevScrollTop = app.scrollTop;
+    const prevView = state.view;
     let html = '';
     if (state.view === 'home') html = viewHome();
     else if (state.view === 'search') html = viewSearch();
@@ -3965,6 +4160,7 @@
     else if (state.view === 'detail') html = viewDetail();
     else if (state.view === 'category') html = viewCategory();
     else if (state.view === 'discoverList') html = viewDiscoverList();
+    else if (state.view === 'account') html = viewAccount();
     const showBottomSearch = state.view === 'search';
     if (showBottomSearch) html += searchBarBottomHtml();
     const hideNav = state.view === 'choose' || state.view === 'detail';
@@ -3988,7 +4184,11 @@
       if (m) { loadSimilarForDetail(m); loadSeasonInfoForDetail(m); loadTrailerForDetail(m); loadScreenshotsForDetail(m); mountTrailerPlayer(m); bindTrailerFallbackEvents(); }
     }
     
-    if (state.view === 'search' || state.view === 'discoverList' || state.view === 'home') {
+    if (state.view === prevView){
+      // Тот же самый экран, что и до перерисовки — точечное действие, а не переход.
+      // Возвращаем прокрутку туда, где пользователь был, вместо "прыжка" наверх.
+      if (prevScrollTop > 0) app.scrollTop = prevScrollTop;
+    } else if (state.view === 'search' || state.view === 'discoverList' || state.view === 'home') {
       const pos = state.scrollPositions[state.view] || 0;
       if (pos > 0) {
         setTimeout(() => app.scrollTop = pos, 10);
@@ -4114,7 +4314,14 @@
     return {
       v: 1,
       exportedAt: Date.now(),
-      categories: state.categories.map(c => ({ v:c.v, l:c.l, sub:c.sub||'', icon:c.icon, color:c.color })),
+      categories: state.categories.map(c => {
+        const o = { v:c.v, l:c.l, sub:c.sub||'', icon:c.icon, color:c.color };
+        // Совместные категории обязательно несут флаг shared и код shared/<code> —
+        // без них на другом устройстве категория при синке аккаунта превращалась
+        // в обычную (несовместную) с тем же названием.
+        if (c.shared){ o.shared = true; o.code = c.code; }
+        return o;
+      }),
       movies: state.movies.map(m => Object.assign({}, m))
     };
   }
@@ -4137,6 +4344,429 @@
       throw new Error('bad-shape');
     }
     return payload;
+  }
+
+  // ===== Аккаунты (ник + 4-значный пинкод) =====
+  // Аккаунт хранится в том же общем Firebase-бэкенде, что и совместные категории:
+  // accounts/<ключ_ника> = { nick, pin, updatedAt, data:{ categories, movies } }.
+  // Локально запоминаем только ник и пин текущего вошедшего пользователя (через
+  // STORAGE.setSetting), чтобы при следующем открытии приложения не разлогинивало.
+  // Любое локальное изменение фильмов/категорий (уже проходящее через STORAGE)
+  // автоматически (с debounce) отправляется в аккаунт, если пользователь вошёл.
+  const ACCOUNT_NICK_KEY = 'account_nick';
+  const ACCOUNT_PIN_KEY = 'account_pin';
+
+  function normalizeNickKey(nick){
+    return String(nick || '').trim().toLowerCase().replace(/[.#$\[\]\/\s]+/g, '_');
+  }
+
+  let _applyingRemoteAccountData = false;
+  // Момент (Date.now()), до которого нужно игнорировать входящие SSE-события live-синка.
+  // Без этого свой же пуш данных на сервер (см. ниже) прилетает обратно через тот же
+  // EventSource как "изменение" — и приложение начинает полностью перезагружать и
+  // перерисовывать библиотеку прямо в момент, когда пользователь ещё листает оценку
+  // фильма или переключает категории (то самое "дёрганье" интерфейса).
+  let _ownPushSuppressUntil = 0;
+  // Раньше любое локальное изменение (оценка, категория, заметка и т.п.) запускало
+  // отправку на сервер уже через 1.2 сек — и почти сразу после этого прилетало
+  // обратно через SSE-подписку, вызывая лишнюю перерисовку прямо во время
+  // взаимодействия. Теперь изменение только помечает данные как "несинхронизированные"
+  // (_accountDirty), а сама отправка на сервер происходит позже, одним куском —
+  // когда пользователь уходит с текущего раздела приложения или сворачивает/закрывает
+  // вкладку (см. flushAccountSyncNow и её вызовы в render()/visibilitychange/pagehide).
+  let _accountDirty = false;
+  // Раньше синк на сервер срывался с места при каждой смене вкладки/раздела —
+  // на практике это тоже "почти после каждого действия" (открыл фильм → вернулся
+  // назад → уже улетел запрос). Теперь между двумя отправками должно пройти не
+  // меньше ACCOUNT_SYNC_MIN_INTERVAL — а чтобы изменения всё равно не терялись,
+  // если человек долго сидит на одном экране, раз в тот же интервал само собой
+  // проверяем: если данные помечены как "грязные", досылаем их по таймеру.
+  const ACCOUNT_SYNC_MIN_INTERVAL = 45000; // не чаще раза в 45 секунд
+  let _lastSyncFlushAt = 0;
+  function scheduleAccountSync(){
+    if (_applyingRemoteAccountData) return; // это мы сами только что применили чужие изменения — не гоняем их обратно
+    if (!state || !state.account || !state.account.nick) return;
+    _accountDirty = true;
+  }
+
+  async function flushAccountSyncNow(useKeepalive, force){
+    if (!_accountDirty) return;
+    if (!state || !state.account || !state.account.nick) return;
+    // force=true — используется, когда приложение сворачивают/закрывают: там
+    // ждать нельзя, копим данные не успеем. В остальных случаях (смена вкладки
+    // и т.п.) уважаем минимальный интервал между отправками.
+    if (!force && Date.now() - _lastSyncFlushAt < ACCOUNT_SYNC_MIN_INTERVAL) return;
+    const key = normalizeNickKey(state.account.nick);
+    if (!key) return;
+    _accountDirty = false;
+    _lastSyncFlushAt = Date.now();
+    const payload = buildExportPayload();
+    const opts = useKeepalive ? { keepalive:true } : undefined;
+    await fbSet('accounts/' + key + '/data', { categories: payload.categories, movies: payload.movies }, opts);
+    await fbSet('accounts/' + key + '/updatedAt', Date.now(), opts);
+    // Даём запас времени на то, чтобы SSE-эхо этого же пуша долетело и было отфильтровано
+    // (задержка события у Firebase + 400мс дебаунс в onEvent ниже).
+    _ownPushSuppressUntil = Date.now() + 2500;
+  }
+
+  // Подстраховка: пока приложение открыто и не сворачивается (человек долго сидит
+  // на одном экране, копит изменения), раз в ACCOUNT_SYNC_MIN_INTERVAL проверяем
+  // накопленную "грязь" и отправляем — чтобы данные не залёживались локально
+  // дольше интервала синка, даже без переключения вкладок.
+  setInterval(() => { flushAccountSyncNow(); }, ACCOUNT_SYNC_MIN_INTERVAL);
+
+  async function registerAccount(nick, pin){
+    const cleanNick = String(nick || '').trim();
+    const key = normalizeNickKey(cleanNick);
+    if (!key || key.length < 2) return { ok:false, msg:'Ник должен быть не короче 2 символов.' };
+    if (!/^[0-9]{4}$/.test(pin)) return { ok:false, msg:'Пинкод — это ровно 4 цифры.' };
+    if (!sharedBackendReady()) return { ok:false, msg:'Аккаунты сейчас недоступны — нет соединения с сервером.' };
+    const existing = await fbGet('accounts/' + key);
+    if (existing) return { ok:false, msg:'Такой ник уже занят. Выбери другой.' };
+    const payload = buildExportPayload();
+    const ok = await fbSet('accounts/' + key, {
+      nick: cleanNick, pin: pin, updatedAt: Date.now(),
+      data: { categories: payload.categories, movies: payload.movies }
+    });
+    if (!ok) return { ok:false, msg:'Не удалось создать аккаунт. Проверь соединение и попробуй ещё раз.' };
+    await STORAGE.setSetting(ACCOUNT_NICK_KEY, cleanNick);
+    await STORAGE.setSetting(ACCOUNT_PIN_KEY, pin);
+    state.account = { nick: cleanNick };
+    startAccountLiveSync();
+    return { ok:true };
+  }
+
+  async function loginAccount(nick, pin){
+    const cleanNick = String(nick || '').trim();
+    const key = normalizeNickKey(cleanNick);
+    if (!key) return { ok:false, msg:'Введи ник.' };
+    if (!/^[0-9]{4}$/.test(pin)) return { ok:false, msg:'Пинкод — это ровно 4 цифры.' };
+    if (!sharedBackendReady()) return { ok:false, msg:'Аккаунты сейчас недоступны — нет соединения с сервером.' };
+    const acc = await fbGet('accounts/' + key);
+    if (!acc) return { ok:false, msg:'Аккаунт не найден. Проверь ник или соединение с интернетом.' };
+    if (String(acc.pin) !== String(pin)) return { ok:false, msg:'Неверный пинкод.' };
+
+    // Сбрасываем текущий аккаунт ДО перезаписи локальных данных, чтобы очистка
+    // старой библиотеки ниже не улетела синком поверх данных предыдущего аккаунта.
+    state.account = { nick:null };
+
+    const remoteMovies = (acc.data && Array.isArray(acc.data.movies)) ? acc.data.movies : [];
+    const remoteCats = (acc.data && Array.isArray(acc.data.categories) && acc.data.categories.length) ? acc.data.categories : DEFAULT_CATEGORIES.slice();
+
+    const oldIds = await STORAGE.getMovieIds();
+    for (const id of oldIds){ await rawRemove(movieKey(id)); }
+    await STORAGE.saveMovieIds([]);
+    for (const m of remoteMovies){
+      const copy = Object.assign({}, m);
+      normalizeMovieCats(copy);
+      await STORAGE.saveMovie(copy);
+    }
+    await STORAGE.saveCategories(remoteCats);
+
+    state.movies = await STORAGE.loadAllMovies();
+    state.categories = remoteCats;
+
+    await STORAGE.setSetting(ACCOUNT_NICK_KEY, acc.nick || cleanNick);
+    await STORAGE.setSetting(ACCOUNT_PIN_KEY, pin);
+    state.account = { nick: acc.nick || cleanNick };
+    startAccountLiveSync();
+    return { ok:true };
+  }
+
+  async function logoutAccount(){
+    stopAccountLiveSync();
+    await STORAGE.setSetting(ACCOUNT_NICK_KEY, '');
+    await STORAGE.setSetting(ACCOUNT_PIN_KEY, '');
+    state.account = { nick:null };
+  }
+
+  // Подтягивает свежие данные аккаунта с сервера на это устройство (например, если
+  // фильмы/оценки добавляли с другого телефона под тем же аккаунтом).
+  async function refreshAccountFromServer(){
+    if (!state.account || !state.account.nick) return { ok:false, msg:'Ты не вошёл в аккаунт.' };
+    const pin = await STORAGE.getSetting(ACCOUNT_PIN_KEY);
+    if (!pin) return { ok:false, msg:'Не удалось подтвердить аккаунт локально. Войди заново.' };
+    return loginAccount(state.account.nick, pin);
+  }
+
+  async function initAccountFromLocal(){
+    const nick = await STORAGE.getSetting(ACCOUNT_NICK_KEY);
+    state.account = { nick: nick || null };
+    if (nick) startAccountLiveSync();
+  }
+
+  // ===== Живая синхронизация между устройствами (Server-Sent Events поверх Firebase REST) =====
+  // Firebase Realtime Database отдаёт поток изменений прямо по обычному GET-запросу
+  // с заголовком Accept: text/event-stream — а именно так и работает нативный EventSource
+  // в браузере, без каких-либо доп. SDK. Подписываемся на узел accounts/<ник>/data:
+  // как только с ДРУГОГО устройства (того же аккаунта) что-то поменяется — фильм, категория,
+  // оценка, заметка — сюда прилетит событие, и мы подтянем свежие данные и перерисуем экран.
+  let _accountEventSource = null;
+  let _remoteApplyTimer = null;
+
+  function startAccountLiveSync(){
+    stopAccountLiveSync();
+    if (!state.account || !state.account.nick || !sharedBackendReady()) return;
+    const key = normalizeNickKey(state.account.nick);
+    if (!key) return;
+    try{
+      const es = new EventSource(fbUrl('accounts/' + key + '/data'));
+      const onEvent = () => {
+        if (_remoteApplyTimer) clearTimeout(_remoteApplyTimer);
+        _remoteApplyTimer = setTimeout(() => {
+          // Если это эхо нашего же недавнего пуша — просто перепланируем проверку
+          // на конец окна подавления, ничего не перерисовывая раньше времени.
+          if (Date.now() < _ownPushSuppressUntil){
+            _remoteApplyTimer = setTimeout(() => applyRemoteAccountData(key), _ownPushSuppressUntil - Date.now() + 50);
+            return;
+          }
+          applyRemoteAccountData(key);
+        }, 400);
+      };
+      es.addEventListener('put', onEvent);
+      es.addEventListener('patch', onEvent);
+      es.onerror = () => { /* EventSource сам переподключается по спецификации — ничего не делаем */ };
+      _accountEventSource = es;
+    }catch(e){ _accountEventSource = null; }
+  }
+
+  function stopAccountLiveSync(){
+    if (_remoteApplyTimer){ clearTimeout(_remoteApplyTimer); _remoteApplyTimer = null; }
+    if (_accountEventSource){
+      try{ _accountEventSource.close(); }catch(e){}
+      _accountEventSource = null;
+    }
+  }
+
+  // Полностью перекладывает локальную библиотеку в соответствие с тем, что сейчас лежит
+  // в аккаунте на сервере — так же, как при входе, только без разлогина/модалок.
+  async function applyRemoteAccountData(key){
+    if (!state.account || normalizeNickKey(state.account.nick) !== key) return; // аккаунт сменился, пока летел запрос
+    const data = await fbGet('accounts/' + key + '/data');
+    if (!data) return;
+    const remoteMovies = Array.isArray(data.movies) ? data.movies : [];
+    const remoteCats = (Array.isArray(data.categories) && data.categories.length) ? data.categories : state.categories;
+
+    _applyingRemoteAccountData = true;
+    try{
+      const oldIds = await STORAGE.getMovieIds();
+      for (const id of oldIds){ await rawRemove(movieKey(id)); }
+      await STORAGE.saveMovieIds([]);
+      for (const m of remoteMovies){
+        const copy = Object.assign({}, m);
+        normalizeMovieCats(copy);
+        await STORAGE.saveMovie(copy);
+      }
+      await STORAGE.saveCategories(remoteCats);
+      state.movies = await STORAGE.loadAllMovies();
+      state.categories = remoteCats;
+      if (repairSharedCategoryFlags(state.categories)) await STORAGE.saveCategories(state.categories);
+    } finally {
+      _applyingRemoteAccountData = false;
+    }
+    render();
+    recoverMissingPosters();
+  }
+
+  // Пока приложение было свёрнуто, поток SSE мог оборваться (Telegram WebView это делает
+  // охотно) — при возврате на экран переоткрываем соединение и сразу же принудительно
+  // подтягиваем актуальные данные, чтобы не ждать следующего события.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.account && state.account.nick){
+      startAccountLiveSync();
+      const key = normalizeNickKey(state.account.nick);
+      if (key) applyRemoteAccountData(key);
+    } else if (document.visibilityState === 'hidden'){
+      // Пользователь свернул приложение/переключился на другую вкладку — самое
+      // время отправить накопленные локальные изменения одним куском, невзирая
+      // на минимальный интервал между синками (force=true) — рисковать нельзя.
+      flushAccountSyncNow(true, true);
+    }
+  });
+  // На случай, если вкладка/мини-апп закрывается совсем (а не просто сворачивается) —
+  // visibilitychange тоже успевает сработать, но pagehide подстраховывает те платформы,
+  // где это не гарантировано. keepalive:true позволяет запросу долететь уже после того,
+  // как страница начала выгружаться.
+  window.addEventListener('pagehide', () => { flushAccountSyncNow(true, true); });
+
+  // ===== Восстановление обложек =====
+  // Если у фильма нет постера (например, старая запись без картинки, или карточка
+  // пришла с другого устройства без поля poster), пытаемся дотянуть картинку из TMDB:
+  // сначала по сохранённому tmdbId (точный код фильма), а если его нет — поиском по
+  // названию, беря первый результат с постером.
+  let _posterRecoveryRunning = false;
+  async function ensurePosterForMovie(m){
+    if (!m || m.poster) return false;
+    let found = null;
+    try{
+      if (m.tmdbId != null && m.mediaType){
+        const data = await tmdbFetch('/' + m.mediaType + '/' + m.tmdbId, state.tmdbKey);
+        if (data && data.poster_path) found = data;
+      }
+      if (!found && m.title){
+        const data = await tmdbFetch('/search/multi?query=' + encodeURIComponent(m.title), state.tmdbKey);
+        const results = (data && data.results) || [];
+        const match = results.find(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path);
+        if (match){
+          found = match;
+          if (m.tmdbId == null){ m.tmdbId = match.id; m.mediaType = match.media_type === 'tv' ? 'tv' : 'movie'; }
+        }
+      }
+    }catch(e){ return false; }
+    if (!found || !found.poster_path) return false;
+    m.poster = TMDB_IMG_PROXY_BASE + '/t/p/w500' + found.poster_path;
+    if (!m.backdrop && found.backdrop_path) m.backdrop = TMDB_IMG_PROXY_BASE + '/t/p/w1280' + found.backdrop_path;
+    await updateMovie(m);
+    return true;
+  }
+
+  async function recoverMissingPosters(){
+    if (_posterRecoveryRunning) return;
+    const missing = state.movies.filter(m => !m.poster);
+    if (!missing.length) return;
+    _posterRecoveryRunning = true;
+    try{
+      let changedAny = false;
+      for (const m of missing){
+        const changed = await ensurePosterForMovie(m);
+        if (changed) changedAny = true;
+      }
+      if (changedAny) render();
+    } finally {
+      _posterRecoveryRunning = false;
+    }
+  }
+
+  function openLoginModal(){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = `
+      <div class="modal">
+        <div class="modal-title">Вход в аккаунт</div>
+        <div class="modal-msg" style="padding-top:0;">Введи ник и 4-значный пинкод. Твои категории, оценки и фильмы на этом устройстве будут заменены данными аккаунта.</div>
+        <div style="margin-top:8px;" class="field">
+          <label>Ник</label>
+          <input id="loginNickInput" placeholder="Твой ник" autocomplete="off" maxlength="24">
+        </div>
+        <div style="margin-top:10px;" class="field">
+          <label>Пинкод</label>
+          <input id="loginPinInput" class="pin-input" placeholder="••••" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off">
+        </div>
+        <div class="modal-actions" style="margin-top:16px;display:flex;gap:8px;">
+          <button type="button" class="secondary-btn glass-flat" id="loginCancel">Отмена</button>
+          <button type="button" class="primary-btn" id="loginConfirm" style="margin-top:0;">Войти</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(div);
+    const nickEl = div.querySelector('#loginNickInput');
+    const pinEl = div.querySelector('#loginPinInput');
+    if (nickEl) nickEl.focus();
+    pinEl.addEventListener('input', () => { pinEl.value = pinEl.value.replace(/[^0-9]/g, '').slice(0,4); });
+    const close = () => div.remove();
+    div.querySelector('#loginCancel').onclick = close;
+    div.addEventListener('click', e => { if (e.target === div) close(); });
+    const confirmBtn = div.querySelector('#loginConfirm');
+    confirmBtn.onclick = async () => {
+      if (confirmBtn.dataset.busy === '1') return;
+      confirmBtn.dataset.busy = '1';
+      confirmBtn.style.opacity = '.6';
+      const res = await loginAccount(nickEl.value, pinEl.value);
+      confirmBtn.dataset.busy = '0';
+      confirmBtn.style.opacity = '1';
+      if (!res.ok){ customAlert(res.msg); return; }
+      close();
+      hapticOk();
+      render();
+      recoverMissingPosters();
+    };
+  }
+
+  function openRegisterModal(){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    div.innerHTML = `
+      <div class="modal">
+        <div class="modal-title">Регистрация</div>
+        <div class="modal-msg" style="padding-top:0;">Придумай ник и 4-значный пинкод. Твоя текущая библиотека на этом устройстве привяжется к новому аккаунту.</div>
+        <div style="margin-top:8px;" class="field">
+          <label>Ник</label>
+          <input id="regNickInput" placeholder="Придумай ник" autocomplete="off" maxlength="24">
+        </div>
+        <div style="margin-top:10px;" class="field">
+          <label>Пинкод</label>
+          <input id="regPinInput" class="pin-input" placeholder="••••" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off">
+        </div>
+        <div class="modal-actions" style="margin-top:16px;display:flex;gap:8px;">
+          <button type="button" class="secondary-btn glass-flat" id="regCancel">Отмена</button>
+          <button type="button" class="primary-btn" id="regConfirm" style="margin-top:0;">Создать</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(div);
+    const nickEl = div.querySelector('#regNickInput');
+    const pinEl = div.querySelector('#regPinInput');
+    if (nickEl) nickEl.focus();
+    pinEl.addEventListener('input', () => { pinEl.value = pinEl.value.replace(/[^0-9]/g, '').slice(0,4); });
+    const close = () => div.remove();
+    div.querySelector('#regCancel').onclick = close;
+    div.addEventListener('click', e => { if (e.target === div) close(); });
+    const confirmBtn = div.querySelector('#regConfirm');
+    confirmBtn.onclick = async () => {
+      if (confirmBtn.dataset.busy === '1') return;
+      confirmBtn.dataset.busy = '1';
+      confirmBtn.style.opacity = '.6';
+      const res = await registerAccount(nickEl.value, pinEl.value);
+      confirmBtn.dataset.busy = '0';
+      confirmBtn.style.opacity = '1';
+      if (!res.ok){ customAlert(res.msg); return; }
+      close();
+      hapticOk();
+      render();
+      recoverMissingPosters();
+    };
+  }
+
+  // Аватарка — просто картинка, которая лежит на устройстве (STORAGE.setSetting),
+  // и не привязана к серверному аккаунту. Поэтому кликабельна и рисуется одинаково
+  // и у залогиненных, и у гостя: нажал на кружок — открылась галерея устройства.
+  function accountAvatarHtml(){
+    const inner = state.avatarDataUrl
+      ? '<img src="' + state.avatarDataUrl + '" alt="">'
+      : icon('user', 34);
+    return '<div class="account-avatar avatar-clickable" id="accountAvatarBtn" role="button" title="Изменить фото">'
+      + inner
+      + '</div>'
+      + '<input type="file" accept="image/*" id="avatarFileInput" style="display:none;">';
+  }
+
+  function viewAccount(){
+    let html = '<div class="topbar"><div class="netflix-brand"><div class="netflix-logo compact">АККАУНТ</div></div></div>';
+    if (state.account && state.account.nick){
+      const moviesCount = state.movies.length;
+      const live = !!_accountEventSource;
+      html += '<div class="account-hero">'
+        + accountAvatarHtml()
+        + '<div class="account-nick">' + escapeHtml(state.account.nick) + '</div>'
+        + '<div class="account-live-badge' + (live ? ' on' : '') + '"><span class="dot"></span>' + (live ? 'Синхронизация активна' : 'Подключение…') + '</div>'
+        + '</div>';
+      html += '<div class="account-stats">'
+        + '<div class="account-stat glass-flat"><div class="num">' + moviesCount + '</div><div class="lbl">фильмов сохранено</div></div>'
+        + '</div>';
+      html += '<div class="account-actions" style="margin-top:20px;">'
+        + '<button type="button" class="danger-btn" id="accountLogoutBtn">Выйти из аккаунта</button>'
+        + '</div>';
+    } else {
+      html += '<div class="account-hero">'
+        + accountAvatarHtml()
+        + '<div class="account-sub">Войди или зарегистрируйся, чтобы твои категории, оценки и фильмы сохранялись за аккаунтом и сами синхронизировались между устройствами.</div>'
+        + '</div>';
+      html += '<div class="account-guest-actions">'
+        + '<button type="button" class="primary-btn" id="accountLoginBtn">Вход</button>'
+        + '<button type="button" class="secondary-btn glass-flat" id="accountRegisterBtn">Регистрация</button>'
+        + '</div>';
+    }
+    return html;
   }
 
   let _uidCounter = 0;
@@ -4740,6 +5370,57 @@
     });
   }
 
+  // Клик по аватарке → системный выбор фото (галерея на телефоне, проводник на ПК).
+  // Картинку ужимаем в квадрат 320×320 через canvas перед сохранением — иначе
+  // фото с телефона в оригинальном размере (несколько МБ) не влезет в лимиты
+  // локального хранилища устройства.
+  function setupAccountAvatarHandlers(){
+    const btn = document.getElementById('accountAvatarBtn');
+    const input = document.getElementById('avatarFileInput');
+    if (!btn || !input) return;
+    btn.onclick = () => input.click();
+    input.onchange = async () => {
+      const file = input.files && input.files[0];
+      input.value = '';
+      if (!file || !file.type || file.type.indexOf('image/') !== 0) return;
+      try{
+        const dataUrl = await resizeImageToDataUrl(file, 320);
+        state.avatarDataUrl = dataUrl;
+        await STORAGE.setSetting('avatar_v1', dataUrl);
+        hapticOk();
+        render();
+      }catch(e){
+        hapticErr();
+        customAlert('Не получилось загрузить фото — попробуй другую картинку.');
+      }
+    };
+  }
+
+  function resizeImageToDataUrl(file, size){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('read-failed'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('decode-failed'));
+        img.onload = () => {
+          try{
+            const side = Math.min(img.width, img.height);
+            const sx = (img.width - side) / 2;
+            const sy = (img.height - side) / 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+            resolve(canvas.toDataURL('image/jpeg', 0.86));
+          }catch(e){ reject(e); }
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   function bindEvents(){
     document.querySelectorAll('[data-nav]').forEach(btn => {
       btn.onclick = () => {
@@ -5242,23 +5923,22 @@
       };
     }
 
-    const exportBtn = document.getElementById('exportLibraryBtn');
-    if (exportBtn){
-      exportBtn.onclick = () => {
-        if (exportBtn.dataset.busy === '1') return;
-        exportBtn.dataset.busy = '1';
-        Promise.resolve(exportLibrary()).finally(() => { exportBtn.dataset.busy = '0'; });
+    const accountLoginBtn = document.getElementById('accountLoginBtn');
+    if (accountLoginBtn) accountLoginBtn.onclick = () => openLoginModal();
+
+    const accountRegisterBtn = document.getElementById('accountRegisterBtn');
+    if (accountRegisterBtn) accountRegisterBtn.onclick = () => openRegisterModal();
+
+    const accountLogoutBtn = document.getElementById('accountLogoutBtn');
+    if (accountLogoutBtn){
+      accountLogoutBtn.onclick = async () => {
+        await logoutAccount();
+        hapticOk();
+        render();
       };
     }
 
-    const importBtn = document.getElementById('importLibraryBtn');
-    if (importBtn){
-      importBtn.onclick = () => {
-        if (importBtn.dataset.busy === '1') return;
-        importBtn.dataset.busy = '1';
-        Promise.resolve(importLibrary()).finally(() => { importBtn.dataset.busy = '0'; });
-      };
-    }
+    setupAccountAvatarHandlers();
   }
 
   function openAddCategoryChooser(){
