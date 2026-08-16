@@ -72,11 +72,13 @@
     height:100vh;
     height:100dvh;
     overflow-y:auto;
+    overflow-x:hidden;
     padding-bottom:168px;
     position:relative;
     -webkit-overflow-scrolling:touch;
   }
   #app.search-scroll-locked{overflow:hidden;touch-action:none;-webkit-overflow-scrolling:auto;}
+  #app.detail-scroll{padding-bottom:0;}
   ::-webkit-scrollbar{display:none;}
   a{color:inherit;text-decoration:none;}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;-webkit-tap-highlight-color:transparent;}
@@ -381,8 +383,11 @@
   }
 
   .poster-caption{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:30px 9px 9px;background:linear-gradient(180deg, rgba(7,7,10,0) 0%, rgba(7,7,10,.52) 42%, rgba(7,7,10,.95) 100%);}
-  .poster-caption .card-title{font-size:12px;font-weight:700;line-height:1.28;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;}
+  .poster-caption .card-title-row{display:flex;align-items:flex-start;gap:4px;}
+  .poster-caption .card-title{font-size:12px;font-weight:700;line-height:1.28;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;flex:1 1 auto;min-width:0;}
   .poster-caption .card-sub{margin-top:3px;font-size:9.5px;font-weight:600;letter-spacing:.3px;color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-note-icon{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:15px;height:15px;margin-top:1px;color:var(--accent-2);filter:drop-shadow(0 1px 3px rgba(0,0,0,.7));}
+  .card-note-icon svg{width:11px;height:11px;}
 
   .rating-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);}
   .imdb-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);color:var(--gold);}
@@ -587,6 +592,13 @@
   #searchBgContent{transition: filter .18s var(--ease);}
   #searchBgContent.search-bg-blurred{
     filter: blur(14px) brightness(.5) saturate(115%);
+    /* Без этого клики по карточкам/категориям под блюром всё равно доходили
+       до них (JS-перехватчик тапа вне поиска не всегда успевал первым),
+       и можно было случайно открыть фильм или переключить категорию прямо
+       через заблюренный фон. pointer-events:none гарантированно убирает
+       эту возможность на уровне CSS — тап в любом месте под блюром просто
+       закрывает поиск и никуда больше не проваливается. */
+    pointer-events: none;
   }
 
   .field label{display:block;font-size:11px;color:var(--ink-dim);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px;}
@@ -616,14 +628,40 @@
   .icon-btn svg{width:18px;height:18px;}
   .subtitle{font-family:'Bebas Neue',sans-serif;font-size:23px;letter-spacing:.7px;word-break:break-word;}
 
-  .detail-page{position:relative;z-index:1;animation:pageIn .34s var(--ease) both;touch-action:pan-y;min-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#07070a;width:100%;}
-  @keyframes pageIn{0%{opacity:0;transform:translateY(30px) scale(.98);}100%{opacity:1;transform:translateY(0) scale(1);}}
+  .detail-page{position:relative;z-index:1;animation:pageIn .34s var(--ease) backwards;touch-action:pan-y;min-height:100dvh;display:flex;flex-direction:column;justify-content:space-between;background:#07070a;width:100%;}
+  /* Раньше здесь стоял fill-mode "both". Дело в том, что "both"/"forwards"
+     держат анимацию в "заполняющем" состоянии НАВСЕГДА после её окончания —
+     а браузер считает элемент с такой все ещё "действующей" анимацией на
+     transform контейнером для position:fixed потомков ВСЁ ВРЕМЯ, пока
+     анимация формально не снята, даже если конечный кадр — transform:none
+     (это отдельный частый браузерный "капкан", независимый от фактического
+     значения transform). Из-за этого зафиксированная кнопка "назад" внутри
+     реально позиционировалась относительно .detail-page (который сам
+     прокручивается вместе с контентом внутри #app), а не относительно окна —
+     и визуально ехала вместе со страницей при скролле, как будто fixed не
+     сработал. fill-mode "backwards" по-прежнему подхватывает 0%-кадр перед
+     стартом (на случай задержки), но НЕ держит анимацию заполняющей после
+     конца — через .34s .detail-page полностью перестаёт "анимироваться", и
+     fixed-кнопка внутри становится честно зафиксирована относительно окна. */
+  @keyframes pageIn{0%{opacity:0;transform:translateY(30px) scale(.98);}100%{opacity:1;transform:none;}}
+  
   
   .detail-hero-bg{position:absolute;inset:0;height:66dvh;z-index:0;overflow:hidden;}
-  .detail-hero-bg img{width:100%;height:100%;object-fit:cover;}
-  .detail-hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg, rgba(7,7,10,0.12) 0%, rgba(7,7,10,0.72) 46%, #07070a 100%);}
+  .detail-hero-bg .detail-hero-poster-bg{width:100%;height:100%;object-fit:cover;}
+  .detail-hero-wide{display:none;}
+  /* pointer-events:none — это чисто декоративный градиент поверх фонового кадра.
+     На ПК он лежит поверх всей широкой карточки .detail-hero-wide (включая
+     кнопку "заметка" в её правом нижнем углу) и без этого свойства перехватывал
+     клики по ней, из-за чего кнопка выглядела нерабочей. */
+  .detail-hero-gradient{position:absolute;inset:0;background:linear-gradient(180deg, rgba(7,7,10,0.12) 0%, rgba(7,7,10,0.72) 46%, #07070a 100%);pointer-events:none;}
   
   .detail-top-controls{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:16px;}
+  .note-fab{width:auto;height:auto;min-width:39px;border-radius:16px;padding:7px 12px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--ink);}
+  .note-fab svg{width:17px;height:17px;}
+  .note-fab .note-fab-label{font-family:var(--font-label);font-size:8.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--ink-dim);line-height:1;}
+  .note-fab.has-note{color:var(--accent-2);border-color:rgba(255,61,104,.4);}
+  .note-fab.has-note .note-fab-label{color:var(--accent-2);}
+  .note-fab:active{transform:scale(.92);}
   
   .detail-content{position:relative;z-index:5;padding:18px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:auto;width:100%;}
   .detail-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px, 8.5vw, 46px);line-height:1.02;letter-spacing:1px;margin-bottom:13px;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,0.85);word-break:break-word;}
@@ -672,6 +710,14 @@
   .detail-meta-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.68);margin-bottom:25px;}
   
   .detail-action-area{position:relative;z-index:5;padding:0 16px 26px;width:100%;}
+  .trailer-embed-wrap{width:100%;max-width:520px;margin:0 auto 20px;border-radius:var(--radius);overflow:hidden;background:#000;box-shadow:0 14px 36px rgba(0,0,0,.5);}
+  .trailer-embed-wrap .trailer-ratio{position:relative;width:100%;padding-top:56.25%;}
+  .trailer-embed-wrap .trailer-ratio iframe,
+  .trailer-embed-wrap .trailer-ratio > div{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .trailer-embed-wrap .trailer-ratio .trailer-slot-loading{display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:13px;font-weight:600;}
+  .trailer-tap-overlay{cursor:pointer;background:transparent;z-index:3;}
+  .trailer-loading-standalone{width:100%;max-width:520px;margin:0 auto 20px;border-radius:var(--radius);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:13px;font-weight:600;}
+  .trailer-embed-wrap.trailer-fallback{background:var(--glass);padding:22px 16px;}
   
   .movie-screenshots-scroll {
     display: flex;
@@ -753,6 +799,48 @@
     padding: 5px 12px;
     border-radius: var(--radius-pill);
     backdrop-filter: blur(10px);
+  }
+  /* Стрелки перелистывания в полноэкранном просмотре картинок фильма — по
+     центру слева/справа поверх изображения, кликабельны мышью (тач по-прежнему
+     листает свайпом, эти стрелки не мешают). */
+  .fullscreen-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 101;
+    transition: background .15s var(--ease), transform .15s var(--ease);
+  }
+  .fullscreen-arrow:hover{ background: rgba(255,255,255,0.22); }
+  .fullscreen-arrow-prev:hover{ transform: translateY(-50%) scale(1.06); }
+  .fullscreen-arrow-prev{ left: 16px; }
+  .fullscreen-arrow-next{ right: 16px; transform: translateY(-50%) rotate(180deg); }
+  .fullscreen-arrow-next:hover{ transform: translateY(-50%) rotate(180deg) scale(1.06); }
+  @media (min-width: 900px){
+    .fullscreen-arrow{ width: 50px; height: 50px; }
+    /* Та же логика, что и у .detail-top-controls: на широком экране картинка
+       (max-height:85dvh, ширина по её реальным пропорциям) занимает по факту
+       узкую центральную колонку, а стрелки листания раньше стояли у самых
+       краёв окна — визуально далеко от кадра. max(28px, calc(50% - 560px))
+       подтягивает их к условной колонке шириной ~1120px вокруг центра экрана
+       и просто не подтягивает дальше, чем 28px от края, на узких окнах —
+       так стрелки не наедут на саму картинку, а на любой ширине остаются
+       кликабельными и не перекрывают счётчик/крестик закрытия (те стоят по
+       вертикали выше, в углах модалки). */
+    .fullscreen-arrow-prev{ left: max(28px, calc(50% - 560px)); }
+    .fullscreen-arrow-next{ right: max(28px, calc(50% - 560px)); }
+    .fullscreen-close{ top: 20px; right: max(20px, calc(50% - 560px)); }
+    .fullscreen-counter{ top: 24px; left: max(20px, calc(50% - 560px)); }
   }
 
   /* Адаптивная панель оценок: масштабируется под любую ширину экрана */
@@ -901,41 +989,31 @@
   .cat-icon-opt:active{transform:scale(.88);}
   .cat-icon-opt.active{background:linear-gradient(135deg,var(--accent-2),var(--accent-deep));color:#fff;border-color:transparent;}
 
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:80;display:flex;align-items:flex-end;justify-content:center;animation:overlayIn .18s ease both;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:80;display:flex;align-items:center;justify-content:center;padding:24px 16px calc(24px + var(--kb-inset));transition:padding-bottom .12s ease-out;animation:overlayIn .18s ease both;}
   @keyframes overlayIn{0%{opacity:0;}100%{opacity:1;}}
   .modal{
     width:100%;
-    max-width:520px;
-    border-radius:var(--radius-lg) var(--radius-lg) 0 0;
-    padding:18px 16px 18px;
-    max-height:85dvh;
+    max-width:420px;
+    border-radius:var(--radius-lg);
+    padding:20px 18px;
+    max-height:82dvh;
     overflow-y:auto;
-    background:linear-gradient(165deg, rgba(38,38,45,.4), rgba(16,16,20,.46));
-    backdrop-filter:blur(44px) saturate(180%) brightness(1.1);
-    -webkit-backdrop-filter:blur(44px) saturate(180%) brightness(1.1);
-    border:1px solid rgba(255,255,255,.1);
-    border-bottom:none;
-    box-shadow:0 -16px 44px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
+    background:rgba(255,255,255,.1);
+    backdrop-filter:blur(26px) saturate(180%);
+    -webkit-backdrop-filter:blur(26px) saturate(180%);
+    border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 8px 22px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22);
     box-sizing:border-box;
     position:relative;
-    animation:sheetIn .26s var(--ease) both;
+    animation:modalPopIn .22s var(--ease) both;
   }
-  @keyframes sheetIn{0%{transform:translateY(24px);opacity:.4;}100%{transform:translateY(0);opacity:1;}}
-  .modal::before{
-    content:'';
-    position:absolute;
-    top:10px;
-    left:50%;
-    transform:translateX(-50%);
-    width:38px;
-    height:4px;
-    border-radius:var(--radius-pill);
-    background:rgba(255,255,255,.16);
-  }
+  @keyframes modalPopIn{0%{transform:scale(.94) translateY(6px);opacity:0;}100%{transform:scale(1) translateY(0);opacity:1;}}
   .modal-msg{font-size:14px;line-height:1.58;color:var(--ink-dim);padding:7px 2px 11px;}
   .modal-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.6px;padding:6px 2px 4px;}
   .modal-actions{display:flex;gap:8px;width:100%;}
   .modal-actions button{flex:1;}
+  .modal textarea:focus{border-color:rgba(255,255,255,.15);background:var(--glass);}
+  .modal textarea:focus-visible{outline:none;}
   
   .infinite-loader{display:block;width:100%;text-align:center;padding:18px 0;font-size:13px;color:var(--ink-faint);font-weight:600;}
   
@@ -965,12 +1043,6 @@
   .choose-btn{background:var(--glass);}
   .choose-icon{background:linear-gradient(135deg,var(--accent-2),var(--violet));}
 
-  .modal{
-    background:linear-gradient(165deg, rgba(40,32,52,.5), rgba(14,11,19,.5));
-    border-color:rgba(255,255,255,.12);
-  }
-  .modal::before{background:linear-gradient(90deg, var(--accent-2), var(--violet-2));opacity:.55;}
-
   .lp-toast{
     background:linear-gradient(155deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
     box-shadow:0 14px 34px rgba(0,0,0,.55), 0 0 0 1px var(--accent-glow);
@@ -986,7 +1058,13 @@
   .section-title .ic{color:var(--accent-2);filter:drop-shadow(0 0 6px var(--accent-glow));}
 
   /* Плавное появление контента при переключении разделов */
-  .movies-grid, .row-scroll, .choose-wrap, .detail-page{will-change:transform,opacity;}
+  .movies-grid, .row-scroll, .choose-wrap{will-change:transform,opacity;}
+  /* .detail-page намеренно не в списке выше: will-change:transform сам по
+     себе (даже без фактического transform) тоже создаёт containing block
+     для position:fixed потомков — той же "ловушкой", что и transform в
+     keyframes pageIn (см. комментарий там). Кнопке "назад" внутри нужен
+     honest fixed относительно окна, поэтому здесь оставляем только opacity. */
+  .detail-page{will-change:opacity;}
 
   /* Небольшое дыхание для главного лого-акцента отключается при reduce-motion уже выше */
   @media (hover:hover){
@@ -994,7 +1072,34 @@
     .card:hover .poster-frame{box-shadow:0 16px 34px rgba(0,0,0,.55), 0 0 0 1px var(--accent-glow);}
     .primary-btn:hover{background-position:100% 0;}
     .nav button:not(.active):hover{color:var(--ink);}
+
+    /* Подсказка мышью: эти ряды можно тащить в сторону (drag-to-scroll),
+       курсор меняется на "руку", как в галереях десктопных сайтов. */
+    .row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track{
+      cursor:grab;
+    }
   }
+  /* На ПК тягание мышью по этим рядам раньше могло случайно выделить текст
+     внутри карточек (заголовки, подписи) или запустить нативное "перетаскивание"
+     картинки браузером — оба эффекта конфликтовали с собственным JS-скроллом
+     (initMouseDragScroll) и выглядели как "постеры/картинки цепляются вместо
+     того чтобы просто листаться". Раньше user-select:none включался только
+     ПОСЛЕ того как JS распознавал перетаскивание (класс .mouse-dragging) — то
+     есть в первые миллисекунды жеста браузер уже успевал начать выделение.
+     Теперь запрещаем выделение текста в этих рядах всегда, а не только во
+     время активного перетаскивания. */
+  .row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track{
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .row-scroll.mouse-dragging, .genres-scroll-bar.mouse-dragging,
+  .discover-filter-bar.mouse-dragging, .movie-screenshots-scroll.mouse-dragging,
+  .hero-banner-track.mouse-dragging{
+    cursor:grabbing;
+    scroll-snap-type:none;
+  }
+  .row-scroll.mouse-dragging .card{ pointer-events:none; }
+  .hero-banner-track.mouse-dragging .hero-banner-slide{ pointer-events:none; }
 
   /* ================================================================
      ВТОРАЯ ВОЛНА РЕДИЗАЙНА: живой анимированный фон, кинематографичный
@@ -1027,9 +1132,9 @@
   /* Постер в детальной карточке фильма медленно "дышит" зумом — классический
      кинематографичный приём Ken Burns вместо статичной картинки. */
   .detail-hero-bg{position:absolute;inset:0;height:66dvh;z-index:0;overflow:hidden;}
-  .detail-hero-bg img{width:100%;height:100%;object-fit:cover;transform-origin:50% 30%;animation:kenBurns 18s ease-in-out infinite alternate;}
+  .detail-hero-bg .detail-hero-poster-bg{width:100%;height:100%;object-fit:cover;transform-origin:50% 30%;animation:kenBurns 18s ease-in-out infinite alternate;}
   @keyframes kenBurns{0%{transform:scale(1);}100%{transform:scale(1.09);}}
-  @media (prefers-reduced-motion: reduce){ .detail-hero-bg img{animation:none;} }
+  @media (prefers-reduced-motion: reduce){ .detail-hero-bg .detail-hero-poster-bg{animation:none;} }
 
   /* Заголовки разделов получают цветной акцент-штрих слева — быстрее считываются
      глазом и добавляют структуре страницы фирменный ритм. */
@@ -1085,6 +1190,362 @@
   }
   @keyframes navGlow{to{transform:rotate(360deg);}}
   @media (prefers-reduced-motion: reduce){ .nav button.active::before{animation:none;} .movies-grid .card, .row-scroll .card{animation:none;} }
+
+  /* ============================================================================
+     DESKTOP-АДАПТАЦИЯ. Всё выше — оригинальная мобильная вёрстка, она не тронута
+     ни единой строкой. Правила ниже применяются ТОЛЬКО от 900px ширины окна
+     (обычный ПК-браузер) и лишь переопределяют то немногое, что на широком экране
+     выглядит слишком узко/пусто: контейнер приложения, ленты постеров и сетку
+     "Фильмов"/"Сериалов" на странице поиска. Логика, JS-обработчики и структура
+     HTML остаются теми же — меняется только раскладка через CSS.
+     ============================================================================ */
+  @media (min-width: 900px){
+    /* Раньше #app был центрированной "коробкой" с фиксированной max-width —
+       отсюда и чёткая вертикальная граница по бокам (особенно заметно на
+       фоне-постере фильма), и мёртвая зона по краям экрана, где колёсико
+       мыши не долетало до скролла (за пределами #app html/body не скроллятся).
+       На ПК убираем ограничение ширины у самого #app — теперь это единое
+       полотно на весь экран, без рамки, и скролл работает буквально везде,
+       потому что #app и есть весь видимый экран. Читаемость текста и
+       ширина сеток карточек по-прежнему ограничены отдельно ниже (у
+       .detail-content, .choose-wrap и т.д. свои max-width с центрированием). */
+    #app{
+      max-width:none;
+    }
+
+    .topbar{ padding-top:42px; }
+    .netflix-logo{ font-size:clamp(46px, 4.2vw, 62px); }
+
+    /* Ленты с постерами (главная, похожие фильмы и т.п.) — карточки чуть
+       крупнее и в кадре их помещается больше, раз ширина позволяет. */
+    .card{ flex:0 0 clamp(138px, 12vw, 172px); }
+    .row-scroll{ padding:2px 32px 16px; gap:16px; }
+    .genres-scroll-bar{ padding-left:32px; padding-right:32px; }
+
+    /* Hero-баннер вверху "Поиска" — на телефоне высота считалась от aspect-ratio
+       16/10 к ширине карточки, но на широком контейнере (1180px+) это превращает
+       баннер в гигантский блок под 800px высотой, который перекрывает всё
+       остальное. На ПК ограничиваем высоту как в обычных стриминг-сервисах —
+       широкий, но невысокий (~42% высоты окна, максимум ~460px).
+       Слайд теперь не на всю ширину трека, а ýже — так по бокам от активного
+       баннера видна треть соседних слайдов (как на витринах кинотеатров/
+       стриминговых сайтов). Трек получает боковые отступы, равные половине
+       "недостающей" ширины слайда — это даёт крайним баннерам возможность
+       тоже оказаться по центру при скролле. */
+    .hero-banner-wrap{ padding:2px 0 18px; }
+    .hero-banner-track{ padding:0 15vw; scroll-padding:0 15vw; }
+    .hero-banner-slide{
+      aspect-ratio:auto;
+      height:min(42vh, 460px);
+      margin:0 12px;
+      width:70vw;
+      max-width:900px;
+      scroll-snap-align:center;
+    }
+    .hero-banner-title{ font-size:30px; }
+    .hero-banner-info{ padding:26px; }
+
+    /* Соседние баннеры по бокам от центрального затемняются — как на
+       витринах стриминговых сервисов — и светлеют, когда их наводят курсором
+       или они сами оказываются по центру (класс .is-center вешается в JS,
+       см. applyCenterClass в initHeroBannerCarousel). Кликабельны в любом
+       состоянии: если баннер ещё не по центру, клик по нему просто
+       докручивает его туда (см. bindHeroBannerClicks), а не сразу открывает
+       карточку фильма. */
+    .hero-banner-slide{
+      filter:brightness(.48) saturate(.8);
+      transition:filter .35s var(--ease), transform .2s var(--ease);
+    }
+    .hero-banner-slide.is-center{ filter:brightness(1) saturate(1); }
+
+    /* Начальный экран с категориями (Избранное, Смотреть позже и т.д.) —
+       на мобильном название лежит слева, а счётчик с стрелочкой прижаты к
+       правому краю (space-between). На ПК вместо растянутого на весь экран
+       ряда — название по центру, а счётчик с стрелочкой сразу правее него,
+       одной компактной группой. */
+    .section-head[data-cat]{
+      justify-content:center;
+      gap:10px;
+    }
+
+    /* Кнопки "Добавить категорию"/"Скопировать"/"Вставить" внизу — на ПК
+       контейнер #app больше не ограничен по ширине (см. выше), поэтому
+       width:calc(100% - 32px) и flex:1 растягивали их почти на весь экран.
+       Сужаем и центрируем, как обычные компактные кнопки. */
+    .add-cat-btn{
+      width:auto;
+      min-width:240px;
+      max-width:340px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    .sync-btn-row{
+      max-width:340px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+
+    /* Фильтры (год/тип/жанр/страна) на экране открытого раздела вроде
+       "Популярное" — на мобильном это прокручиваемая лента, прижатая к
+       левому краю, с почти нулевым отступом снизу (2px) — вплотную к сетке
+       фильмов. На ПК фильтров обычно немного и они не требуют скролла,
+       поэтому центрируем их по горизонтали и даём больше воздуха до сетки
+       фильмов под ними. */
+    .discover-filter-bar{
+      justify-content:center;
+      padding-top:14px;
+      padding-bottom:22px;
+    }
+
+    /* Сетка "Фильмы"/"Сериалы"/"Мультики" и т.п. на странице поиска — вместо
+       фиксированных 3 колонок под телефон, авто-подстраиваемая сетка с
+       карточками комфортного размера, сколько бы их ни влезло по ширине. */
+    .movies-grid{
+      grid-template-columns:repeat(auto-fill, minmax(148px, 1fr));
+      padding:2px 32px 16px;
+      gap:16px;
+    }
+
+    /* Детальная страница фильма — текстовый блок не растягивается на всю
+       ширину широкого окна (иначе описание было бы неудобно читать), а
+       кадры/похожие фильмы используют более щедрую ширину. */
+    .detail-content{ max-width:640px; margin-left:auto; margin-right:auto; }
+    .detail-action-area{ max-width:960px; margin-left:auto; margin-right:auto; }
+    /* Описание фильма (.detail-overview) раньше было ограничено 400px
+       независимо от ширины экрана — на ПК, где текстовая колонка
+       .detail-content шире (640px), это выглядело неоправданно узко.
+       Расширяем описание почти на всю ширину колонки. */
+    .detail-overview{ max-width:600px; }
+
+    /* На мобильном постер-фон растягивается на 66% высоты экрана (dvh) — это
+       нормально для узкого телефонного экрана, но на ПК-мониторе (где dvh
+       считается от полной высоты окна браузера) это превращает шапку фильма
+       в гигантское изображение почти на весь экран. Ограничиваем высоту
+       разумным значением, как в обычных десктопных стриминг-сервисах. */
+    .detail-hero-bg{ height:46vh; max-height:520px; min-height:320px; }
+
+    /* На мобильном hero-фон и текст (заголовок/описание/кнопки) сознательно
+       наложены друг на друга — .detail-hero-bg вынут из потока (position:
+       absolute), а .detail-content идёт поверх него, прижатый к низу текстом
+       на самой картинке. На ПК с широким hero-баннером (см. .detail-hero-wide
+       ниже) такое наложение выглядело плохо — трейлер и остальной контент
+       наезжали на низ картинки. Возвращаем hero-фон в обычный поток (у него
+       уже есть фиксированная высота выше), тогда всё остальное просто идёт
+       ПОСЛЕ него, без наложения. */
+    .detail-hero-bg{ position:relative; }
+    /* Кнопка "заметка" переехала на сам постер (правый нижний угол широкой
+       карточки кадра, см. .detail-hero-wide-note ниже) — прячем её старую
+       версию в верхней панели, она там больше не нужна. */
+    .detail-top-controls .note-fab{ display:none; }
+    /* Кнопка "назад" на странице фильма (.detail-top-controls) — зафиксирована
+       так же, как и на остальных открытых разделах (см. .subbar #backBtn
+       ниже), чтобы оставаться на экране при прокрутке страницы фильма. */
+    .subbar #backBtn{
+      position:fixed;
+      top:20px;
+      left:max(16px, calc(50% - 610px));
+      z-index:15;
+    }
+    /* Кнопка "назад" на самой странице фильма (.detail-top-controls) — та же
+       фиксированная позиция, что и на остальных открытых разделах
+       (Популярное, Фильмы и т.д.), чтобы кнопка выглядела и вела себя
+       одинаково везде и не уезжала вверх вместе со страницей при скролле. */
+    .detail-top-controls #backBtn{
+      position:fixed;
+      top:20px;
+      left:max(16px, calc(50% - 610px));
+      z-index:15;
+    }
+
+    /* Заголовок открытого раздела (.subbar .subtitle) — по центру экрана,
+       независимо от кнопки "назад" (она зафиксирована отдельно выше) и любых
+       дополнительных кнопок справа (например, "редактировать"/"обновить" у
+       категорий). На мобильном .subbar остаётся как был — это только для ПК.
+       Раньше заголовок центрировался через top:50% от всей высоты .subbar —
+       но паддинг у неё несимметричный (18px сверху / 10px снизу), поэтому
+       50% всей коробки не совпадает с центром самой строки кнопок, и
+       заголовок с кнопками "назад"/"редактировать" оказывались на разных
+       уровнях. Теперь используем один и тот же ориентир для всех: паддинг
+       сверху 20px + центр кнопки высотой 39px — ровно то же значение, что и
+       top:20px у зафиксированной кнопки "назад" выше. */
+    /* Заголовок и кнопка "назад" вынесены из потока (position:absolute/fixed,
+       см. правила ниже), поэтому без явной высоты .subbar схлопывался почти
+       до нуля — и следующий блок (например, панель фильтров на экране
+       категории вроде "Популярное"/"Сериалы") наезжал прямо на текст
+       заголовка. Явно резервируем высоту, равную отступу сверху (20px) +
+       высоте строки заголовка (39px) + небольшой зазор снизу. */
+    .subbar{ position:relative; padding-top:20px; min-height:69px; }
+    .subbar .subtitle{
+      position:absolute;
+      top:20px; height:39px;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex; align-items:center; justify-content:center;
+      max-width:min(64vw, 640px);
+      text-align:center;
+    }
+
+    /* Раньше вертикальный постер просто растягивался object-fit:cover на всю
+       широкую area фона — на ПК это выглядело как грубо обрезанная и
+       "размазанная" картинка. Теперь постер уходит на задний план: сильно
+       блюрится и затемняется (и слегка увеличивается scale, чтобы блюр не
+       обнажил свои же края) — играет роль декоративного фонового свечения,
+       как на десктопных стриминг-сервисах. */
+    .detail-hero-bg .detail-hero-poster-bg{
+      filter:blur(40px) saturate(115%) brightness(.55);
+      transform:scale(1.18);
+    }
+    /* А поверх него — широкий кадр (backdrop) этого же фильма в виде красивой
+       карточки со скруглением и тенью. Внутри самой карточки — название
+       фильма (снизу, поверх градиента) и рейтинг IMDb (в правом верхнем
+       углу) — по сути это теперь и есть "шапка" фильма на ПК, а всё
+       остальное (описание, жанры, кнопки, трейлер, кадры, похожее) идёт
+       отдельным блоком уже НИЖЕ этой карточки, без наложения. */
+    .detail-hero-wide{
+      display:block;
+      position:absolute;
+      inset:26px 5vw 24px;
+      z-index:1;
+      max-width:1100px;
+      margin:0 auto;
+      border-radius:20px;
+      overflow:hidden;
+      box-shadow:0 26px 64px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.09);
+    }
+    .detail-hero-wide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .detail-hero-wide-gradient{
+      position:absolute;inset:0;
+      background:linear-gradient(180deg, rgba(7,7,10,0) 45%, rgba(7,7,10,.86) 100%);
+    }
+    /* Обёртка названия + под-строки (год/тип/сезоны) на широкой карточке —
+       раньше был только заголовок, прижатый к левому краю. Теперь оба блока
+       уложены в одну колонку по центру карточки, как на постерах стриминговых
+       сервисов. */
+    /* Обёртка названия + под-строки (год/тип/сезоны) на широкой карточке —
+       раньше был только заголовок, прижатый к левому краю. Теперь оба блока
+       уложены в одну колонку по центру карточки, как на постерах стриминговых
+       сервисов. pointer-events:none — этот блок только текст, не кнопка,
+       но его бокс растянут почти на всю ширину карточки (left/right:24px) и
+       по высоте физически перекрывает кнопку "заметка" в правом нижнем углу
+       (она в DOM идёт раньше и без этого свойства просто не получала клики,
+       т.к. пустая/прозрачная часть этого блока лежала поверх неё). */
+    .detail-hero-wide-info{
+      position:absolute;left:24px;right:24px;bottom:20px;z-index:2;
+      display:flex;flex-direction:column;align-items:center;
+      gap:6px;
+      pointer-events:none;
+    }
+    .detail-hero-wide-title{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(28px, 3vw, 40px);
+      letter-spacing:.7px;
+      line-height:1.05;
+      color:#fff;
+      text-align:center;
+      text-transform:uppercase;
+      text-shadow:0 2px 12px rgba(0,0,0,.75);
+      word-break:break-word;
+    }
+    /* Под названием — год, тип (фильм/сериал/мультик и т.д.) и число сезонов
+       (для сериалов), через точку-разделитель, тем же приёмом, что и
+       .hero-banner-meta в баннере "Поиска". */
+    .detail-hero-wide-meta{
+      font-family:var(--font-label);
+      font-size:13px;font-weight:700;letter-spacing:.6px;
+      color:rgba(255,255,255,.75);
+      text-transform:uppercase;
+      text-align:center;
+      text-shadow:0 2px 10px rgba(0,0,0,.6);
+    }
+    .detail-hero-wide-rating{
+      position:absolute;top:16px;right:16px;z-index:3;
+      display:flex;align-items:center;gap:5px;
+      font-size:13px;font-weight:800;color:var(--gold);
+      padding:6px 12px;border-radius:var(--radius-pill);
+      background:rgba(9,9,11,.7);backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,.14);
+    }
+    /* Кнопка "заметка" — тем же приёмом, что и плашка IMDb-рейтинга выше,
+       только в правом нижнем углу широкой карточки кадра. z-index:3 — выше,
+       чем .detail-hero-wide-info (z-index:2), на случай перекрытия боксов. */
+    .detail-hero-wide-note{
+      position:absolute;bottom:16px;right:16px;z-index:3;
+    }
+    /* Название и IMDb-рейтинг теперь показаны прямо на широкой карточке —
+       прячем их дублирующие версии из текстового блока ниже, чтобы не
+       повторялись дважды. Если у фильма нет широкого кадра (карточка не
+       отрисовалась, #detailHeroWide отсутствует), оригинальный заголовок
+       остаётся на месте как запасной вариант. */
+    .detail-page:has(#detailHeroWide) .detail-content > .detail-title{ display:none; }
+    /* Год, тип (фильм/сериал) и число сезонов теперь показаны прямо на
+       широкой карточке (.detail-hero-wide-meta, под названием) — прячем эти
+       три пункта в строке под описанием, чтобы не дублировались. Жанры на
+       баннере намеренно не показываются (см. комментарий у wideMeta выше),
+       поэтому строку жанров под описанием оставляем как единственное место,
+       где они видны. */
+    .detail-page:has(#detailHeroWide) .detail-content #detailMetaRow .meta-year,
+    .detail-page:has(#detailHeroWide) .detail-content #detailMetaRow .meta-type,
+    .detail-page:has(#detailHeroWide) .detail-content #detailMetaRow .meta-seasons{ display:none; }
+    /* Отдельная плашка "IMDb Рейтинг" в тексте больше не нужна на ПК в любом
+       случае — рейтинг уже виден в правом верхнем углу новой широкой карточки
+       кадра (см. .detail-hero-wide-rating выше). */
+    .imdb-rating-box{ display:none !important; }
+
+    /* .detail-page на мобильном — flex-колонка высотой минимум в весь экран
+       (min-height:100dvh) с justify-content:space-between, чтобы блок с
+       описанием и блок с трейлером/похожими фильмами красиво "прижимались"
+       к верху и низу короткого телефонного экрана. На ПК-мониторе окно
+       гораздо выше контента, и это же правило растягивает пустое место
+       МЕЖДУ кнопкой «Добавить в коллекцию» и блоком с трейлером — вместо
+       того чтобы они шли подряд. На широких экранах просто убираем эту
+       принудительную растяжку — блоки идут друг за другом естественно. */
+    .detail-page{ min-height:auto; justify-content:flex-start; }
+    /* Раньше между низом широкой карточки-баннера и текстом (описание и т.д.)
+       было слишком много пустого места: 46px внутреннего отступа снизу у
+       самой карточки (см. .detail-hero-wide inset выше) плюс ещё 28px
+       padding-top у .detail-content — итого почти 74px "воздуха", из-за
+       чего описание выглядело подвешенным слишком низко относительно
+       постера. Сокращаем оба зазора, чтобы описание шло сразу под баннером. */
+    .detail-content{ margin-top:0; padding-top:8px; }
+
+    /* Карточка "Выбрать категорию" и подобные модальные обёртки остаются
+       по центру и не растягиваются на всё окно. */
+    .choose-wrap{ max-width:480px; margin-left:auto; margin-right:auto; }
+
+    /* Окошко трейлера на телефоне ограничено 520px, чтобы не быть шире
+       экрана — на ПК это выглядит непропорционально мелко рядом с широким
+       кадром фильма выше. Даём ему вырасти вместе с остальным контентом
+       ПК-версии (ширина ограничена .detail-action-area, см. выше). */
+    .trailer-embed-wrap, .trailer-loading-standalone{ max-width:900px; }
+
+    /* На мобильном блок оценки, панель категорий и блок с заметкой намеренно
+       узкие (max-width:380px) — под ширину телефонного экрана. На ПК колонка
+       .detail-content шире (640px, см. выше), и эти блоки выглядели неоправданно
+       узкими посреди широкого текстового столбца. Даём им растянуться на всю
+       ширину колонки, как остальному контенту (описанию и т.д.). */
+    .my-rating-box,
+    .search-action-bar,
+    .desc-card{ max-width:none; }
+  }
+
+  /* Наведение курсора мышью тоже снимает затемнение с бокового баннера —
+     отдельный блок, т.к. hover:hover должен работать независимо от того,
+     попадает ли ширина экрана в брейкпоинт 900px (на деле боковые баннеры
+     видны только на ПК, но так правило не завязано на два условия сразу). */
+  @media (hover:hover){
+    .hero-banner-slide:hover{ filter:brightness(1) saturate(1); }
+  }
+
+  /* На совсем широких мониторах даём приложению чуть подрасти дальше,
+     но не превращаем ленты в бесконечно растянутое полотно. */
+  @media (min-width: 1440px){
+    .movies-grid{ grid-template-columns:repeat(auto-fill, minmax(158px, 1fr)); }
+  }
 </style>
 </head>
 <body>
@@ -1184,6 +1645,7 @@
     
     minimalPoop: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-2 0-3.5 1.5-3.5 3.5 0 .8.3 1.5.8 2.1C8.2 9.5 7 11.1 7 13c0 2.2 1.8 4 4 4h2c2.2 0 4-1.8 4-4 0-1.9-1.2-3.5-2.3-4.4.5-.6.8-1.3.8-2.1C15.5 4.5 14 3 12 3z"/></svg>',
     minimalMinus: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+    minimalOkHand: '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none" fill-rule="evenodd"><path d="M5.6,22.5 Q4.1,20.8 4.1,19.5 L3.6,15 Q3.6,13.5 3.75,12.4 Q4,10.5 5.6,9.4 L11.25,8.25 Q11.6,5.5 12.4,2.25 Q13,0.5 15,5.25 Q15.6,2.2 16.1,0.4 Q17,2 18,8.25 Q19,10 19.5,11.25 L19.5,14.25 Q19.5,18.5 16.1,22.9 Q11,23.3 5.6,22.5 Z M8.6,12 L13.1,12.4 L14.25,15.75 L11.25,18 L8.1,16.1 Z"/></svg>',
     minimalThumbUp: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
     minimalFire: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-2-.5-3-1-4 2 1 3 3 3 5a6 6 0 1 1-12 0c0-3.5 2-6 5-11Z"/></svg>',
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>',
@@ -1191,7 +1653,9 @@
     users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     sync: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M3 21v-5h5"/><path d="M21 3v5h-5"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
-    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>'
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5.5v13a1 1 0 0 0 1.53.85l10.5-6.5a1 1 0 0 0 0-1.7l-10.5-6.5A1 1 0 0 0 8 5.5Z"/></svg>',
+    volumeMute: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M23 9l-6 6M17 9l6 6"/></svg>'
   };
   function icon(name, size){ return (ICONS[name]||ICONS.star).replace('<svg', '<svg width="'+size+'" height="'+size+'"'); }
 
@@ -1353,6 +1817,7 @@
     discoverListKey: null,
     scrollPositions: {},
     similarCache: {}, similarLoading: {},
+    trailerCache: {}, trailerLoading: {},
     banner: { items: [], index: 0, loadedAt: 0 }
   };
   let bannerLoadingFlag = false;
@@ -1564,8 +2029,20 @@
   const tmdbCache = new Map();
   const tmdbInFlight = new Map();
 
+  // Запросы к TMDB идут не напрямую на api.themoviedb.org, а через собственный
+  // прокси на Cloudflare Workers. Так у пользователей без VPN (или с VPN на
+  // датацентровом IP, который TMDB/Cloudflare банит) приложение всё равно грузится:
+  // браузер стучится только на этот адрес, а сам прокси уже сам обращается к TMDB.
+  // ВАЖНО: после деплоя воркера подставь сюда его реальный адрес вида
+  // https://<имя-воркера>.<твой-сабдомен>.workers.dev
+  const TMDB_PROXY_BASE = 'https://kinoblo-proxy.zenabunicev.workers.dev/3';
+  // Картинки (постеры, кадры) TMDB отдаёт с отдельного домена image.tmdb.org —
+  // он тоже проксируется через тот же воркер (см. обновлённый tmdb-proxy-worker.js),
+  // просто без префикса /3.
+  const TMDB_IMG_PROXY_BASE = 'https://kinoblo-proxy.zenabunicev.workers.dev';
+
   async function tmdbFetch(path, key){
-    const base = 'https://api.themoviedb.org/3';
+    const base = TMDB_PROXY_BASE;
     const sep = path.indexOf('?') > -1 ? '&' : '?';
     const url = base + path + sep + 'api_key=' + encodeURIComponent(key) + '&language=ru-RU';
 
@@ -1598,7 +2075,8 @@
       mediaType: isTv ? 'tv' : 'movie',
       title: (isTv ? (r.name || r.original_name) : (r.title || r.original_title)) || '',
       year: ((isTv ? r.first_air_date : r.release_date) || '').slice(0, 4),
-      poster: r.poster_path ? ('https://image.tmdb.org/t/p/w500' + r.poster_path) : '',
+      poster: r.poster_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w500' + r.poster_path) : '',
+      backdrop: r.backdrop_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w1280' + r.backdrop_path) : '',
       description: r.overview || '',
       genres: (r.genre_ids || []).map(id => gmap[id]).filter(Boolean),
       voteAverage: typeof r.vote_average === 'number' ? r.vote_average : null,
@@ -2002,6 +2480,23 @@
     } else {
       render();
     }
+
+    // На широких экранах карточек на страницу помещается больше в ширину,
+    // поэтому первая (и иногда вторая-третья) страница может целиком уместиться
+    // на экране без вертикального скролла — а раз скроллить нечем, обычный
+    // scroll-триггер подгрузки (initInfiniteScroll) вообще не срабатывает, и
+    // список "застревает" на первой партии фильмов. Поэтому после каждой
+    // подгрузки дополнительно проверяем: не короче ли контент, чем видимая
+    // область — и если короче, сразу подгружаем следующую страницу, пока
+    // список не заполнит экран (или пока подборка не закончится).
+    setTimeout(() => {
+      if (state.view !== 'discoverList' || state.discoverListKey !== key) return;
+      if (state.discover.fullLoading[key] || state.discover.fullDone[key]) return;
+      const appEl = document.getElementById('app');
+      if (appEl && appEl.scrollHeight <= appEl.clientHeight + 200){
+        loadDiscoverFullPage(key);
+      }
+    }, 60);
   }
 
   function initInfiniteScroll(){
@@ -2050,10 +2545,10 @@
   async function tmdbImages(tmdbId, mediaType, key){
     try{
       const kind = mediaType === 'tv' ? 'tv' : 'movie';
-      const res = await fetch('https://api.themoviedb.org/3/' + kind + '/' + tmdbId + '/images?api_key=' + encodeURIComponent(key));
+      const res = await fetch(TMDB_PROXY_BASE + '/' + kind + '/' + tmdbId + '/images?api_key=' + encodeURIComponent(key));
       const data = await res.json();
       const backdrops = data.backdrops || [];
-      return backdrops.map(b => 'https://image.tmdb.org/t/p/w780' + b.file_path);
+      return backdrops.map(b => TMDB_IMG_PROXY_BASE + '/t/p/w780' + b.file_path);
     }catch(e){ return []; }
   }
 
@@ -2079,7 +2574,7 @@
   function tierMeta(r){
     if (r == null) return null;
     if (r >= 1 && r <= 3) return {key:'poop', color:'#c9935a', iconName:'minimalPoop'};
-    if (r <= 6) return {key:'pee', color:'#e8c94a', iconName:'minimalMinus'};
+    if (r <= 6) return {key:'pee', color:'#e8c94a', iconName:'minimalOkHand'};
     if (r <= 9) return {key:'green', color:'#34d399', iconName:'minimalThumbUp'};
     if (r === 10) return {key:'fire', color:'#ffb347', iconName:'minimalFire'};
     return null;
@@ -2091,7 +2586,7 @@
       if (!t) return '';
       let svgIcon = '';
       if (t.key === 'poop') svgIcon = icon('minimalPoop', 13);
-      else if (t.key === 'pee') svgIcon = icon('minimalMinus', 13);
+      else if (t.key === 'pee') svgIcon = icon('minimalOkHand', 13);
       else if (t.key === 'green') svgIcon = icon('minimalThumbUp', 13);
       else if (t.key === 'fire') svgIcon = icon('minimalFire', 13);
 
@@ -2112,11 +2607,12 @@
   function card(m){
     const tier = (m.myRating != null) ? tierMeta(m.myRating) : null;
     const frameCls = 'poster-frame ' + (tier ? 'tier-'+tier.key : 'tier-none');
-    const posterHtml = m.poster ? '<img class="poster" src="'+escapeHtml(tmdbImgSize(m.poster,'w342'))+'" alt="" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(m.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(m.title)+'</div>';
+    const posterHtml = m.poster ? '<img class="poster" src="'+escapeHtml(tmdbImgSize(m.poster,'w342'))+'" alt="" loading="lazy" decoding="async" draggable="false" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(m.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(m.title)+'</div>';
     const typePill = m.type ? '<div class="type-pill">'+typeLabel(m.type)+'</div>' : '';
     const gArr = genresOf(m);
     const subLine = [typeLabel(m.type), gArr.slice(0,2).join(', ')].filter(Boolean).join(' · ');
-    const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(m.title)+'</div>'+(subLine?'<div class="card-sub">'+escapeHtml(subLine)+'</div>':'')+'</div>';
+    const noteMiniIcon = (m.myNote && m.myNote.trim()) ? '<span class="card-note-icon" title="Есть заметка">'+icon('pencil',11)+'</span>' : '';
+    const caption = '<div class="poster-caption"><div class="card-title-row"><div class="card-title">'+escapeHtml(m.title)+'</div>'+noteMiniIcon+'</div>'+(subLine?'<div class="card-sub">'+escapeHtml(subLine)+'</div>':'')+'</div>';
     
     if (m._sourceType === 'tmdb') {
       return '<div class="card" data-discover-pick="'+m.tmdbId+'" data-discover-type="'+m.mediaType+'"><div class="'+frameCls+'">'+posterHtml+caption+'</div>'+typePill+ratingPill(m)+'</div>';
@@ -2126,7 +2622,7 @@
 
   function discoverCard(item){
     const isAlreadyAddedAnywhere = state.movies.some(x => x.tmdbId === item.tmdbId);
-    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(tmdbImgSize(item.poster,'w342'))+'" alt="" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
+    const posterHtml = item.poster ? '<img class="poster" src="'+escapeHtml(tmdbImgSize(item.poster,'w342'))+'" alt="" loading="lazy" decoding="async" draggable="false" onerror="this.parentElement.innerHTML=\'<div class=&quot;poster&quot;>'+escapeHtml(item.title)+'</div>\'">' : '<div class="poster">'+escapeHtml(item.title)+'</div>';
     const typePill = '<div class="type-pill">'+(item.mediaType==='tv'?'Сериал':'Фильм')+'</div>';
     const caption = '<div class="poster-caption"><div class="card-title">'+escapeHtml(item.title)+'</div>'+(item.year?'<div class="card-sub">'+item.year+'</div>':'')+'</div>';
     const newBadge = item.isNew ? '<div class="new-badge">Новое</div>' : '';
@@ -2213,6 +2709,187 @@
     return (m && m.tmdbId != null && m.mediaType) ? (m.mediaType + '_' + m.tmdbId) : null;
   }
 
+  // Трейлер встраивается прямо на странице фильма через официальный YouTube IFrame Player API,
+  // а не открывается наружу. Некоторые видео (особенно официальные трейлеры студий) имеют
+  // встраивание отключено владельцем — плеер в таком случае отдаёт onError с кодом 101/150
+  // ("ошибка 153" в UI YouTube). Поэтому храним НЕСКОЛЬКО видео-кандидатов на фильм и при
+  // ошибке встраивания одного пробуем следующий; если ни один не встраивается — показываем
+  // компактную карточку-заглушку со ссылкой "Смотреть на YouTube" вместо сломанного плеера.
+  function trailerCacheKey(m){
+    return (m && m.tmdbId != null && m.mediaType) ? (m.mediaType + '_' + m.tmdbId) : null;
+  }
+
+  async function loadTrailerForDetail(m){
+    const key = trailerCacheKey(m);
+    if (!key || Object.prototype.hasOwnProperty.call(state.trailerCache, key) || state.trailerLoading[key]) return;
+    state.trailerLoading[key] = true;
+    try{
+      // TMDB по умолчанию отдаёт из /videos только ролики на языке запроса (у нас ru-RU) —
+      // у многих фильмов (особенно не самых крупных) трейлер размечен только на английском
+      // и без include_video_language просто не попадёт в выдачу. Расширяем языки явно.
+      const data = await tmdbFetch('/' + m.mediaType + '/' + m.tmdbId + '/videos?include_video_language=en,ru,null', state.tmdbKey);
+      const vids = (data && data.results) || [];
+      const yt = vids.filter(v => v.site === 'YouTube' && v.key);
+      const rank = v => (v.type === 'Trailer' ? 0 : v.type === 'Teaser' ? 1 : 2) - (v.official ? 0.5 : 0);
+      yt.sort((a, b) => rank(a) - rank(b));
+      const ids = [];
+      yt.forEach(v => { if (ids.indexOf(v.key) === -1) ids.push(v.key); });
+      state.trailerCache[key] = ids.slice(0, 5);
+    }catch(e){
+      state.trailerCache[key] = [];
+    }
+    state.trailerLoading[key] = false;
+    const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (state.view === 'detail' && curM && trailerCacheKey(curM) === key){
+      renderTrailerSection();
+    }
+  }
+
+  function trailerEmbedHtml(m){
+    const key = trailerCacheKey(m);
+    if (!key) return '';
+    if (!Object.prototype.hasOwnProperty.call(state.trailerCache, key)){
+      return '<div class="trailer-loading-standalone glass-flat">Загрузка трейлера…</div>';
+    }
+    const ids = state.trailerCache[key];
+    // Даже когда TMDB не нашёл ни одного видео (бывает у менее популярных тайтлов),
+    // всё равно показываем карточку — она откроет поиск по трейлеру на YouTube —
+    // вместо того чтобы страница фильма молча оставалась без секции трейлера.
+    if (!ids || !ids.length) return trailerFallbackHtml(m);
+    return '<div class="trailer-embed-wrap"><div class="trailer-ratio" id="trailerPlayerHost" data-trailer-key="'+key+'"><div class="trailer-slot-loading">Загрузка трейлера…</div></div></div>';
+  }
+
+  function trailerFallbackHtml(m){
+    const ids = state.trailerCache[trailerCacheKey(m)] || [];
+    const firstId = ids[0];
+    const url = firstId ? ('https://www.youtube.com/watch?v=' + firstId) : ('https://www.youtube.com/results?search_query=' + encodeURIComponent((m.title || '') + (m.year ? ' ' + m.year : '') + ' трейлер'));
+    return '<div class="trailer-embed-wrap trailer-fallback glass-flat" id="trailerFallback">'
+      + '<button type="button" class="secondary-btn glass-flat" id="trailerExternalBtn" data-url="'+escapeHtml(url)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;">'
+      + icon('external', 16) + '<span>Смотреть трейлер на YouTube</span>'
+      + '</button>'
+      + '</div>';
+  }
+
+  // Пытаемся смонтировать плеер для очередного видео-кандидата по индексу idx; если у видео
+  // отключено встраивание (или оно недоступно), YT.Player пришлёт onError — переходим к
+  // следующему кандидату, а когда кандидаты закончились — заменяем плеер на фолбэк-ссылку.
+  function mountTrailerPlayer(m){
+    const key = trailerCacheKey(m);
+    const ids = state.trailerCache[key];
+    const host = document.getElementById('trailerPlayerHost');
+    if (!host || !ids || !ids.length) return;
+    if (host.getAttribute('data-mounted') === '1') return;
+    host.setAttribute('data-mounted', '1');
+
+    ensureYouTubeApi(() => {
+      const hostNow = document.getElementById('trailerPlayerHost');
+      if (!hostNow || hostNow.getAttribute('data-trailer-key') !== key) return;
+      let idx = 0;
+      let settled = false;
+      let currentPlayer = null;
+      function tryNext(){
+        const h = document.getElementById('trailerPlayerHost');
+        if (!h || h.getAttribute('data-trailer-key') !== key) return;
+        if (idx >= ids.length){
+          if (settled) return;
+          settled = true;
+          h.closest('.trailer-embed-wrap').outerHTML = trailerFallbackHtml(m);
+          bindTrailerFallbackEvents();
+          return;
+        }
+        const vid = ids[idx++];
+        h.innerHTML = '<div class="trailer-slot-loading">Загрузка трейлера…</div>';
+        const playerDiv = document.createElement('div');
+        h.appendChild(playerDiv);
+        try{
+          currentPlayer = new YT.Player(playerDiv, {
+            videoId: vid,
+            playerVars: { playsinline: 1, rel: 0, autoplay: 1, mute: 1, controls: 0, disablekb: 1, modestbranding: 1 },
+            events: {
+              onReady: function(ev){
+                settled = true;
+                try{ ev.target.mute(); ev.target.playVideo(); }catch(e){}
+                mountTrailerTapOverlay(h, ev.target, vid);
+              },
+              onError: function(){ tryNext(); }
+            }
+          });
+        }catch(e){ tryNext(); }
+      }
+      tryNext();
+    });
+  }
+
+  // Трейлер стартует автоматически, но без звука и без панели управления YouTube
+  // (иначе браузеры/Telegram WebView блокируют автовоспроизведение со звуком, а
+  // элементы управления зря отвлекают до того, как человек решил смотреть трейлер).
+  // Поверх видео лежит невидимый прозрачный слой на весь трейлер — тап по видео
+  // включает звук, а сам плеер пересоздаётся с обычной панелью управления YouTube
+  // (controls нельзя переключить у живого плеера, поэтому он пересоздаётся на той
+  // же секунде, где остановился).
+  function mountTrailerTapOverlay(host, player, videoId){
+    if (!host || host.querySelector('.trailer-tap-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'trailer-tap-overlay';
+    host.appendChild(overlay);
+
+    overlay.onclick = () => {
+      let curTime = 0;
+      try{ curTime = player.getCurrentTime() || 0; }catch(e){}
+      try{ player.destroy(); }catch(e){}
+      overlay.remove();
+      host.innerHTML = '';
+      const newDiv = document.createElement('div');
+      host.appendChild(newDiv);
+      try{
+        new YT.Player(newDiv, {
+          videoId: videoId,
+          playerVars: { playsinline: 1, rel: 0, autoplay: 1, mute: 0, controls: 1, start: Math.floor(curTime) },
+          events: {
+            onReady: function(ev){
+              try{ ev.target.unMute(); ev.target.setVolume(100); ev.target.playVideo(); }catch(e){}
+            }
+          }
+        });
+      }catch(e){}
+    };
+  }
+
+  function bindTrailerFallbackEvents(){
+    const btn = document.getElementById('trailerExternalBtn');
+    if (btn){
+      btn.onclick = () => { openExternal(btn.getAttribute('data-url')); };
+    }
+  }
+
+  let ytApiLoading = false;
+  let ytApiCallbacks = [];
+  function ensureYouTubeApi(cb){
+    if (window.YT && window.YT.Player){ cb(); return; }
+    ytApiCallbacks.push(cb);
+    if (ytApiLoading) return;
+    ytApiLoading = true;
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = function(){
+      if (typeof prevReady === 'function') { try{ prevReady(); }catch(e){} }
+      const cbs = ytApiCallbacks; ytApiCallbacks = [];
+      cbs.forEach(fn => { try{ fn(); }catch(e){} });
+    };
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+
+  function renderTrailerSection(){
+    const body = document.getElementById('trailerSectionBody');
+    if (!body) return;
+    const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (!m) return;
+    body.innerHTML = trailerEmbedHtml(m);
+    mountTrailerPlayer(m);
+    bindTrailerFallbackEvents();
+  }
+
   function getDisplaySimilarList(m){
     const key = similarCacheKey(m);
     if (key && state.similarCache[key]) return state.similarCache[key];
@@ -2270,6 +2947,63 @@
     state.seasonLoading[key] = false;
     const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
     if (state.view === 'detail' && curM === m) renderDetailMetaRow();
+  }
+
+  // Скриншоты (backdrops) раньше проставлялись только в момент добавления фильма в
+  // коллекцию — у всего, что было сохранено до появления этой фичи (или как-то иначе,
+  // в обход mapTmdbItem-флоу), поле screenshots просто отсутствует, и блок с картинками
+  // молча не рендерится. Как и с сезонами — подгружаем один раз при открытии карточки
+  // и дописываем в сохранённые данные, чтобы больше не запрашивать при следующих открытиях.
+  function screenshotsInnerHtml(m){
+    if (!m.screenshots || !m.screenshots.length) return '';
+    return '<div class="movie-screenshots-scroll">' + m.screenshots.map((imgUrl, idx) =>
+      '<div class="movie-screenshot-item" data-fullscreen-index="'+idx+'"><img src="'+escapeHtml(imgUrl)+'" loading="lazy" draggable="false"></div>'
+    ).join('') + '</div>';
+  }
+
+  async function loadScreenshotsForDetail(m){
+    if (!m || !m.tmdbId || (m.screenshots && m.screenshots.length > 0)) return;
+    const key = 'shots_' + m.tmdbId;
+    if (!state.screenshotsLoading) state.screenshotsLoading = {};
+    if (state.screenshotsLoading[key]) return;
+    state.screenshotsLoading[key] = true;
+    try{
+      const backdrops = await tmdbImages(m.tmdbId, m.mediaType, state.tmdbKey);
+      m.screenshots = backdrops.slice(0, 6);
+      const isSaved = state.movies.some(x => x.id === m.id);
+      if (isSaved && m.screenshots.length > 0) await updateMovie(m);
+    }catch(e){
+      // не удалось получить — блок просто останется пустым
+    }
+    state.screenshotsLoading[key] = false;
+    const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (state.view === 'detail' && curM === m) renderScreenshotsSection();
+  }
+
+  function renderScreenshotsSection(){
+    const el = document.getElementById('detailScreenshotsBody');
+    if (!el) return;
+    const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (!m) return;
+    el.innerHTML = screenshotsInnerHtml(m);
+    // У старых сохранённых фильмов (без поля backdrop) широкий кадр на ПК
+    // изначально нечем показать — доставляем его сюда же, как только
+    // подтянулись скриншоты.
+    const heroBg = document.querySelector('.detail-hero-bg');
+    if (heroBg && !document.getElementById('detailHeroWide')){
+      const heroWideSrc = m.backdrop || (m.screenshots && m.screenshots[0]) || '';
+      const gradientEl = heroBg.querySelector('.detail-hero-gradient');
+      const wideHtml = heroWideCardHtml(m, heroWideSrc);
+      if (wideHtml && gradientEl){
+        gradientEl.insertAdjacentHTML('beforebegin', wideHtml);
+      }
+    }
+    // bindEvents() навешивает клик на .movie-screenshot-item при каждом полном render();
+    // здесь мы обновили блок точечно (без полного render), поэтому перевызываем bindEvents(),
+    // чтобы новые элементы (созданные заново через innerHTML) тоже получили обработчик —
+    // сама функция уже устроена так, что безопасно вызывается повторно (это происходит
+    // и при обычной навигации между экранами).
+    bindEvents();
   }
 
   function renderDetailMetaRow(){
@@ -2768,6 +3502,10 @@
   // ===== Hero-баннер: самые популярные прямо сейчас (TMDB trending/all/day), вверху "Поиска" =====
   let heroBannerInterval = null;
   let heroBannerResumeTimer = null;
+  // Ссылка на текущую scrollToPos() из initHeroBannerCarousel — нужна снаружи,
+  // в bindHeroBannerClicks(), чтобы клик по боковому (не центральному) баннеру
+  // мог докрутить трек к нему, а не сразу открывать карточку фильма.
+  let heroBannerScrollToPos = null;
   const BANNER_REFRESH_MS = 30 * 60 * 1000; // раз в 30 минут баннер считается устаревшим и подгружается заново
 
   function mapTmdbBannerItem(r){
@@ -2777,8 +3515,8 @@
       mediaType: isTv ? 'tv' : 'movie',
       title: (isTv ? (r.name || r.original_name) : (r.title || r.original_title)) || '',
       year: ((isTv ? r.first_air_date : r.release_date) || '').slice(0, 4),
-      backdrop: r.backdrop_path ? ('https://image.tmdb.org/t/p/w780' + r.backdrop_path) : '',
-      poster: r.poster_path ? ('https://image.tmdb.org/t/p/w500' + r.poster_path) : '',
+      backdrop: r.backdrop_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w780' + r.backdrop_path) : '',
+      poster: r.poster_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w500' + r.poster_path) : '',
       voteAverage: typeof r.vote_average === 'number' ? r.vote_average : null,
       type: isTv ? 'series' : 'movie'
     };
@@ -2802,7 +3540,7 @@
 
   function bannerSlideHtml(item){
     const bg = item.backdrop || item.poster || '';
-    const img = bg ? '<img class="hero-banner-img" src="'+escapeHtml(bg)+'" alt="" loading="lazy">' : '';
+    const img = bg ? '<img class="hero-banner-img" src="'+escapeHtml(bg)+'" alt="" loading="lazy" draggable="false">' : '';
     const meta = [item.year, typeLabel(item.type)].filter(Boolean).join(' · ');
     return '<div class="hero-banner-slide" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'" data-poster-src="'+escapeHtml(item.poster || '')+'">'
       + img
@@ -2815,18 +3553,41 @@
       + '</div>';
   }
 
+  // Для эффекта бесконечной карусели в трек по краям добавляются "клоны" —
+  // копия последнего баннера перед первым и копия первого баннера после
+  // последнего. Так слева от самого первого баннера всегда виден (при
+  // пролистывании назад) тот же фильм, что и в самом конце ленты, а вправо
+  // после последнего — снова первый. Сами точки-индикаторы (dots) строятся
+  // только по настоящим элементам (без клонов) — см. initHeroBannerCarousel,
+  // где клоны отслеживаются и подмена на настоящий слайд происходит незаметно.
   function heroBannerHtml(){
-    if (!state.banner.items.length) return '';
+    const items = state.banner.items;
+    if (!items.length) return '';
+    const n = items.length;
+    const slidesForTrack = n > 1 ? [items[n - 1]].concat(items, [items[0]]) : items;
     return '<div class="hero-banner-wrap"><div class="hero-banner-track" id="heroBannerTrack">'
-      + state.banner.items.map(bannerSlideHtml).join('')
+      + slidesForTrack.map(bannerSlideHtml).join('')
       + '</div><div class="hero-banner-dots" id="heroBannerDots">'
-      + state.banner.items.map((_, i) => '<span class="hero-dot'+(i === state.banner.index ? ' active' : '')+'"></span>').join('')
+      + items.map((_, i) => '<span class="hero-dot'+(i === state.banner.index ? ' active' : '')+'"></span>').join('')
       + '</div></div>';
   }
 
   function bindHeroBannerClicks(){
     document.querySelectorAll('#heroBannerTrack [data-discover-pick]').forEach(el => {
-      el.onclick = () => previewTmdb(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+      el.onclick = () => {
+        // На ПК центральный баннер крупный и кликабелен как обычно — открывает
+        // карточку фильма. Боковые (затемнённые) баннеры первым кликом просто
+        // перетягиваются в центр — как на витринах стриминговых сервисов, где
+        // сначала "выбираешь" слайд, а потом открываешь его. На мобильном
+        // соседние баннеры не видны, поэтому там класс is-center всегда стоит
+        // на единственном видимом слайде и поведение не меняется.
+        const track = document.getElementById('heroBannerTrack');
+        if (!el.classList.contains('is-center') && track && heroBannerScrollToPos){
+          const pos = Array.from(track.children).indexOf(el);
+          if (pos >= 0){ heroBannerScrollToPos(pos, true); return; }
+        }
+        previewTmdb(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+      };
     });
   }
 
@@ -2858,20 +3619,56 @@
   function initHeroBannerCarousel(){
     const track = document.getElementById('heroBannerTrack');
     if (heroBannerInterval){ clearInterval(heroBannerInterval); heroBannerInterval = null; }
-    if (!track || state.banner.items.length < 2) return;
+    const n = state.banner.items.length;
+    if (!track) return;
+    if (n < 2){
+      // Один-единственный баннер — карусели тут нечего листать, но класс
+      // .is-center всё равно нужно проставить, иначе heroBannerSlideNeedsCenter()
+      // будет считать его "боковым" и клик по нему вместо открытия фильма
+      // будет пытаться докрутить баннер к самому себе.
+      if (track.children[0]) track.children[0].classList.add('is-center');
+      return;
+    }
 
-    const scrollToIndex = (i, smooth) => {
-      track.scrollTo({ left: i * track.clientWidth, behavior: smooth === false ? 'auto' : 'smooth' });
+    // Трек содержит клоны по краям (см. heroBannerHtml): позиция 0 — клон
+    // последнего баннера, позиции 1..n — настоящие баннеры, позиция n+1 —
+    // клон первого. realToPos/posToReal переводят между "настоящим" индексом
+    // (используется для точек-индикаторов) и позицией в треке (с учётом сдвига
+    // на клон в начале).
+    const realToPos = i => i + 1;
+    const posToReal = p => (p === 0 ? n - 1 : (p === n + 1 ? 0 : p - 1));
+
+    // Раньше позиция слайда считалась как i * track.clientWidth — это работало,
+    // только пока слайд занимал 100% ширины трека. Теперь на ПК слайд уже трека
+    // (видны соседи по бокам), поэтому берём реальные размеры/отступы конкретного
+    // элемента слайда — так формула остаётся верной что на телефоне (слайд ~100%),
+    // что на ПК (слайд ~70vw с соседями по бокам).
+    const scrollToPos = (p, smooth) => {
+      const slideEl = track.children[p];
+      if (!slideEl) return;
+      const target = slideEl.offsetLeft - (track.clientWidth - slideEl.offsetWidth) / 2;
+      track.scrollTo({ left: target, behavior: smooth === false ? 'auto' : 'smooth' });
     };
-    scrollToIndex(state.banner.index, false);
+    // Разрешаем клику по боковому баннеру (см. bindHeroBannerClicks) дёргать
+    // именно эту scrollToPos — трек и позиции меняются при каждой перерисовке
+    // баннера, поэтому ссылку обновляем при каждой инициализации карусели.
+    heroBannerScrollToPos = scrollToPos;
+
+    // Помечает слайд в позиции p как центральный (снимает затемнение через
+    // CSS-класс .is-center) и снимает пометку со всех остальных.
+    const applyCenterClass = (p) => {
+      Array.from(track.children).forEach((el, i) => el.classList.toggle('is-center', i === p));
+    };
+
+    let curPos = realToPos(state.banner.index);
+    scrollToPos(curPos, false);
+    applyCenterClass(curPos);
 
     const startAuto = () => {
       if (heroBannerInterval) clearInterval(heroBannerInterval);
       heroBannerInterval = setInterval(() => {
-        const n = state.banner.items.length;
-        state.banner.index = (state.banner.index + 1) % n;
-        scrollToIndex(state.banner.index);
-        updateHeroDots();
+        curPos += 1;
+        scrollToPos(curPos, true);
       }, 4500);
     };
     startAuto();
@@ -2880,20 +3677,47 @@
     track.addEventListener('scroll', () => {
       if (scrollSettleTimer) clearTimeout(scrollSettleTimer);
       scrollSettleTimer = setTimeout(() => {
-        const w = track.clientWidth || 1;
-        const idx = Math.round(track.scrollLeft / w);
-        state.banner.index = Math.max(0, Math.min(state.banner.items.length - 1, idx));
+        // Определяем ближайший к центру трека слайд по фактическому положению
+        // элементов, а не по формуле "scrollLeft / ширина трека" — та же причина,
+        // что и в scrollToPos выше.
+        const centerX = track.scrollLeft + track.clientWidth / 2;
+        let closestP = 0, closestDist = Infinity;
+        Array.from(track.children).forEach((el, i) => {
+          const elCenter = el.offsetLeft + el.offsetWidth / 2;
+          const dist = Math.abs(elCenter - centerX);
+          if (dist < closestDist){ closestDist = dist; closestP = i; }
+        });
+        curPos = closestP;
+        state.banner.index = posToReal(closestP);
         updateHeroDots();
+        applyCenterClass(closestP);
+        // Долистали до клона на краю трека — мгновенно (без анимации) переносим
+        // скролл на настоящий слайд с той же картинкой. Визуально это незаметно
+        // (клон и оригинал выглядят одинаково), зато дальше можно листать в ту
+        // же сторону бесконечно — эффект настоящей закольцованной карусели.
+        if (closestP === 0){
+          curPos = n;
+          scrollToPos(curPos, false);
+          applyCenterClass(curPos);
+        } else if (closestP === n + 1){
+          curPos = 1;
+          scrollToPos(curPos, false);
+          applyCenterClass(curPos);
+        }
       }, 120);
     }, { passive: true });
 
     // Ручное перелистывание пользователем — на время останавливаем автопрокрутку,
-    // затем возобновляем её через паузу, чтобы не мешать друг другу.
-    track.addEventListener('touchstart', () => {
+    // затем возобновляем её через паузу, чтобы не мешать друг другу. На ПК роль
+    // "начала жеста" играет ещё и mousedown (перетаскивание мышью), не только
+    // touchstart на телефоне.
+    const pauseAuto = () => {
       if (heroBannerInterval){ clearInterval(heroBannerInterval); heroBannerInterval = null; }
       if (heroBannerResumeTimer) clearTimeout(heroBannerResumeTimer);
       heroBannerResumeTimer = setTimeout(startAuto, 6000);
-    }, { passive: true });
+    };
+    track.addEventListener('touchstart', pauseAuto, { passive: true });
+    track.addEventListener('mousedown', pauseAuto);
   }
 
   // ===== Проверка подборок "Поиска" на новинки (сверка live-данных TMDB с уже загрученным кэшем) =====
@@ -2939,10 +3763,58 @@
       + '</div>';
   }
 
+  // Карточка широкого кадра (backdrop) в шапке детальной страницы на ПК —
+  // помимо самой картинки внутри неё дублируются название фильма (снизу,
+  // поверх градиента) и рейтинг IMDb (в правом верхнем углу карточки).
+  // Используется и при первом рендере viewDetail(), и когда backdrop
+  // подтягивается позже — вместе со скриншотами (см. renderScreenshotsSection).
+  // На мобильном сам .detail-hero-wide скрыт целиком (display:none по
+  // умолчанию в CSS), поэтому дублирование здесь не задваивает контент на
+  // телефоне — там остаются только оригинальные .detail-title/IMDb-плашка.
+  function heroWideCardHtml(m, heroWideSrc){
+    if (!heroWideSrc) return '';
+    const ratingHtml = (m.voteAverage != null)
+      ? '<div class="detail-hero-wide-rating">'+icon('star', 14)+'<span>'+m.voteAverage.toFixed(1)+'</span></div>'
+      : '';
+    // Кнопка "заметка" — на ПК она живёт прямо на постере, в правом нижнем
+    // углу (см. .detail-hero-wide-note), тем же приёмом, что и плашка
+    // IMDb-рейтинга выше. Обработчик клика навешивается по классу .note-fab
+    // (см. bindEvents), поэтому отдельный id здесь не нужен.
+    const hasNoteWide = !!(m.myNote && m.myNote.trim());
+    const noteWideHtml = '<button class="icon-btn glass-flat note-fab detail-hero-wide-note'+(hasNoteWide?' has-note':'')+'" title="Заметка">'
+      + icon('pencil', 17)
+      + '<span class="note-fab-label">заметка</span>'
+      + '</button>';
+    // Год, тип и (для сериалов) число сезонов — та же логика, что и в
+    // detailMetaRow/renderDetailMetaRow ниже, но без жанров: на широкой
+    // карточке под названием нужна короткая строка, а не полный список жанров.
+    const wideYearStr = m.year ? m.year : '';
+    const wideTypeStr = typeLabel(m.type) || (m.mediaType === 'tv' ? 'Сериал' : 'Фильм');
+    const wideSeasonsStr = m.mediaType === 'tv' ? seasonsLabel(m.numberOfSeasons) : '';
+    const wideMeta = [wideYearStr, wideTypeStr, wideSeasonsStr].filter(Boolean).join(' · ');
+    return '<div class="detail-hero-wide" id="detailHeroWide">'
+      + '<img src="'+escapeHtml(heroWideSrc)+'" alt="" draggable="false">'
+      + '<div class="detail-hero-wide-gradient"></div>'
+      + ratingHtml
+      + noteWideHtml
+      + '<div class="detail-hero-wide-info">'
+      +   '<div class="detail-hero-wide-title">'+escapeHtml(m.title)+'</div>'
+      +   (wideMeta ? '<div class="detail-hero-wide-meta">'+escapeHtml(wideMeta)+'</div>' : '')
+      + '</div>'
+      + '</div>';
+  }
+
   function viewDetail(){
     const m = state.movies.find(x=>x.id===state.detailId) || state.previewItem;
     if (!m) { state.view='home'; return viewHome(); }
-    const heroImg = m.poster ? '<img src="'+escapeHtml(m.poster)+'" onerror="this.style.display=\'none\';">' : '';
+    const heroImg = m.poster ? '<img class="detail-hero-poster-bg" src="'+escapeHtml(m.poster)+'" draggable="false" onerror="this.style.display=\'none\';">' : '';
+    // Широкий кадр фильма (backdrop) поверх заблюренного постера — показывается
+    // только на ПК (см. .detail-hero-wide в CSS), на телефоне остаётся как было.
+    // Если backdrop ещё не подтянут (старые сохранённые фильмы без этого поля),
+    // используем первый уже загруженный скриншот — а после подгрузки скриншотов
+    // блок довставится через renderScreenshotsSection().
+    const heroWideSrc = m.backdrop || (m.screenshots && m.screenshots[0]) || '';
+    const heroWideImg = heroWideCardHtml(m, heroWideSrc);
     const isSaved = state.movies.some(x => x.id === m.id);
 
     const starsHtml = [];
@@ -2961,9 +3833,13 @@
     let descriptionHtml = '';
     if (m.description) {
       const words = m.description.trim().split(/\s+/);
-      if (words.length > 25) {
-        const shortText = words.slice(0, 25).join(' ');
-        const restText = words.slice(25).join(' ');
+      // На ПК описание заметно шире (см. .detail-overview в CSS: 600px вместо
+      // 400px на мобильном), поэтому в него без переполнения влезает заметно
+      // больше слов, прежде чем понадобится нажимать "ещё".
+      const overviewWordLimit = window.innerWidth >= 900 ? 42 : 25;
+      if (words.length > overviewWordLimit) {
+        const shortText = words.slice(0, overviewWordLimit).join(' ');
+        const restText = words.slice(overviewWordLimit).join(' ');
         descriptionHtml = '<div class="detail-overview'+(isOverviewExpanded ? ' expanded' : '')+'" id="detailOverview">'
           + '<span class="overview-text-inner">' + escapeHtml(shortText) + '<span class="overview-ellipsis">…</span></span>'
           + '<span class="overview-extra'+(isOverviewExpanded ? ' overview-extra-mounted' : '')+'" id="overviewExtra">' + escapeHtml(restText) + '</span>'
@@ -2999,7 +3875,7 @@
     ` : '';
 
     const imdbInfoBar = (m.voteAverage != null) ? `
-      <div class="my-rating-box" style="display:flex; align-items:center; justify-content:space-between; background:rgba(245,197,24,0.05); border-color:rgba(245,197,24,0.2);">
+      <div class="my-rating-box imdb-rating-box" style="display:flex; align-items:center; justify-content:space-between; background:rgba(245,197,24,0.05); border-color:rgba(245,197,24,0.2);">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="color:#f5c518; display:flex;">${icon('star', 20)}</span>
           <span style="font-size:13px; font-weight:700; color:var(--ink);">IMDb Рейтинг</span>
@@ -3008,12 +3884,7 @@
       </div>
     ` : '';
 
-    let screenshotsHtml = '';
-    if (m.screenshots && m.screenshots.length > 0) {
-      screenshotsHtml = '<div class="movie-screenshots-scroll">' + m.screenshots.map((imgUrl, idx) => 
-        '<div class="movie-screenshot-item" data-fullscreen-index="'+idx+'"><img src="'+escapeHtml(imgUrl)+'" loading="lazy"></div>'
-      ).join('') + '</div>';
-    }
+    let screenshotsHtml = screenshotsInnerHtml(m);
 
     const similarKey = similarCacheKey(m);
     const similarStillLoading = !!(similarKey && !state.similarCache[similarKey]);
@@ -3028,27 +3899,35 @@
       `;
     }
 
+    const hasNote = !!(m.myNote && m.myNote.trim());
+    const noteBtnHtml = '<button class="icon-btn glass-flat note-fab'+(hasNote?' has-note':'')+'" id="noteBtn" title="Заметка">'
+      + icon('pencil', 17)
+      + '<span class="note-fab-label">заметка</span>'
+      + '</button>';
+    const noteDisplayHtml = (isSaved && hasNote) ? '<div class="desc-card glass-flat" style="margin-top:'+(m.description?'-6px':'0')+';"><div class="my-rating-label" style="margin-bottom:8px;">Моя заметка</div><div class="desc">'+escapeHtml(m.myNote)+'</div></div>' : '';
+
     return ''
     + '<div class="detail-page" id="detailPage">'
-    +   '<div class="detail-hero-bg">'+heroImg+'<div class="detail-hero-gradient"></div></div>'
-    +   '<div class="detail-top-controls"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button></div>'
+    +   '<div class="detail-hero-bg">'+heroImg+heroWideImg+'<div class="detail-hero-gradient"></div></div>'
+    +   '<div class="detail-top-controls"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button>'+noteBtnHtml+'</div>'
     +   '<div class="detail-content">'
     +     '<div class="detail-title">'+escapeHtml(m.title)+'</div>'
     +     descriptionHtml
+    +     noteDisplayHtml
     +     '<div class="detail-meta-row" id="detailMetaRow">'
-    +       (genreStr ? '<span>'+escapeHtml(genreStr)+'</span>' : '')
-    +       (yearStr ? '<span>'+escapeHtml(yearStr)+'</span>' : '')
-    +       (typeStr ? '<span>'+escapeHtml(typeStr)+'</span>' : '')
-    +       (seasonsStr ? '<span>'+escapeHtml(seasonsStr)+'</span>' : '')
+    +       (genreStr ? '<span class="meta-genre">'+escapeHtml(genreStr)+'</span>' : '')
+    +       (yearStr ? '<span class="meta-year">'+escapeHtml(yearStr)+'</span>' : '')
+    +       (typeStr ? '<span class="meta-type">'+escapeHtml(typeStr)+'</span>' : '')
+    +       (seasonsStr ? '<span class="meta-seasons">'+escapeHtml(seasonsStr)+'</span>' : '')
     +     '</div>'
     +     categorySelectHtml
     +     ratingBoxHtml
     +     imdbInfoBar
-    +     (isSaved && m.myNote ? '<div class="desc-card glass-flat"><div class="my-rating-label" style="margin-bottom:8px;">Моя заметка</div><div class="desc">'+escapeHtml(m.myNote)+'</div></div>' : '')
     +     (isSaved ? '<button class="danger-btn" id="deleteFromDetail" style="width:100%; max-width:380px; margin-bottom:16px;">Удалить из коллекции</button>' : '<button class="primary-btn" id="saveFromDetail" style="width:100%; max-width:380px; margin-bottom:16px;">Добавить в коллекцию</button>')
     +   '</div>'
     +   '<div class="detail-action-area">'
-    +     screenshotsHtml
+    +     '<div id="trailerSectionBody">'+trailerEmbedHtml(m)+'</div>'
+    +     '<div id="detailScreenshotsBody">'+screenshotsHtml+'</div>'
     +     similarSectionHtml
     +   '</div>'
     + '</div>';
@@ -3093,6 +3972,7 @@
     app.innerHTML = html;
     syncTopbarFilmAnim();
     app.classList.toggle('no-select', state.view === 'home' || state.view === 'search');
+    app.classList.toggle('detail-scroll', state.view === 'detail');
     bindEvents();
     if (showBottomSearch && !(state.tmdbQuery && state.tmdbQuery.trim())){
       DISCOVER_CATEGORIES.forEach(cat => {
@@ -3105,7 +3985,7 @@
 
     if (state.view === 'detail'){
       const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
-      if (m) { loadSimilarForDetail(m); loadSeasonInfoForDetail(m); }
+      if (m) { loadSimilarForDetail(m); loadSeasonInfoForDetail(m); loadTrailerForDetail(m); loadScreenshotsForDetail(m); mountTrailerPlayer(m); bindTrailerFallbackEvents(); }
     }
     
     if (state.view === 'search' || state.view === 'discoverList' || state.view === 'home') {
@@ -3173,6 +4053,57 @@
     div.innerHTML = '<div class="modal" style="text-align:center;padding:24px;"><div class="modal-title">Внимание</div><div class="modal-msg">'+escapeHtml(msg)+'</div><button class="primary-btn" id="alertOk" style="width:100%;margin-top:12px;">Ок</button></div>';
     document.body.appendChild(div);
     div.querySelector('#alertOk').onclick = () => div.remove();
+  }
+
+  // Модалка добавления/редактирования личной заметки к фильму — открывается по кнопке
+  // с иконкой пера на странице фильма. Заметка хранится в поле movie.myNote и выводится
+  // под описанием фильма на странице деталей, а также помечается мини-иконкой пера
+  // на постере фильма на главных экранах, если заметка непустая.
+  function openNoteEditor(movie){
+    const div = document.createElement('div');
+    div.className = 'modal-overlay';
+    const existing = movie.myNote || '';
+    div.innerHTML = `
+      <div class="modal">
+        <div class="modal-title">Моя заметка</div>
+        <div class="modal-msg" style="padding-top:0;">Личное мнение о фильме — будет видно только тебе под описанием.</div>
+        <div style="margin-top:6px;" class="field">
+          <textarea id="noteTextarea" placeholder="Что думаешь об этом фильме?" style="min-height:140px;">${escapeHtml(existing)}</textarea>
+        </div>
+        <div class="modal-actions" style="margin-top:16px;display:flex;gap:8px;">
+          <button type="button" class="secondary-btn glass-flat" id="noteCancel">Отмена</button>
+          <button type="button" class="primary-btn" id="noteSave" style="margin-top:0;">Сохранить</button>
+        </div>
+        ${existing ? '<button type="button" class="danger-btn" id="noteDelete" style="margin-top:10px;width:100%;">Удалить заметку</button>' : ''}
+      </div>
+    `;
+    document.body.appendChild(div);
+
+    const ta = div.querySelector('#noteTextarea');
+    if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
+
+    const close = () => div.remove();
+
+    div.querySelector('#noteCancel').onclick = close;
+    div.addEventListener('click', e => { if (e.target === div) close(); });
+
+    div.querySelector('#noteSave').onclick = async () => {
+      const val = (ta ? ta.value : '').trim();
+      movie.myNote = val ? val : null;
+      close();
+      render();
+      await updateMovie(movie);
+    };
+
+    const delBtn = div.querySelector('#noteDelete');
+    if (delBtn){
+      delBtn.onclick = async () => {
+        movie.myNote = null;
+        close();
+        render();
+        await updateMovie(movie);
+      };
+    }
   }
 
   // ===== Экспорт / импорт библиотеки (перенос фильмов между устройствами через буфер обмена) =====
@@ -3993,11 +4924,28 @@
         if (ok){
           state.movies.push(m);
           state.pendingMovie = null;
+          // Экран "выбери категорию" был открыт через pushNav() (см. saveFromDetail/
+          // openChooseForTmdb) — тот шаг нужно снять со стека здесь же, иначе он
+          // остаётся в navStack "мёртвым" и следующее нажатие "назад" на странице
+          // фильма вместо возврата к списку/поиску возвращает на этот же фильм ещё
+          // раз (баг: "назад" приходится жать дважды).
+          popNav();
           state.detailId = m.id;
           state.previewItem = null;
           state.view = 'detail';
           render();
         }
+      };
+    });
+
+    // .note-fab встречается в двух местах разметки — в верхней панели (мобильная
+    // версия) и на самом постере (ПК, см. .detail-hero-wide-note) — навешиваем
+    // один и тот же обработчик на все найденные кнопки сразу.
+    document.querySelectorAll('.note-fab').forEach(noteBtn => {
+      noteBtn.onclick = () => {
+        const m = state.movies.find(x => x.id === state.detailId);
+        if (!m){ customAlert('Сначала добавь фильм в коллекцию, чтобы оставить заметку.'); return; }
+        openNoteEditor(m);
       };
     });
 
@@ -4021,7 +4969,13 @@
         const ok = await deleteMovie(m.id);
         if (ok){
           state.movies = state.movies.filter(x => x.id !== m.id);
-          popNav();
+          // Раньше здесь был popNav() — он уводил с этой страницы на предыдущий
+          // экран (обычно главную). Вместо этого остаёмся на карточке того же
+          // фильма: он просто больше не "сохранён" (state.previewItem вместо
+          // state.detailId), поэтому вместо кнопки "Удалить из коллекции" тут
+          // же появится "Добавить в коллекцию".
+          state.detailId = null;
+          state.previewItem = m;
           render();
         }
       };
@@ -4044,7 +4998,14 @@
           m.catAddedAt[catV] = Date.now();
         }
         hapticSelect();
-        render();
+        // Раньше здесь был полный render() — на странице фильма это заново
+        // перезапускало плеер трейлера и перезагружало скриншоты/похожие
+        // фильмы при каждом тапе по категории, что выглядело как обновление
+        // страницы. Вместо этого точечно обновляем только вид самой кнопки.
+        const nowOn = cats.indexOf(catV) !== -1;
+        const catMeta = state.categories.find(c => c.v === catV);
+        btn.classList.toggle('active', nowOn);
+        btn.style.color = nowOn ? (catMeta && catMeta.color || '#fff') : '';
         saveMovieDebounced(m);
       };
     });
@@ -4055,7 +5016,15 @@
         const m = state.movies.find(x => x.id === state.detailId);
         if (!m) return;
         m.myRating = (m.myRating === r) ? null : r;
-        render();
+        // Точечное обновление вместо полного render() — по той же причине,
+        // что и у переключателя категорий выше: не дёргаем трейлер/скриншоты.
+        document.querySelectorAll('.rate-star-btn[data-rate]').forEach(sBtn => {
+          const i = parseInt(sBtn.getAttribute('data-rate'), 10);
+          sBtn.classList.toggle('filled', m.myRating != null && m.myRating >= i);
+          sBtn.classList.toggle('selected-star', m.myRating === i);
+        });
+        const valEl = document.querySelector('.my-rating-val-mini');
+        if (valEl) valEl.textContent = m.myRating != null ? (m.myRating + ' / 10') : 'Не выбрана';
         saveMovieDebounced(m);
       };
     });
@@ -4097,23 +5066,88 @@
         if (!m || !m.screenshots || !m.screenshots.length) return;
         
         let curIdx = idx;
+        const hasMultiple = m.screenshots.length > 1;
         const modal = document.createElement('div');
         modal.className = 'fullscreen-modal';
         
         const updateModalContent = () => {
+          const arrowsHtml = hasMultiple
+            ? '<button class="fullscreen-arrow fullscreen-arrow-prev" title="Предыдущее изображение">'+icon('back', 22)+'</button>'
+            + '<button class="fullscreen-arrow fullscreen-arrow-next" title="Следующее изображение">'+icon('back', 22)+'</button>'
+            : '';
           modal.innerHTML = `
             <div class="fullscreen-counter">${curIdx + 1} / ${m.screenshots.length}</div>
             <button class="fullscreen-close">${icon('close', 20)}</button>
-            <img src="${escapeHtml(m.screenshots[curIdx])}" alt="">
+            ${arrowsHtml}
+            <img src="${escapeHtml(m.screenshots[curIdx])}" alt="" draggable="false">
           `;
           modal.querySelector('.fullscreen-close').onclick = () => modal.remove();
           modal.onclick = (ev) => {
             if (ev.target === modal) modal.remove();
           };
+          if (hasMultiple){
+            modal.querySelector('.fullscreen-arrow-prev').onclick = (ev) => {
+              ev.stopPropagation();
+              curIdx = (curIdx - 1 + m.screenshots.length) % m.screenshots.length;
+              updateModalContent();
+            };
+            modal.querySelector('.fullscreen-arrow-next').onclick = (ev) => {
+              ev.stopPropagation();
+              curIdx = (curIdx + 1) % m.screenshots.length;
+              updateModalContent();
+            };
+          }
         };
         
         updateModalContent();
         document.body.appendChild(modal);
+
+        // Колесо мыши на ПК тоже листает картинки (вперёд/назад), как и стрелки —
+        // а заодно не даёт скроллу "пролезть" сквозь модалку и прокрутить страницу
+        // фильма на фоне (модалка ведь fixed поверх всего, скролла внутри у неё нет).
+        let wheelLockedUntil = 0;
+        const onWheel = (ev) => {
+          ev.preventDefault();
+          if (!hasMultiple) return;
+          const now = Date.now();
+          if (now < wheelLockedUntil) return;
+          wheelLockedUntil = now + 280;
+          if (ev.deltaY > 0 || ev.deltaX > 0){
+            curIdx = (curIdx + 1) % m.screenshots.length;
+          } else {
+            curIdx = (curIdx - 1 + m.screenshots.length) % m.screenshots.length;
+          }
+          updateModalContent();
+        };
+        modal.addEventListener('wheel', onWheel, { passive:false });
+
+        // Стрелками ← / → тоже можно листать изображения — удобно на ПК,
+        // где свайп мышью не так очевиден, как на телефоне.
+        const onKeydown = (ev) => {
+          if (ev.key === 'ArrowLeft' && hasMultiple){
+            // preventDefault — иначе стрелки, помимо переключения картинки,
+            // ещё и выполняют своё стандартное браузерное действие: чуть
+            // скроллят страницу фильма позади модалки (на ПК это заметно
+            // как небольшое подёргивание фона при каждом нажатии).
+            ev.preventDefault();
+            curIdx = (curIdx - 1 + m.screenshots.length) % m.screenshots.length;
+            updateModalContent();
+          } else if (ev.key === 'ArrowRight' && hasMultiple){
+            ev.preventDefault();
+            curIdx = (curIdx + 1) % m.screenshots.length;
+            updateModalContent();
+          } else if (ev.key === 'Escape'){
+            modal.remove();
+          }
+        };
+        document.addEventListener('keydown', onKeydown);
+        const cleanupObserver = new MutationObserver(() => {
+          if (!document.body.contains(modal)){
+            document.removeEventListener('keydown', onKeydown);
+            cleanupObserver.disconnect();
+          }
+        });
+        cleanupObserver.observe(document.body, { childList: true });
 
         // Один и тот же жест обрабатывает и горизонтальное листание между картинками
         // (как раньше), и потягивание вниз для закрытия (как на карточке фильма) —
@@ -4457,6 +5491,21 @@
   let lpSuppressClicksUntil = 0;
   let lpLastTouchTs = 0;
 
+  // Боковой (нецентральный) баннер в карусели "Поиска" не должен открывать
+  // фильм по короткому тапу/клику — сначала его нужно докрутить к центру.
+  // Проверяем именно так (а не только через bindHeroBannerClicks), потому что
+  // lpStartPress/lpRelease ниже перехватывают короткое нажатие раньше, чем до
+  // элемента доходит нативный click.
+  function heroBannerSlideNeedsCenter(cardEl){
+    return !!(cardEl && cardEl.classList && cardEl.classList.contains('hero-banner-slide') && !cardEl.classList.contains('is-center'));
+  }
+  function heroBannerCenterSlide(cardEl){
+    const track = document.getElementById('heroBannerTrack');
+    if (!track || !heroBannerScrollToPos) return;
+    const pos = Array.from(track.children).indexOf(cardEl);
+    if (pos >= 0) heroBannerScrollToPos(pos, true);
+  }
+
   function lpResolveRef(cardEl){
     if (cardEl.hasAttribute('data-open')){
       const id = cardEl.getAttribute('data-open');
@@ -4489,6 +5538,14 @@
 
   function lpStartPress(cardEl, x, y){
     lpAbort();
+    if (heroBannerSlideNeedsCenter(cardEl)){
+      // Боковой баннер — не открываем карточку и не запускаем лонг-пресс,
+      // просто докручиваем его к центру; ghost-клик после этого глушим,
+      // чтобы он не попытался сделать то же самое повторно.
+      lpSuppressClicksUntil = Date.now() + 400;
+      heroBannerCenterSlide(cardEl);
+      return;
+    }
     const ref = lpResolveRef(cardEl);
     if (!ref) return;
     lpState = {
@@ -4865,6 +5922,8 @@
         mapped.addedAt = Date.now();
         mapped.categories = [catValue];
         mapped.catAddedAt = { [catValue]: mapped.addedAt };
+        const backdrops = await tmdbImages(ref.tmdbId, ref.mediaType, state.tmdbKey);
+        mapped.screenshots = backdrops.slice(0, 6);
         const ok = await addMovie(mapped);
         if (ok) state.movies.push(mapped);
         return ok;
@@ -4883,6 +5942,68 @@
       t.classList.remove('show');
       setTimeout(() => t.remove(), 260);
     }, 1500);
+  }
+
+  // ===== Перетаскивание горизонтальных рядов мышкой (drag-to-scroll) =====
+  // На телефоне ряды (постеры, жанры, фильтры, кадры, hero-баннер) листаются пальцем.
+  // На ПК тачпад умеет горизонтальный скролл, а вот обычная мышь — нет: единственный
+  // способ пролистать ряд мышкой — тащить его за собой, зажав кнопку, как в галереях
+  // на десктопных сайтах. Ловим mousedown на самих скролл-контейнерах и двигаем их
+  // scrollLeft за курсором, пока кнопка мыши зажата.
+  const DRAG_SCROLL_SELECTOR = '.row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track';
+
+  function initMouseDragScroll(){
+    let dragEl = null, startX = 0, startScrollLeft = 0, dragMoved = false;
+
+    document.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      // Сердечко (и другие quick-действия) на постере лежит внутри
+      // скроллящегося ряда .row-scroll. Без этого исключения любое едва
+      // заметное дрожание мыши между mousedown и mouseup по кнопке
+      // засчитывалось как "перетаскивание ряда" — endDrag() затем на 200мс
+      // глушил следующий click, и сердечко на ПК выглядело нерабочим.
+      if (e.target.closest('[data-quick-fav]')) return;
+      const el = e.target.closest(DRAG_SCROLL_SELECTOR);
+      if (!el || el.scrollWidth <= el.clientWidth) return; // нечего скроллить — не мешаем обычному клику
+      dragEl = el;
+      startX = e.clientX;
+      startScrollLeft = el.scrollLeft;
+      dragMoved = false;
+      el.classList.add('mouse-dragging');
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragEl) return;
+      // Пока мини-панель (сердечко/мусорка/категории) уже показана после
+      // удержания — не скроллим карусель и не гасим панель из-за движения
+      // мыши. Иначе, когда пользователь тянется курсором от карточки к
+      // сердечку/мусорке (а это движение обычно больше 4px), ряд карточек
+      // подхватывал это как жест "потянуть карусель" и сбрасывал панель.
+      if (lpState && lpState.active) return;
+      const dx = e.clientX - startX;
+      if (!dragMoved && Math.abs(dx) > 4){
+        dragMoved = true;
+        // Как только жест точно распознан как перетаскивание — гасим параллельно
+        // запущенный long-press-preview (система "удержать постер"), чтобы два
+        // жеста не конфликтовали между собой.
+        lpAbort();
+      }
+      if (dragMoved) dragEl.scrollLeft = startScrollLeft - dx;
+    });
+
+    const endDrag = () => {
+      if (dragEl){
+        dragEl.classList.remove('mouse-dragging');
+        // Если реально было перетаскивание — гасим следующий click (иначе после
+        // отпускания кнопки браузер всё равно "кликнет" по карточке под курсором
+        // и откроет фильм, хотя пользователь просто листал ряд).
+        if (dragMoved) lpSuppressClicksUntil = Date.now() + 200;
+      }
+      dragEl = null;
+      dragMoved = false;
+    };
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('mouseleave', endDrag);
   }
 
   function initLongPressPreview(){
@@ -4923,6 +6044,14 @@
     document.addEventListener('contextmenu', function(e){
       if (lpState && lpState.active) e.preventDefault();
     });
+
+    // Если во время удержания кнопки мыши на карточке пользователь крутит
+    // колесо (явное намерение прокрутить список, а не "держать" карточку) —
+    // отменяем ожидание/показ мини-панели, чтобы она не выскакивала поверх
+    // того, что человек на самом деле пытается пролистать.
+    document.addEventListener('wheel', function(){
+      if (lpState) lpAbort();
+    }, {passive:true});
 
     document.addEventListener('click', function(e){
       // Съедаем только один «призрачный» клик в коротком окне после долгого нажатия —
@@ -4992,10 +6121,44 @@
     }
   }
 
+  // На ПК #app — это центрированная колонка (max-width) внутри html/body с
+  // overflow:hidden. Если крутить колёсико мыши не прямо над этой колонкой
+  // (а, например, над пустыми полями по бокам на широком мониторе), скролл
+  // никуда не передаётся, потому что html/body сами не скроллятся. Ловим
+  // wheel-события на всём документе и, если они произошли вне #app, вручную
+  // докручиваем именно #app — так колёсико работает вообще в любой точке окна.
+  function initGlobalWheelToApp(){
+    // Копим дельту прокрутки и применяем её ОДИН раз за кадр (requestAnimationFrame),
+    // а не на каждое отдельное wheel-событие. Трекпады и некоторые мыши шлют пачками
+    // много мелких событий подряд — если дёргать scrollTop на каждое из них синхронно,
+    // браузер не успевает ровно отрисовывать кадры и прокрутка выглядит рывками.
+    // Батчинг по кадру убирает эту дёрготню и делает скролл таким же плавным, как
+    // нативная прокрутка прямо над #app.
+    let pendingDelta = 0;
+    let rafScheduled = false;
+    function flush(){
+      rafScheduled = false;
+      const appEl = document.getElementById('app');
+      if (appEl) appEl.scrollTop += pendingDelta;
+      pendingDelta = 0;
+    }
+    document.addEventListener('wheel', function(e){
+      const appEl = document.getElementById('app');
+      if (!appEl) return;
+      if (appEl.contains(e.target)) return; // внутри #app скролл и так работает нативно
+      if (e.target.closest('.modal, .lp-rate-panel, .year-wheel, .fullscreen-modal')) return; // не мешаем скроллу модалок
+      pendingDelta += e.deltaY;
+      if (!rafScheduled){ rafScheduled = true; requestAnimationFrame(flush); }
+      if (e.cancelable) e.preventDefault();
+    }, {passive:false});
+  }
+
   initLongPressPreview();
+  initMouseDragScroll();
   initDiscoverAutoUpdate();
   initKeyboardAwareViewport();
   initSearchBlurGlobalGuard();
+  initGlobalWheelToApp();
 
   loadTelegramSdkThenStart();
 })();
