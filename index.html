@@ -195,8 +195,8 @@
   .discover-filter-bar{display:flex;gap:6px;padding:10px 16px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .discover-filter-btn{
     flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:var(--radius-pill);
-    background:rgba(0,0,0,.42);
-    border:1px solid rgba(255,255,255,.16);
+    background:rgba(8,7,12,.86);
+    border:1px solid rgba(255,255,255,.13);
     box-shadow:none;
     font-size:12px;font-weight:600;color:var(--ink-dim);
     transition:all .18s var(--ease);white-space:nowrap;
@@ -210,8 +210,8 @@
   .discover-filter-btn:active{transform:scale(.94);}
   .discover-filter-reset{
     flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    background:rgba(0,0,0,.42);
-    border:1px solid rgba(255,255,255,.16);
+    background:rgba(8,7,12,.86);
+    border:1px solid rgba(255,255,255,.13);
     box-shadow:none;
     color:var(--ink-dim);
     transition:all .18s var(--ease);
@@ -232,12 +232,13 @@
   .year-wheel{
     height:176px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
     border-radius:var(--radius-sm);
-    background:rgba(0,0,0,.4);
-    border:1px solid rgba(255,255,255,.1);
-    
+    background:rgba(6,5,10,.82);
+    border:1px solid rgba(255,255,255,.09);
+    cursor:grab;
     padding:69px 0;box-sizing:border-box;
   }
   .year-wheel::-webkit-scrollbar{display:none;}
+  .year-wheel.mouse-dragging{cursor:grabbing;scroll-snap-type:none;user-select:none;-webkit-user-select:none;}
   .year-wheel-item{height:38px;display:flex;align-items:center;justify-content:center;font-size:15.5px;font-weight:600;color:var(--ink-faint);scroll-snap-align:center;scroll-snap-stop:always;user-select:none;-webkit-user-select:none;transition:color .15s var(--ease), font-size .15s var(--ease);}
   .year-wheel-item.center-active{color:#fff;font-size:19px;font-weight:800;}
   .year-wheel-indicator{
@@ -374,6 +375,9 @@
   .imdb-pill{position:absolute;top:7px;right:7px;z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:800;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.7);border:1px solid rgba(255,255,255,.14);color:var(--gold);}
   .type-pill{position:absolute;top:7px;left:7px;z-index:3;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3.5px 7px;border-radius:var(--radius-pill);background:rgba(9,9,11,.65);border:1px solid rgba(255,255,255,.14);color:var(--ink-dim);}
   .new-badge{position:absolute;top:29px;left:7px;z-index:3;font-size:7.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;padding:2.5px 6px;border-radius:var(--radius-pill);background:var(--accent);color:#fff;}
+  /* На большом баннере карточка не в формате постера — сдвигаем бейдж
+     в левый верхний угол самого слайда, а не под верхний край постера. */
+  .hero-banner-new-badge{top:14px;left:14px;font-size:9px;padding:3.5px 9px;}
 
   /* ===== Hero-баннер популярного вверху поиска ===== */
   .hero-banner-wrap{position:relative;padding:2px 0 14px;}
@@ -691,6 +695,58 @@
   .trailer-loading-standalone{width:100%;max-width:520px;margin:0 auto 20px;border-radius:var(--radius);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:13px;font-weight:600;}
   .trailer-embed-wrap.trailer-fallback{background:var(--glass);padding:22px 16px;}
   
+  /* ===== Актёры на странице фильма/сериала: горизонтальный ряд кружочков с
+     фото, именем и ролью — по тапу открывается страница актёра со всей его
+     фильмографией (см. openActor / viewActor). ===== */
+  .cast-scroll{
+    display:flex;
+    gap:14px;
+    overflow-x:auto;
+    padding:2px 16px 6px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    width:100%;
+  }
+  .cast-item{
+    flex:0 0 auto;
+    width:72px;
+    scroll-snap-align:start;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    cursor:pointer;
+  }
+  .cast-item:active .cast-avatar{ transform:scale(.94); }
+  .cast-avatar{
+    width:64px;height:64px;border-radius:50%;overflow:hidden;flex-shrink:0;
+    background:var(--glass);border:1px solid var(--glass-border);
+    transition:transform .15s var(--ease);
+  }
+  .cast-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cast-avatar-fallback{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-label);font-weight:800;font-size:16px;color:var(--ink-dim);
+    background:var(--glass-strong);
+  }
+  .cast-name{margin-top:7px;font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.25;word-break:break-word;}
+  .cast-role{margin-top:1px;font-size:10.5px;color:var(--ink-faint);line-height:1.2;word-break:break-word;}
+
+  /* ===== Страница актёра (фото, имя, био, вся фильмография сеткой) ===== */
+  .actor-header{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 16px 14px;}
+  .actor-avatar{
+    width:112px;height:112px;border-radius:50%;overflow:hidden;flex-shrink:0;
+    background:var(--glass);border:1px solid var(--glass-border);
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .actor-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .actor-avatar-fallback{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-label);font-weight:800;font-size:32px;color:var(--ink-dim);
+    background:var(--glass-strong);
+  }
+  .actor-name{margin-top:12px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.5px;color:var(--ink);}
+
   .movie-screenshots-scroll {
     display: flex;
     gap: 10px;
@@ -827,7 +883,91 @@
   .my-rating-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
   .my-rating-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;}
   .my-rating-val-mini{font-size:12px;font-weight:700;color:var(--ink-dim);}
-  
+
+  /* Счётчик "вышло X из Y" и полоса прогресса для текущего сезона — теперь
+     показывается не отдельной карточкой, а прямо внутри разворачиваемой
+     панели этого сезона в разделе "Сезоны" (см. seasonEpisodesPanelHtml). */
+  .episodes-progress-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .episodes-progress-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;}
+  .episodes-progress-count{font-size:12px;font-weight:700;color:var(--ink-dim);white-space:nowrap;}
+  .episodes-progress-bar{width:100%;height:5px;border-radius:var(--radius-pill);background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:12px;}
+  .episodes-progress-bar-fill{height:100%;border-radius:var(--radius-pill);background:linear-gradient(90deg, var(--accent-deep), var(--accent));transition:width .3s var(--ease);}
+  .episode-schedule-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 10px;
+    border-radius:var(--radius-sm);
+    background:var(--glass);
+    border:1px solid var(--glass-border-soft);
+  }
+  .episode-schedule-num{font-size:12.5px;font-weight:700;color:var(--ink);}
+  .episode-schedule-date{font-size:12px;color:var(--ink-dim);white-space:nowrap;}
+
+  /* Карточка даты выхода — показывает дату премьеры/выхода фильма или сериала,
+     если она известна (см. releaseInfoInnerHtml). */
+  .release-info-card{
+    display:flex;align-items:center;gap:12px;
+    border-radius:var(--radius-sm);
+    padding:13px 15px;
+    margin-bottom:15px;
+    width:100%;
+    max-width:460px;
+    background:rgba(255,61,104,.08);
+    border:1px solid rgba(255,61,104,.2);
+    box-sizing:border-box;
+    text-align:left;
+  }
+  .release-info-icon{color:var(--accent);display:flex;flex:0 0 auto;}
+  .release-info-text{display:flex;flex-direction:column;gap:2px;}
+  .release-info-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;}
+  .release-info-date{font-size:14px;font-weight:700;color:var(--ink);}
+
+  /* Блок со списком ВСЕХ сезонов сериала (не только текущего) — сам раздел
+     сворачиваемый (шапка "Сезоны" + стрелка, см. seasonsListInnerHtml), внутри
+     каждый сезон тоже кликабелен и разворачивает список своих серий. Показывает
+     число серий в каждом сезоне и, если сезон ещё не вышел, дату премьеры
+     вместо счётчика. */
+  .seasons-list-card{
+    border-radius:var(--radius-sm);
+    margin-bottom:15px;
+    width:100%;
+    max-width:460px;
+    background:rgba(255,255,255,0.032);
+    border:1px solid var(--glass-border-soft);
+    box-sizing:border-box;
+    text-align:left;
+    overflow:hidden;
+  }
+  .seasons-list-title{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:11.5px;color:var(--ink);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;
+    padding:14px 15px;
+    cursor:pointer;
+  }
+  .seasons-list-title.open{padding-bottom:12px;}
+  .seasons-list-chevron{transform:rotate(90deg);}
+  .seasons-list-title.open .seasons-list-chevron{transform:rotate(-90deg);}
+  .season-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 15px;
+    cursor:pointer;
+    border-top:1px solid var(--glass-border-soft);
+    transition:background .15s var(--ease);
+  }
+  .season-row:active{background:rgba(255,255,255,.04);}
+  .season-row.expanded{background:rgba(255,61,104,.06);}
+  .season-row-left{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .season-row-name{font-size:13.5px;font-weight:700;color:var(--ink);}
+  .season-row-name.current{color:var(--accent-2);}
+  .season-row-sub{font-size:11.5px;color:var(--ink-faint);}
+  .season-row-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+  .season-row-count{font-size:12px;font-weight:700;color:var(--ink-dim);white-space:nowrap;}
+  .season-row-chevron{color:var(--ink-faint);display:flex;transition:transform .2s var(--ease);transform:rotate(90deg);}
+  .season-row.expanded .season-row-chevron{transform:rotate(-90deg);}
+  .season-episodes-panel{padding:4px 15px 14px;border-top:1px solid var(--glass-border-soft);background:rgba(0,0,0,.15);}
+  .season-episodes-panel .episode-schedule-row{background:var(--glass);margin-top:7px;}
+  .season-episodes-panel .episode-schedule-row:first-child{margin-top:12px;}
+  .season-episodes-loading{font-size:12px;color:var(--ink-faint);padding:12px 0 2px;text-align:center;}
+
   .rate-stars-row{
     display:flex;
     align-items:center;
@@ -1015,6 +1155,13 @@
     animation:modalPopIn .22s var(--ease) both;
   }
   @keyframes modalPopIn{0%{transform:scale(.94) translateY(6px);opacity:0;}100%{transform:scale(1) translateY(0);opacity:1;}}
+  /* Подложка модалок фильтров (Год/Тип/Жанр/Страна) — раньше была полупрозрачным
+     "стеклом" (rgba(255,255,255,.1)), из-за чего сквозь неё просвечивал фон.
+     Делаем плотнее и темнее, оставляя форму и анимацию общего .modal. */
+  .filter-modal{
+    background:rgba(12,10,17,.94);
+    border:1px solid rgba(255,255,255,.08);
+  }
   .modal-msg{font-size:14px;line-height:1.58;color:var(--ink-dim);padding:7px 2px 11px;}
   .modal-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.6px;padding:6px 2px 4px;}
   .modal-actions{display:flex;gap:8px;width:100%;}
@@ -1542,6 +1689,8 @@
        ширину колонки, как остальному контенту (описанию и т.д.). */
     .my-rating-box,
     .search-action-bar,
+    .seasons-list-card,
+    .release-info-card,
     .desc-card{ max-width:none; }
   }
 
@@ -1575,6 +1724,7 @@
   let tg = null;
   let tmdbSearchTimer = null;
   let isOverviewExpanded = false; 
+  let isActorBioExpanded = false;
   let navStack = []; // стек предыдущих экранов для корректной работы "назад" (свайп/кнопка) при вложенных переходах
 
   function pushNav(){
@@ -1583,7 +1733,8 @@
       detailId: state.detailId,
       previewItem: state.previewItem,
       categoryFilter: state.categoryFilter,
-      discoverListKey: state.discoverListKey
+      discoverListKey: state.discoverListKey,
+      actorId: state.actorId
     });
   }
 
@@ -1596,6 +1747,7 @@
       state.previewItem = prev.previewItem;
       state.categoryFilter = prev.categoryFilter;
       state.discoverListKey = prev.discoverListKey;
+      state.actorId = prev.actorId;
     } else {
       state.view = 'home';
     }
@@ -1850,6 +2002,8 @@
     scrollPositions: {},
     similarCache: {}, similarLoading: {},
     trailerCache: {}, trailerLoading: {},
+    castLoading: {},
+    actorId: null, actorCache: {}, actorLoading: {},
     banner: { items: [], index: 0, loadedAt: 0 },
     account: { nick: null },
     avatarDataUrl: null
@@ -2115,6 +2269,10 @@
       mediaType: isTv ? 'tv' : 'movie',
       title: (isTv ? (r.name || r.original_name) : (r.title || r.original_title)) || '',
       year: ((isTv ? r.first_air_date : r.release_date) || '').slice(0, 4),
+      // Полная дата выхода (фильм) / выхода первой серии (сериал) в формате YYYY-MM-DD —
+      // нужна, чтобы определить, что тайтл ещё не вышел, и показать точную дату (см. releaseInfoHtml).
+      releaseDate: isTv ? null : (r.release_date || null),
+      firstAirDate: isTv ? (r.first_air_date || null) : null,
       poster: r.poster_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w500' + r.poster_path) : '',
       backdrop: r.backdrop_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w1280' + r.backdrop_path) : '',
       description: r.overview || '',
@@ -2139,6 +2297,196 @@
     else word = 'сезонов';
     return n + ' ' + word;
   }
+
+  // Склонение слова «серия» в родительном падеже после «из» (для строки вида
+  // «вышло 5 из 12 серий»). Для «из 1 серии» — родительный падеж единственного
+  // числа, во всех остальных случаях (по умолчанию, включая 2-4) — «серий»,
+  // как принято в повседневных счётчиках прогресса.
+  function episodesGenitiveWord(n){
+    return n === 1 ? 'серии' : 'серий';
+  }
+
+  // Русская дата в длинном виде («24 августа 2026») из строки TMDB YYYY-MM-DD.
+  const RU_MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  function formatRuDateLong(dateStr){
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return '';
+    const y = parseInt(parts[0], 10), moIdx = parseInt(parts[1], 10) - 1, d = parseInt(parts[2], 10);
+    if (!y || !d || !RU_MONTHS_GEN[moIdx]) return '';
+    return d + ' ' + RU_MONTHS_GEN[moIdx] + ' ' + y;
+  }
+
+  // Карточка даты выхода — показывается всегда, когда TMDB знает дату (фильма
+  // или первой серии сериала), независимо от того, вышел тайтл уже или нет:
+  // для будущей даты пишем "Премьера ...", для прошедшей — "Дата выхода ...".
+  // Если даты нет вовсе — блок не показываем (нечего написать, кроме "неизвестно").
+  function releaseInfoInnerHtml(m){
+    if (!m) return '';
+    const dateStr = m.mediaType === 'tv' ? m.firstAirDate : m.releaseDate;
+    if (!dateStr) return '';
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const isFuture = dateStr > todayStr;
+    const ruDate = formatRuDateLong(dateStr);
+    if (!ruDate) return '';
+    const label = isFuture
+      ? (m.mediaType === 'tv' ? 'Премьера сериала' : 'Премьера фильма')
+      : 'Дата выхода';
+    return '<div class="release-info-card glass-flat">'
+      + '<span class="release-info-icon">'+icon('calendar', 18)+'</span>'
+      + '<div class="release-info-text"><span class="release-info-label">'+escapeHtml(label)+'</span>'
+      + '<span class="release-info-date">'+escapeHtml(ruDate)+'</span></div>'
+      + '</div>';
+  }
+
+  function renderReleaseInfoSection(){
+    const el = document.getElementById('releaseInfoBody');
+    if (!el) return;
+    const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (!m) return;
+    el.innerHTML = releaseInfoInnerHtml(m);
+  }
+
+  // ===== Блок "Сезоны" — единственный раздел с сериями на карточке (раньше
+  // была ещё отдельная карточка прогресса текущего сезона — убрали дублирование,
+  // теперь прогресс/расписание текущего сезона показывается прямо внутри его
+  // разворачиваемой строки). Список ВСЕХ сезонов сериала, с числом серий в
+  // каждом. По умолчанию сам раздел свёрнут (шапка "Сезоны" + стрелка), но если
+  // у текущего сезона есть ещё не вышедшие серии — раздел и нужный сезон сразу
+  // разворачиваются сами, чтобы новые серии были видны без лишних тапов.
+  // state.detailSeasonsOpen — раскрыт ли сам раздел целиком.
+  // state.detailExpandedSeason — какой сезон внутри раскрыт (номер или null).
+  // state.detailSeasonsAutoDecided — решение об автораскрытии уже принято для
+  // текущей открытой карточки (чтобы не переоткрывать раздел, если пользователь
+  // сам его свернул руками уже после автораскрытия).
+  // Все три сбрасываются при открытии другой карточки (см. openMovie/previewTmdb).
+
+  // Короткая строка под названием сезона: дата премьеры, если сезон ещё не
+  // вышел, иначе просто год выхода (или ничего, если дата неизвестна).
+  function seasonRowSubLabel(season){
+    if (!season.airDate) return '';
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (season.airDate > todayStr){
+      const ruDate = formatRuDateLong(season.airDate);
+      return ruDate ? 'Выйдет ' + ruDate : '';
+    }
+    return season.airDate.slice(0, 4);
+  }
+
+  // Панель серий одного сезона. Для текущего сезона, если в нём есть ещё не
+  // вышедшие серии, сверху добавляется счётчик "вышло X из Y" и полоса
+  // прогресса — раньше это была отдельная карточка, теперь часть этой панели.
+  function seasonEpisodesPanelHtml(m, seasonNumber){
+    const cacheKey = m.tmdbId + '_' + seasonNumber;
+    const episodes = state.seasonEpisodesCache && state.seasonEpisodesCache[cacheKey];
+    if (!episodes) return '<div class="season-episodes-panel"><div class="season-episodes-loading">Загрузка серий…</div></div>';
+    if (!episodes.length) return '<div class="season-episodes-panel"><div class="season-episodes-loading">Нет данных о сериях</div></div>';
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let progressHtml = '';
+    if (m.currentSeasonNumber === seasonNumber){
+      const total = episodes.length;
+      const released = episodes.filter(ep => ep.airDate && ep.airDate <= todayStr).length;
+      if (released < total){
+        progressHtml = '<div class="episodes-progress-top">'
+          +   '<span class="episodes-progress-label">Вышло серий</span>'
+          +   '<span class="episodes-progress-count">' + released + ' из ' + total + ' ' + episodesGenitiveWord(total) + '</span>'
+          + '</div>'
+          + '<div class="episodes-progress-bar"><div class="episodes-progress-bar-fill" style="width:' + (total ? Math.round(released / total * 100) : 0) + '%;"></div></div>';
+      }
+    }
+    const sorted = episodes.slice().sort((a, b) => (a.number || 0) - (b.number || 0));
+    const rowsHtml = sorted.map(ep => {
+      const isFuture = ep.airDate && ep.airDate > todayStr;
+      const dateStr = ep.airDate ? formatRuDateLong(ep.airDate) : 'дата уточняется';
+      return '<div class="episode-schedule-row">'
+        + '<span class="episode-schedule-num">' + escapeHtml(ep.name ? ('Серия ' + (ep.number != null ? ep.number : '?') + ' — ' + ep.name) : ('Серия ' + (ep.number != null ? ep.number : '?'))) + '</span>'
+        + '<span class="episode-schedule-date">' + (isFuture ? 'Выйдет ' : '') + escapeHtml(dateStr) + '</span>'
+        + '</div>';
+    }).join('');
+    return '<div class="season-episodes-panel">' + progressHtml + rowsHtml + '</div>';
+  }
+
+  function seasonsListInnerHtml(m){
+    if (!m || m.mediaType !== 'tv' || !Array.isArray(m.seasonsList) || !m.seasonsList.length) return '';
+    const seasons = m.seasonsList.filter(s => s.number != null);
+    if (!seasons.length) return '';
+    const isOpen = !!state.detailSeasonsOpen;
+    const expanded = state.detailExpandedSeason;
+    const bodyHtml = isOpen ? seasons.map(s => {
+      const isCurrent = m.currentSeasonNumber === s.number;
+      const isExpanded = expanded === s.number;
+      const name = s.name || ('Сезон ' + s.number);
+      const subLabel = seasonRowSubLabel(s);
+      const countLabel = (s.episodeCount != null && s.episodeCount > 0)
+        ? (s.episodeCount + ' ' + episodesGenitiveWord2(s.episodeCount))
+        : (subLabel ? '' : 'Скоро');
+      return '<div class="season-row'+(isExpanded?' expanded':'')+'" data-season-toggle="'+s.number+'">'
+        + '<div class="season-row-left">'
+        +   '<span class="season-row-name'+(isCurrent?' current':'')+'">'+escapeHtml(name)+'</span>'
+        +   (subLabel ? '<span class="season-row-sub">'+escapeHtml(subLabel)+'</span>' : '')
+        + '</div>'
+        + '<div class="season-row-right">'
+        +   (countLabel ? '<span class="season-row-count">'+escapeHtml(countLabel)+'</span>' : '')
+        +   '<span class="season-row-chevron">'+icon('chevron', 15)+'</span>'
+        + '</div>'
+        + '</div>'
+        + (isExpanded ? seasonEpisodesPanelHtml(m, s.number) : '');
+    }).join('') : '';
+    return '<div class="seasons-list-card glass-flat">'
+      + '<div class="seasons-list-title'+(isOpen?' open':'')+'" data-seasons-toggle="1">'
+      +   '<span>Сезоны</span>'
+      +   '<span class="season-row-chevron seasons-list-chevron">'+icon('chevron', 15)+'</span>'
+      + '</div>'
+      + bodyHtml
+      + '</div>';
+  }
+
+  // Склонение слова «серия» после числа («1 серия», «3 серии», «7 серий»).
+  function episodesGenitiveWord2(n){
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'серия';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'серии';
+    return 'серий';
+  }
+
+  function renderSeasonsListSection(){
+    const el = document.getElementById('seasonsListBody');
+    if (!el) return;
+    const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (!m) return;
+    el.innerHTML = seasonsListInnerHtml(m);
+    bindSeasonRowEvents(el, m);
+  }
+
+  function bindSeasonRowEvents(container, m){
+    const header = container.querySelector('[data-seasons-toggle]');
+    if (header){
+      header.onclick = () => {
+        state.detailSeasonsOpen = !state.detailSeasonsOpen;
+        renderSeasonsListSection();
+      };
+    }
+    container.querySelectorAll('[data-season-toggle]').forEach(row => {
+      row.onclick = (e) => {
+        e.stopPropagation();
+        const num = parseInt(row.getAttribute('data-season-toggle'), 10);
+        if (state.detailExpandedSeason === num){
+          state.detailExpandedSeason = null;
+          renderSeasonsListSection();
+          return;
+        }
+        state.detailExpandedSeason = num;
+        renderSeasonsListSection();
+        const cacheKey = m.tmdbId + '_' + num;
+        if (!state.seasonEpisodesCache || !state.seasonEpisodesCache[cacheKey]){
+          loadSeasonEpisodesForDetail(m, num).then(() => {
+            if (state.view === 'detail' && state.detailExpandedSeason === num) renderSeasonsListSection();
+          }).catch(() => {});
+        }
+      };
+    });
+  }
+
 
   const DISCOVER_CATEGORIES = [
     {key:'popular', label:'Популярное', kind:'movie', path:'/trending/movie/week'},
@@ -2489,6 +2837,13 @@
       const existing = state.discover.full[key] || [];
       const seen = new Set(existing.map(x => x.mediaType + '_' + x.tmdbId));
       newItems = items.filter(x => !seen.has(x.mediaType + '_' + x.tmdbId));
+      // Раньше тут бейдж "Новое" никогда не проставлялся — items шли напрямую из
+      // mapTmdbItem, минуя applyNewBadges, которая как раз и решает isNew.
+      // Из-за этого в полном списке раздела значок не появлялся вообще ни у чего,
+      // хотя в коротком ряду на главной (loadDiscoverCategory) для тех же самых
+      // тайтлов он показывался. Используем тот же catKey (key), что и у ряда,
+      // чтобы статус "новинки" был одинаковым и там, и там.
+      newItems = await applyNewBadges(key, newItems);
       state.discover.full[key] = existing.concat(newItems);
       state.discover.fullPage[key] = page;
       if (page >= 20) state.discover.fullDone[key] = true;
@@ -2977,24 +3332,146 @@
   // Число сезонов есть только в полном ответе /tv/{id}, поэтому у тайтлов, сохранённых
   // до появления этого поля (или добавленных иным путём), его может не быть — подгружаем
   // один раз при открытии карточки и дописываем в сохранённые данные, чтобы больше не запрашивать.
+  // Заодно тем же запросом получаем статус сериала (идёт ли он ещё) и ближайшую/последнюю
+  // вышедшую серию — эти поля (в отличие от числа сезонов) не кэшируем в сохранённый
+  // тайтл навсегда, а перезапрашиваем при каждом открытии карточки (см. needsStatus ниже),
+  // чтобы расписание серий и счётчик "вышло X из Y" не протухали со временем.
   async function loadSeasonInfoForDetail(m){
-    if (!m || m.mediaType !== 'tv' || m.numberOfSeasons != null || !m.tmdbId) return;
+    if (!m || m.mediaType !== 'tv' || !m.tmdbId) return;
+    const needsBase = m.numberOfSeasons == null;
+    const needsStatus = m.tvStatus === undefined;
+    if (!needsBase && !needsStatus) return;
     const key = 'season_' + m.tmdbId;
     if (!state.seasonLoading) state.seasonLoading = {};
     if (state.seasonLoading[key]) return;
     state.seasonLoading[key] = true;
+    let curSeasonNum = null;
     try{
       const data = await tmdbFetch('/tv/' + m.tmdbId, state.tmdbKey);
       m.numberOfSeasons = typeof data.number_of_seasons === 'number' ? data.number_of_seasons : null;
       m.numberOfEpisodes = typeof data.number_of_episodes === 'number' ? data.number_of_episodes : null;
+      m.tvStatus = typeof data.status === 'string' ? data.status : null;
+      m.inProduction = !!data.in_production;
+      // Дата первой серии — уже приходит и из списков (см. mapTmdbItem), но у тайтлов,
+      // сохранённых до появления этого поля, её нет; дозаполняем здесь заодно.
+      if (m.firstAirDate == null) m.firstAirDate = data.first_air_date || null;
+      // Список всех сезонов (номер, название, число серий, дата премьеры) — приходит
+      // только из полного /tv/{id}, нужен для блока "посмотреть другие сезоны".
+      m.seasonsList = Array.isArray(data.seasons) ? data.seasons.map(s => ({
+        number: typeof s.season_number === 'number' ? s.season_number : null,
+        name: s.name || '',
+        episodeCount: typeof s.episode_count === 'number' ? s.episode_count : null,
+        airDate: s.air_date || null
+      })).sort((a, b) => (a.number || 0) - (b.number || 0)) : null;
+      m.nextEpisodeToAir = data.next_episode_to_air ? {
+        airDate: data.next_episode_to_air.air_date || null,
+        episodeNumber: typeof data.next_episode_to_air.episode_number === 'number' ? data.next_episode_to_air.episode_number : null,
+        seasonNumber: typeof data.next_episode_to_air.season_number === 'number' ? data.next_episode_to_air.season_number : null
+      } : null;
+      m.lastEpisodeToAir = data.last_episode_to_air ? {
+        airDate: data.last_episode_to_air.air_date || null,
+        episodeNumber: typeof data.last_episode_to_air.episode_number === 'number' ? data.last_episode_to_air.episode_number : null,
+        seasonNumber: typeof data.last_episode_to_air.season_number === 'number' ? data.last_episode_to_air.season_number : null
+      } : null;
+      // "Текущий" сезон — тот, что содержит ближайшую ещё не вышедшую серию,
+      // а если её нет (например, между сезонами) — тот, где вышла последняя серия.
+      curSeasonNum = (m.nextEpisodeToAir && m.nextEpisodeToAir.seasonNumber)
+        || (m.lastEpisodeToAir && m.lastEpisodeToAir.seasonNumber)
+        || null;
+      m.currentSeasonNumber = curSeasonNum;
       const isSaved = state.movies.some(x => x.id === m.id);
       if (isSaved && m.numberOfSeasons != null) await updateMovie(m);
     }catch(e){
-      // не удалось получить — просто не покажем блок сезонов
+      // не удалось получить — просто не покажем блок сезонов/прогресса серий
     }
     state.seasonLoading[key] = false;
     const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
-    if (state.view === 'detail' && curM === m) renderDetailMetaRow();
+    if (state.view === 'detail' && curM === m) { renderDetailMetaRow(); renderSeasonsListSection(); renderReleaseInfoSection(); }
+    // Расписание серий имеет смысл подгружать только пока сериал ещё может
+    // выпускать новые серии (в производстве или есть анонсированная дата) —
+    // для завершённых/отменённых сериалов без next_episode_to_air сезон точно
+    // вышел целиком, и лишний запрос не нужен.
+    if (curSeasonNum && (m.inProduction || m.nextEpisodeToAir)){
+      loadCurrentSeasonEpisodesForDetail(m);
+    }
+  }
+
+  // Дозаполняет полную дату выхода фильма для тайтлов, сохранённых до появления
+  // этого поля (см. releaseDate в mapTmdbItem) — у новых оно уже приходит сразу
+  // из списков TMDB, отдельный запрос нужен только для старых сохранённых записей.
+  async function loadMovieReleaseInfoForDetail(m){
+    if (!m || m.mediaType === 'tv' || !m.tmdbId || m.releaseDate !== undefined) return;
+    const key = 'movierelease_' + m.tmdbId;
+    if (!state.seasonLoading) state.seasonLoading = {};
+    if (state.seasonLoading[key]) return;
+    state.seasonLoading[key] = true;
+    try{
+      const data = await tmdbFetch('/movie/' + m.tmdbId, state.tmdbKey);
+      m.releaseDate = data.release_date || null;
+      const isSaved = state.movies.some(x => x.id === m.id);
+      if (isSaved) await updateMovie(m);
+    }catch(e){
+      m.releaseDate = null;
+    }
+    state.seasonLoading[key] = false;
+    const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (state.view === 'detail' && curM === m) renderReleaseInfoSection();
+  }
+
+  // Список серий произвольного сезона (не только текущего) — используется и для
+  // карточки прогресса текущего сезона, и для разворачиваемых строк в блоке
+  // "все сезоны" (см. seasonsListInnerHtml). Результаты кэшируются в памяти на
+  // время сессии по ключу "tmdbId_seasonNumber", чтобы повторный разворот того
+  // же сезона не делал лишний запрос.
+  async function loadSeasonEpisodesForDetail(m, seasonNumber){
+    if (!m || m.mediaType !== 'tv' || !m.tmdbId || seasonNumber == null) return null;
+    if (!state.seasonEpisodesCache) state.seasonEpisodesCache = {};
+    const cacheKey = m.tmdbId + '_' + seasonNumber;
+    if (state.seasonEpisodesCache[cacheKey]) return state.seasonEpisodesCache[cacheKey];
+    const data = await tmdbFetch('/tv/' + m.tmdbId + '/season/' + seasonNumber, state.tmdbKey);
+    const episodes = Array.isArray(data.episodes) ? data.episodes.map(ep => ({
+      number: typeof ep.episode_number === 'number' ? ep.episode_number : null,
+      name: ep.name || '',
+      airDate: ep.air_date || null
+    })) : [];
+    state.seasonEpisodesCache[cacheKey] = episodes;
+    return episodes;
+  }
+
+  // Список серий текущего (ещё не полностью вышедшего) сезона с датами выхода —
+  // нужен, чтобы показать "вышло X из Y серий" и расписание оставшихся серий.
+  // Не кэшируется в сохранённый тайтл (см. комментарий в loadSeasonInfoForDetail) —
+  // подгружается заново при каждом открытии карточки, чтобы даты были свежими.
+  async function loadCurrentSeasonEpisodesForDetail(m){
+    if (!m || m.mediaType !== 'tv' || !m.tmdbId || !m.currentSeasonNumber) return;
+    const key = 'season_ep_' + m.tmdbId + '_' + m.currentSeasonNumber;
+    if (!state.episodesLoading) state.episodesLoading = {};
+    if (state.episodesLoading[key]) return;
+    state.episodesLoading[key] = true;
+    let episodes = [];
+    try{
+      episodes = await loadSeasonEpisodesForDetail(m, m.currentSeasonNumber) || [];
+      m.currentSeasonEpisodes = episodes;
+    }catch(e){
+      // не удалось получить расписание — просто не покажем блок прогресса
+    }
+    state.episodesLoading[key] = false;
+    // Автораскрытие: если у текущего сезона есть ещё не вышедшие серии, сразу
+    // разворачиваем раздел "Сезоны" и сам этот сезон, чтобы новые серии были
+    // видны без лишних тапов. Срабатывает один раз на открытую карточку —
+    // если пользователь потом сам свернёт раздел, повторно он не откроется.
+    if (!state.detailSeasonsAutoDecided){
+      state.detailSeasonsAutoDecided = true;
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const total = episodes.length;
+      const released = episodes.filter(ep => ep.airDate && ep.airDate <= todayStr).length;
+      if (total > 0 && released < total){
+        state.detailSeasonsOpen = true;
+        state.detailExpandedSeason = m.currentSeasonNumber;
+      }
+    }
+    const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (state.view === 'detail' && curM === m) renderSeasonsListSection();
   }
 
   // Скриншоты (backdrops) раньше проставлялись только в момент добавления фильма в
@@ -3052,6 +3529,171 @@
     // сама функция уже устроена так, что безопасно вызывается повторно (это происходит
     // и при обычной навигации между экранами).
     bindEvents();
+  }
+
+  // ===== Актёры на странице фильма/сериала =====
+  // Инициалы актёра для заглушки-кружка, когда у TMDB нет фото (profile_path пуст).
+  function personInitials(name){
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    return ((parts[0] && parts[0][0]) || '') + ((parts[1] && parts[1][0]) || '');
+  }
+
+  function castItemHtml(p){
+    const avatar = p.photo
+      ? '<img src="'+escapeHtml(p.photo)+'" alt="" loading="lazy" decoding="async" draggable="false" onerror="this.parentElement.innerHTML=\'<div class=&quot;cast-avatar-fallback&quot;>'+escapeHtml(personInitials(p.name))+'</div>\'">'
+      : '<div class="cast-avatar-fallback">'+escapeHtml(personInitials(p.name))+'</div>';
+    return '<div class="cast-item" data-open-actor="'+p.personId+'" data-actor-name="'+escapeHtml(p.name)+'" data-actor-photo="'+escapeHtml(p.photo || '')+'">'
+      + '<div class="cast-avatar">'+avatar+'</div>'
+      + '<div class="cast-name">'+escapeHtml(p.name)+'</div>'
+      + (p.character ? '<div class="cast-role">'+escapeHtml(p.character)+'</div>' : '')
+      + '</div>';
+  }
+
+  // Содержимое ряда актёров (сами кружки или плейсхолдер загрузки/ошибки) — переиспользуется
+  // и при первом рендере страницы (viewDetail), и при точечном обновлении после подгрузки
+  // (renderCastSection), чтобы не дублировать разметку в двух местах.
+  function castRowInnerHtml(m){
+    if (m.cast && m.cast.length) return m.cast.map(castItemHtml).join('');
+    if (m.cast && !m.cast.length) return '<div class="empty glass-flat" style="margin:0 16px;">Информация об актёрах не найдена.</div>';
+    return '<div class="empty glass-flat" style="margin:0 16px;">Загрузка…</div>';
+  }
+
+  // Актёры и озвучка (для мультфильмов/сериалов в оригинале) приходят одним и тем же полем
+  // credits.cast и у фильмов, и у сериалов — TMDB сам решает, кого туда включать (для анимации
+  // это чаще всего голоса). Как и скриншоты, кэшируем один раз в сам тайтл (m.cast), чтобы не
+  // запрашивать заново при каждом открытии карточки — состав актёров меняется крайне редко.
+  async function loadCastForDetail(m){
+    if (!m || !m.tmdbId || m.cast !== undefined) return;
+    const key = 'cast_' + m.mediaType + '_' + m.tmdbId;
+    if (state.castLoading[key]) return;
+    state.castLoading[key] = true;
+    try{
+      const data = await tmdbFetch('/' + m.mediaType + '/' + m.tmdbId + '/credits', state.tmdbKey);
+      m.cast = (data.cast || []).slice(0, 40).map(r => ({
+        personId: r.id,
+        name: r.name || '',
+        character: r.character || '',
+        photo: r.profile_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w185' + r.profile_path) : ''
+      }));
+      const isSaved = state.movies.some(x => x.id === m.id);
+      if (isSaved) await updateMovie(m);
+    }catch(e){
+      // не удалось получить — при следующем открытии карточки просто попробуем ещё раз
+      // (m.cast остаётся undefined, а не пустым массивом, см. условие выше)
+    }
+    state.castLoading[key] = false;
+    const curM = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (state.view === 'detail' && curM === m) renderCastSection();
+  }
+
+  function renderCastSection(){
+    const el = document.getElementById('detailCastBody');
+    if (!el) return;
+    const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    if (!m) return;
+    el.innerHTML = castRowInnerHtml(m);
+    bindEvents();
+  }
+
+  // Открывает страницу актёра/актрисы: фото, имя, био и вся фильмография (совмещённая
+  // из /person/{id}/combined_credits — и фильмы, и сериалы, в которых он снимался или
+  // озвучивал). name/photo передаются сразу из карточки актёра, чтобы шапка страницы
+  // отрисовалась мгновенно, не дожидаясь ответа сервера.
+  async function openActor(personId, name, photo){
+    state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    pushNav();
+    state.view = 'actor';
+    state.actorId = personId;
+    isActorBioExpanded = false;
+    if (!state.actorCache[personId]){
+      state.actorCache[personId] = { name: name || '', photo: photo || '', bio: '', credits: null, pending: true };
+    }
+    render();
+    document.getElementById('app').scrollTop = 0;
+    loadActorCredits(personId);
+  }
+
+  async function loadActorCredits(personId){
+    const cached = state.actorCache[personId];
+    if ((cached && cached.credits !== null) || state.actorLoading[personId]) return;
+    state.actorLoading[personId] = true;
+    try{
+      const [person, credits] = await Promise.all([
+        tmdbFetch('/person/' + personId, state.tmdbKey),
+        tmdbFetch('/person/' + personId + '/combined_credits', state.tmdbKey)
+      ]);
+      const seen = new Set();
+      const list = [];
+      (credits.cast || []).forEach(r => {
+        if ((r.media_type !== 'movie' && r.media_type !== 'tv') || !r.poster_path) return;
+        const ck = r.media_type + '_' + r.id;
+        if (seen.has(ck)) return;
+        seen.add(ck);
+        const mapped = mapTmdbItem(r, r.media_type);
+        mapped._sourceType = 'tmdb';
+        list.push(mapped);
+      });
+      list.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      state.actorCache[personId] = {
+        name: person.name || (cached && cached.name) || '',
+        photo: person.profile_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w300' + person.profile_path) : ((cached && cached.photo) || ''),
+        bio: person.biography || '',
+        credits: list
+      };
+    }catch(e){
+      state.actorCache[personId] = {
+        name: (cached && cached.name) || '',
+        photo: (cached && cached.photo) || '',
+        bio: '',
+        credits: []
+      };
+    }
+    state.actorLoading[personId] = false;
+    if (state.view === 'actor' && state.actorId === personId) render();
+  }
+
+  function viewActor(){
+    const personId = state.actorId;
+    const a = state.actorCache[personId] || { name: '', photo: '', bio: '', credits: null };
+    const avatarHtml = a.photo
+      ? '<img src="'+escapeHtml(a.photo)+'" alt="" draggable="false">'
+      : '<div class="actor-avatar-fallback">'+escapeHtml(personInitials(a.name))+'</div>';
+
+    let bioHtml = '';
+    if (a.bio) {
+      const words = a.bio.trim().split(/\s+/);
+      // Тот же лимит слов и та же разметка (.detail-overview/.read-more-btn), что и у
+      // описания фильма — сворачиваем длинную биографию под кнопку "еще", коротким
+      // текстом показываем целиком.
+      const bioWordLimit = window.innerWidth >= 900 ? 42 : 25;
+      if (words.length > bioWordLimit) {
+        const shortText = words.slice(0, bioWordLimit).join(' ');
+        const restText = words.slice(bioWordLimit).join(' ');
+        bioHtml = '<div class="detail-overview'+(isActorBioExpanded ? ' expanded' : '')+'" id="actorBioOverview" style="margin:0 auto 19px;padding:0 16px;">'
+          + '<span class="overview-text-inner">' + escapeHtml(shortText) + '<span class="overview-ellipsis">…</span></span>'
+          + '<span class="overview-extra'+(isActorBioExpanded ? ' overview-extra-mounted' : '')+'" id="actorBioExtra">' + escapeHtml(restText) + '</span>'
+          + '<button class="read-more-btn" id="toggleActorBioBtn">' + (isActorBioExpanded ? 'свернуть' : 'еще') + '</button>'
+          + '</div>';
+      } else {
+        bioHtml = '<div class="detail-overview" style="margin:0 auto 19px;padding:0 16px;"><span class="overview-text-inner">' + escapeHtml(a.bio) + '</span></div>';
+      }
+    }
+
+    let gridHtml = '';
+    if (a.credits === null){
+      gridHtml = '<div class="empty glass-flat" style="margin:16px;">Загрузка…</div>';
+    } else if (!a.credits.length){
+      gridHtml = '<div class="empty glass-flat" style="margin:16px;">Фильмографию не удалось загрузить.</div>';
+    } else {
+      gridHtml = '<div class="movies-grid">'+a.credits.map(discoverCard).join('')+'</div>';
+    }
+
+    return '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">'+escapeHtml(a.name)+'</div></div>'
+      + '<div class="actor-header"><div class="actor-avatar">'+avatarHtml+'</div><div class="actor-name">'+escapeHtml(a.name)+'</div></div>'
+      + bioHtml
+      + '<div class="section-title" style="padding:0 16px;margin:16px 0 12px;font-size:20px;">Фильмография</div>'
+      + gridHtml;
   }
 
   function renderDetailMetaRow(){
@@ -3352,7 +3994,7 @@
 
     const div = document.createElement('div');
     div.className = 'modal-overlay';
-    div.innerHTML = '<div class="modal">'
+    div.innerHTML = '<div class="modal filter-modal">'
       + '<div class="modal-title">Год выпуска</div>'
       + '<div class="field" style="margin-top:10px;"><label>Крути колесо ниже или введи год вручную</label>'
       +   '<input id="yearFilterInput" type="number" placeholder="Например: 2021" inputmode="numeric" min="1900" max="'+(currentYear+5)+'" style="margin-top:6px;padding:11px 13px;font-size:14px;">'
@@ -3400,19 +4042,66 @@
 
     // Прокрутка колёсиком мыши/трекпада — листаем список по одному году за "тик",
     // с плавной анимацией, как будто крутишь настоящее колесо выбора.
-    let wheelBusy = false;
+    // Раньше на быстрых прокрутках (спам колёсиком на ПК) события, пришедшие
+    // во время 110мс-паузы, просто отбрасывались — колесо казалось "тугим"
+    // и не успевало за реальной скоростью прокрутки. Теперь лишние тики не
+    // теряются, а копятся в очереди и доигрываются один за другим — колесо
+    // ощущается отзывчивее и успевает за тем, как быстро крутит пользователь.
+    let wheelQueue = 0;
+    let wheelAnimating = false;
+    const itemH = items[0].offsetHeight;
+    const runWheelQueue = () => {
+      if (wheelQueue === 0){ wheelAnimating = false; return; }
+      wheelAnimating = true;
+      const dir = wheelQueue > 0 ? 1 : -1;
+      wheelQueue -= dir;
+      wheel.scrollBy({ top: dir * itemH, behavior: 'smooth' });
+      setTimeout(runWheelQueue, 85);
+    };
     wheel.addEventListener('wheel', (e) => {
       e.preventDefault();
-      if (wheelBusy) return;
-      wheelBusy = true;
-      const itemH = items[0].offsetHeight;
       const dir = e.deltaY > 0 ? 1 : -1;
-      wheel.scrollBy({ top: dir * itemH, behavior: 'smooth' });
-      setTimeout(() => { wheelBusy = false; }, 110);
+      // Ограничиваем очередь, чтобы бесконечный спин не улетал на 60 лет вперёд.
+      wheelQueue = Math.max(-6, Math.min(6, wheelQueue + dir));
+      if (!wheelAnimating) runWheelQueue();
     }, { passive: false });
 
+    // Прокрутка удержанием и перетаскиванием мыши — как будто крутишь колесо
+    // пальцем на тачскрине, только курсором. Слушатели move/up вешаются и
+    // снимаются на каждое нажатие отдельно, чтобы не копиться между открытиями
+    // модалки (модалка каждый раз создаётся заново).
+    let dragStartY = 0, dragStartScroll = 0, dragMovedY = false;
+    const onWheelDragMove = (e) => {
+      const dy = e.clientY - dragStartY;
+      if (Math.abs(dy) > 2) dragMovedY = true;
+      wheel.scrollTop = dragStartScroll - dy;
+    };
+    const onWheelDragEnd = () => {
+      wheel.classList.remove('mouse-dragging');
+      document.removeEventListener('mousemove', onWheelDragMove);
+      document.removeEventListener('mouseup', onWheelDragEnd);
+      if (dragMovedY){
+        // После отпускания докручиваем ровно до ближайшего года по центру.
+        const idx = markCenterActive();
+        if (items[idx]) items[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+    wheel.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      dragStartY = e.clientY;
+      dragStartScroll = wheel.scrollTop;
+      dragMovedY = false;
+      wheel.classList.add('mouse-dragging');
+      document.addEventListener('mousemove', onWheelDragMove);
+      document.addEventListener('mouseup', onWheelDragEnd);
+    });
+
     items.forEach(it => {
-      it.onclick = () => { it.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+      it.onclick = () => {
+        if (dragMovedY) return; // клик после перетаскивания — не годный клик
+        it.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
     });
 
     // Общая кнопка "Применить": если в поле введён год вручную — берём его,
@@ -3438,7 +4127,7 @@
     const f = getDiscoverFilters(key);
     const div = document.createElement('div');
     div.className = 'modal-overlay';
-    div.innerHTML = '<div class="modal">'
+    div.innerHTML = '<div class="modal filter-modal">'
       + '<div class="modal-title">Тип</div>'
       + '<div style="display:flex;flex-direction:column;gap:7px;margin-top:10px;">'
       + DISCOVER_TYPE_OPTIONS.map(t => '<button type="button" class="choose-btn glass-flat filter-type-opt'+(f.type===t.key?' active':'')+'" data-type-opt="'+t.key+'" style="padding:11px 12px;text-align:left;">'+escapeHtml(t.label)+'</button>').join('')
@@ -3461,7 +4150,7 @@
     const f = getDiscoverFilters(key);
     const div = document.createElement('div');
     div.className = 'modal-overlay';
-    div.innerHTML = '<div class="modal">'
+    div.innerHTML = '<div class="modal filter-modal">'
       + '<div class="modal-title">Жанр</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:280px;overflow-y:auto;">'
       + DISCOVER_GENRE_OPTIONS.map(g => '<button type="button" class="genre-chip filter-genre-opt'+(f.genre===g.id?' active':'')+'" data-genre-opt="'+g.id+'">'+escapeHtml(g.label)+'</button>').join('')
@@ -3484,7 +4173,7 @@
     const f = getDiscoverFilters(key);
     const div = document.createElement('div');
     div.className = 'modal-overlay';
-    div.innerHTML = '<div class="modal">'
+    div.innerHTML = '<div class="modal filter-modal">'
       + '<div class="modal-title">Страна выпуска</div>'
       + '<div class="field" style="margin-top:10px;"><label>Код страны вручную и нажми Enter (например RU, US)</label><input id="countryFilterInput" placeholder="RU" maxlength="2" value="'+(f.country||'')+'" style="text-transform:uppercase;padding:11px 13px;font-size:14px;"></div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:220px;overflow-y:auto;">'
@@ -3597,8 +4286,13 @@
       const data = await tmdbFetch('/trending/all/day', state.tmdbKey);
       const items = (data.results || []).filter(r => r.backdrop_path).slice(0, 8).map(mapTmdbBannerItem);
       if (items.length) {
-        preloadBannerImages(items);
-        state.banner.items = items; state.banner.index = 0;
+        // Раньше баннерные айтемы вообще не проходили через applyNewBadges,
+        // поэтому isNew у них никогда не было true — бейдж "Новое" на больших
+        // баннерах не появлялся в принципе, даже если фильм реально новый.
+        // catKey 'hero_banner' — отдельный от ключей категорий, своя история показов.
+        const badgedItems = await applyNewBadges('hero_banner', items);
+        preloadBannerImages(badgedItems);
+        state.banner.items = badgedItems; state.banner.index = 0;
       }
       state.banner.loadedAt = Date.now();
     }catch(e){
@@ -3618,9 +4312,11 @@
     // preloadBannerImages ниже, которая прогревает кэш ещё до первой отрисовки).
     const img = bg ? '<img class="hero-banner-img" src="'+escapeHtml(bg)+'" alt="" draggable="false">' : '';
     const meta = [item.year, typeLabel(item.type)].filter(Boolean).join(' · ');
+    const newBadge = item.isNew ? '<div class="new-badge hero-banner-new-badge">Новое</div>' : '';
     return '<div class="hero-banner-slide" data-discover-pick="'+item.tmdbId+'" data-discover-type="'+item.mediaType+'" data-poster-src="'+escapeHtml(item.poster || '')+'">'
       + img
       + '<div class="hero-banner-gradient"></div>'
+      + newBadge
       + ratingPill(item)
       + '<div class="hero-banner-info">'
       +   '<div class="hero-banner-title">'+escapeHtml(item.title)+'</div>'
@@ -3962,6 +4658,16 @@
 
     let screenshotsHtml = screenshotsInnerHtml(m);
 
+    // Актёры и озвучка — показываем блок сразу, если tmdbId вообще есть (значит, состав
+    // либо уже подтянут, либо вот-вот подтянется через loadCastForDetail), скрываем только
+    // для старых локальных записей без tmdbId, где запросить его попросту не у кого.
+    const castSectionHtml = m.tmdbId ? (
+      '<div class="section" style="margin-top: 20px; text-align: left; width: 100%;">'
+      + '<div class="section-title" style="padding: 0 16px; margin-bottom: 12px; font-size: 20px;">Актёры</div>'
+      + '<div class="cast-scroll" id="detailCastBody">' + castRowInnerHtml(m) + '</div>'
+      + '</div>'
+    ) : '';
+
     const similarKey = similarCacheKey(m);
     const similarStillLoading = !!(similarKey && !state.similarCache[similarKey]);
     let similarList = getDisplaySimilarList(m);
@@ -3996,14 +4702,17 @@
     +       (typeStr ? '<span class="meta-type">'+escapeHtml(typeStr)+'</span>' : '')
     +       (seasonsStr ? '<span class="meta-seasons">'+escapeHtml(seasonsStr)+'</span>' : '')
     +     '</div>'
+    +     '<div id="releaseInfoBody">'+releaseInfoInnerHtml(m)+'</div>'
     +     categorySelectHtml
     +     ratingBoxHtml
     +     imdbInfoBar
+    +     '<div id="seasonsListBody">'+seasonsListInnerHtml(m)+'</div>'
     +     (isSaved ? '<button class="danger-btn" id="deleteFromDetail" style="width:100%; max-width:380px; margin-bottom:16px;">Удалить из коллекции</button>' : '<button class="primary-btn" id="saveFromDetail" style="width:100%; max-width:380px; margin-bottom:16px;">Добавить в коллекцию</button>')
     +   '</div>'
     +   '<div class="detail-action-area">'
     +     '<div id="trailerSectionBody">'+trailerEmbedHtml(m)+'</div>'
     +     '<div id="detailScreenshotsBody">'+screenshotsHtml+'</div>'
+    +     castSectionHtml
     +     similarSectionHtml
     +   '</div>'
     + '</div>';
@@ -4068,6 +4777,7 @@
     else if (state.view === 'detail') html = viewDetail();
     else if (state.view === 'category') html = viewCategory();
     else if (state.view === 'discoverList') html = viewDiscoverList();
+    else if (state.view === 'actor') html = viewActor();
     else if (state.view === 'account') html = viewAccount();
     const showBottomSearch = state.view === 'search';
     if (showBottomSearch) html += searchBarBottomHtml();
@@ -4089,7 +4799,7 @@
 
     if (state.view === 'detail'){
       const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
-      if (m) { loadSimilarForDetail(m); loadSeasonInfoForDetail(m); loadTrailerForDetail(m); loadScreenshotsForDetail(m); mountTrailerPlayer(m); bindTrailerFallbackEvents(); }
+      if (m) { loadSimilarForDetail(m); loadSeasonInfoForDetail(m); loadMovieReleaseInfoForDetail(m); loadTrailerForDetail(m); loadScreenshotsForDetail(m); loadCastForDetail(m); mountTrailerPlayer(m); bindTrailerFallbackEvents(); }
     }
     
     if (cameFromView === state.view){
@@ -4123,6 +4833,9 @@
     pushNav();
     state.detailId = id; 
     state.previewItem = null; 
+    state.detailExpandedSeason = null;
+    state.detailSeasonsOpen = false;
+    state.detailSeasonsAutoDecided = false;
     
     state.tmdbQuery = '';
     state.tmdbResults = null;
@@ -4136,6 +4849,9 @@
     isOverviewExpanded = false;
     state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
     pushNav();
+    state.detailExpandedSeason = null;
+    state.detailSeasonsOpen = false;
+    state.detailSeasonsAutoDecided = false;
     
     state.tmdbQuery = '';
     state.tmdbResults = null;
@@ -5195,7 +5911,7 @@
           app.style.transition = '';
           app.style.transform = '';
           app.style.opacity = '';
-          if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose') {
+          if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose' || state.view === 'actor') {
             popNav();
           } else if (state.view === 'search') {
             state.view = 'home';
@@ -5368,6 +6084,13 @@
       };
     });
 
+    // Разворачивание строк сезонов на детальной странице (см. seasonsListInnerHtml).
+    const seasonsListEl = document.getElementById('seasonsListBody');
+    if (seasonsListEl){
+      const mForSeasons = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+      if (mForSeasons) bindSeasonRowEvents(seasonsListEl, mForSeasons);
+    }
+
     document.querySelectorAll('.section-head[data-cat]').forEach(el => {
       el.onclick = () => {
         if (catDragSuppressClick) return;
@@ -5395,7 +6118,7 @@
     const backBtn = document.getElementById('backBtn');
     if (backBtn){
       backBtn.onclick = () => {
-        if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose'){
+        if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose' || state.view === 'actor'){
           popNav();
         }
         render();
@@ -5494,6 +6217,13 @@
       el.onclick = e => {
         if (e.target.closest('[data-quick-fav]')) return;
         previewTmdb(el.getAttribute('data-discover-pick'), el.getAttribute('data-discover-type'));
+      };
+    });
+
+    document.querySelectorAll('[data-open-actor]').forEach(el => {
+      el.onclick = e => {
+        e.stopPropagation();
+        openActor(el.getAttribute('data-open-actor'), el.getAttribute('data-actor-name'), el.getAttribute('data-actor-photo'));
       };
     });
 
@@ -5661,6 +6391,32 @@
           }
         }
         toggleBtn.textContent = isOverviewExpanded ? 'свернуть' : 'еще';
+      };
+    }
+
+    const toggleActorBioBtn = document.getElementById('toggleActorBioBtn');
+    if (toggleActorBioBtn){
+      toggleActorBioBtn.onclick = () => {
+        isActorBioExpanded = !isActorBioExpanded;
+        const overviewDiv = document.getElementById('actorBioOverview');
+        const extraEl = document.getElementById('actorBioExtra');
+        if (overviewDiv && extraEl){
+          if (isActorBioExpanded){
+            extraEl.classList.add('overview-extra-mounted');
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              overviewDiv.classList.add('expanded');
+            }));
+          } else {
+            overviewDiv.classList.remove('expanded');
+            const onFadeOut = (e) => {
+              if (e.target !== extraEl || e.propertyName !== 'opacity') return;
+              extraEl.classList.remove('overview-extra-mounted');
+              extraEl.removeEventListener('transitionend', onFadeOut);
+            };
+            extraEl.addEventListener('transitionend', onFadeOut);
+          }
+        }
+        toggleActorBioBtn.textContent = isActorBioExpanded ? 'свернуть' : 'еще';
       };
     }
 
@@ -6554,7 +7310,7 @@
   // способ пролистать ряд мышкой — тащить его за собой, зажав кнопку, как в галереях
   // на десктопных сайтах. Ловим mousedown на самих скролл-контейнерах и двигаем их
   // scrollLeft за курсором, пока кнопка мыши зажата.
-  const DRAG_SCROLL_SELECTOR = '.row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track';
+  const DRAG_SCROLL_SELECTOR = '.row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track, .cast-scroll';
 
   function initMouseDragScroll(){
     let dragEl = null, startX = 0, startScrollLeft = 0, dragMoved = false;
