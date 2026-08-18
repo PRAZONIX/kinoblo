@@ -528,6 +528,29 @@
   .search-bar-inner input:focus{border:none;background:transparent;}
   .search-bar-inner input:focus-visible{outline:none;}
   .search-bar-inner .sb-clear{flex:0 0 auto;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);background:rgba(255,255,255,.14);}
+
+  /* Переключатель "фильм / актёр" внутри самой строки поиска — две маленькие
+     иконки-кнопки (фильм и человек), активная подсвечена акцентным цветом.
+     Стоит перед полем ввода на месте прежней статичной иконки-лупы. */
+  /* Переключатель "фильм / актёр" внутри самой строки поиска — две маленькие
+     иконки-кнопки (фильм и человек), активная подсвечена акцентным цветом.
+     Стоит перед полем ввода на месте прежней статичной иконки-лупы.
+     Показывается только когда строка поиска раскрыта (в фокусе или уже есть
+     текст, см. .search-bar-inner.expanded) — в свёрнутом виде скрыт, чтобы
+     не занимать место и не отвлекать до того, как человек нажал на поиск. */
+  .search-mode-toggle{
+    display:flex;align-items:center;flex:0 0 auto;
+    width:0;opacity:0;margin-right:-8px;overflow:hidden;pointer-events:none;
+    transition:width .3s var(--ease), opacity .2s var(--ease), margin-right .3s var(--ease);
+  }
+  .search-bar-inner.expanded .search-mode-toggle{
+    width:28px;opacity:1;margin-right:0;pointer-events:auto;
+  }
+  .search-mode-btn{
+    width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:#fff;background:var(--accent);flex:0 0 auto;
+  }
+  .search-mode-btn svg{width:13px;height:13px;color:inherit;}
   
   .search-results-dropdown {
     position: fixed;
@@ -732,6 +755,18 @@
   .cast-name{margin-top:7px;font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.25;word-break:break-word;}
   .cast-role{margin-top:1px;font-size:10.5px;color:var(--ink-faint);line-height:1.2;word-break:break-word;}
 
+  /* ===== Полный список актёров сеткой (открывается по тапу на заголовок
+     "Актёры" на странице фильма/сериала) — те же кружки, что и в горизонтальном
+     ряду (.cast-item/.cast-avatar), но выложены сеткой по 4 в ряд вместо
+     горизонтальной прокрутки. ===== */
+  .cast-section-title{cursor:pointer;}
+  .cast-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:20px 8px;
+    padding:4px 16px 16px;
+  }
+  .cast-grid .cast-item{ width:100%; }
   /* ===== Страница актёра (фото, имя, био, вся фильмография сеткой) ===== */
   .actor-header{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 16px 14px;}
   .actor-avatar{
@@ -920,6 +955,16 @@
   .release-info-text{display:flex;flex-direction:column;gap:2px;}
   .release-info-label{font-size:10.5px;color:var(--ink-faint);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;}
   .release-info-date{font-size:14px;font-weight:700;color:var(--ink);}
+  /* Тёмный вариант карточки даты — для тайтлов, которые вышли уже давно.
+     Красноватый акцент оставляем только для «новых»: тех, что ещё не вышли
+     (анонс премьеры), либо вышли совсем недавно (см. isRecent в releaseInfoInnerHtml).
+     Цвет фона/рамки берём тот же, что и у карточки оценки (.my-rating-box),
+     чтобы обе тёмные карточки выглядели единообразно. */
+  .release-info-card--old{
+    background:rgba(255,255,255,0.032);
+    border-color:var(--glass-border-soft);
+  }
+  .release-info-icon--old{color:var(--ink-dim);}
 
   /* Блок со списком ВСЕХ сезонов сериала (не только текущего) — сам раздел
      сворачиваемый (шапка "Сезоны" + стрелка, см. seasonsListInnerHtml), внутри
@@ -1237,13 +1282,13 @@
      есть в первые миллисекунды жеста браузер уже успевал начать выделение.
      Теперь запрещаем выделение текста в этих рядах всегда, а не только во
      время активного перетаскивания. */
-  .row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track{
+  .row-scroll, .genres-scroll-bar, .discover-filter-bar, .movie-screenshots-scroll, .hero-banner-track, .cast-scroll{
     user-select:none;
     -webkit-user-select:none;
   }
   .row-scroll.mouse-dragging, .genres-scroll-bar.mouse-dragging,
   .discover-filter-bar.mouse-dragging, .movie-screenshots-scroll.mouse-dragging,
-  .hero-banner-track.mouse-dragging{
+  .hero-banner-track.mouse-dragging, .cast-scroll.mouse-dragging{
     cursor:grabbing;
     scroll-snap-type:none;
   }
@@ -1692,6 +1737,18 @@
     .seasons-list-card,
     .release-info-card,
     .desc-card{ max-width:none; }
+
+    /* Экран "Актёры" (сетка со всем составом) — на телефоне по 4 кружка
+       в ряд, а на ПК показываем сразу по 10 в ряд. #app на ПК растянут на
+       весь экран (см. правило выше), поэтому repeat(10, 1fr) растягивал
+       колонки на всю ширину монитора и кружки оказывались далеко друг от
+       друга — задаём колонкам фиксированную компактную ширину и центрируем
+       сетку, вместо того чтобы тянуть её на весь экран. */
+    .cast-grid{
+      grid-template-columns:repeat(10, 80px);
+      justify-content:center;
+      gap:22px 14px;
+    }
   }
 
   /* Наведение курсора мышью тоже снимает затемнение с бокового баннера —
@@ -1723,6 +1780,27 @@
 (function(){
   let tg = null;
   let tmdbSearchTimer = null;
+
+  // Общий помощник: выполняет запрос к TMDB (фильмы или актёры, в зависимости
+  // от режима) и раскладывает результат в нужное поле state, с проверкой на
+  // "устаревший" ответ (если пользователь успел напечатать дальше или сменить
+  // режим, пока шёл запрос). Используется и при вводе текста, и при возврате
+  // фокуса в поле, и при переключении режима поиска — чтобы не дублировать
+  // одну и ту же логику в трёх местах.
+  async function executeTmdbSearch(query, mode){
+    const queryAtRequest = query, modeAtRequest = mode;
+    try{
+      const res = modeAtRequest === 'actor' ? await personSearch(query, state.tmdbKey) : await tmdbSearch(query, state.tmdbKey);
+      if (state.tmdbQuery !== queryAtRequest || state.searchMode !== modeAtRequest) return;
+      if (modeAtRequest === 'actor') state.actorResults = res; else state.tmdbResults = res;
+      renderSearchDropdown();
+    }catch(err){
+      if (state.tmdbQuery !== queryAtRequest || state.searchMode !== modeAtRequest) return;
+      if (modeAtRequest === 'actor') state.actorResults = []; else state.tmdbResults = [];
+      renderSearchDropdown();
+    }
+  }
+
   let isOverviewExpanded = false; 
   let isActorBioExpanded = false;
   let navStack = []; // стек предыдущих экранов для корректной работы "назад" (свайп/кнопка) при вложенных переходах
@@ -1996,7 +2074,7 @@
   let state = {
     movies: [], categories: [], view: 'search', detailId: null, categoryFilter: null,
     pendingMovie: null, previewItem: null, loaded: false,
-    tmdbKey: '', tmdbResults: null, tmdbQuery: '',
+    tmdbKey: '', tmdbResults: null, tmdbQuery: '', searchMode: 'movie', actorResults: null,
     discover: { cache: {}, loading: {}, lgbtKeywordIds: null, full: {}, fullLoading: {}, fullPage: {}, fullDone: {}, filters: {}, cacheTime: {}, checkingUpdate: {} },
     discoverListKey: null,
     scrollPositions: {},
@@ -2278,6 +2356,7 @@
       description: r.overview || '',
       genres: (r.genre_ids || []).map(id => gmap[id]).filter(Boolean),
       voteAverage: typeof r.vote_average === 'number' ? r.vote_average : null,
+      voteCount: typeof r.vote_count === 'number' ? r.vote_count : 0,
       popularity: r.popularity || 0,
       type: isTv ? 'series' : 'movie',
       // Число сезонов приходит только из полного /tv/{id} (не из discover/search),
@@ -2332,8 +2411,16 @@
     const label = isFuture
       ? (m.mediaType === 'tv' ? 'Премьера сериала' : 'Премьера фильма')
       : 'Дата выхода';
-    return '<div class="release-info-card glass-flat">'
-      + '<span class="release-info-icon">'+icon('calendar', 18)+'</span>'
+    // «Новым» считаем тайтл, который ещё не вышел (тогда карточка — анонс
+    // премьеры), либо вышел не более 90 дней назад. Такие подсвечиваем
+    // фирменным красноватым акцентом; всё, что вышло давно, — тёмным
+    // нейтральным цветом, как карточка оценки.
+    const daysSinceRelease = (new Date(todayStr) - new Date(dateStr)) / 86400000;
+    const isRecent = isFuture || daysSinceRelease <= 90;
+    const oldMod = isRecent ? '' : ' release-info-card--old';
+    const oldIconMod = isRecent ? '' : ' release-info-icon--old';
+    return '<div class="release-info-card glass-flat'+oldMod+'">'
+      + '<span class="release-info-icon'+oldIconMod+'">'+icon('calendar', 18)+'</span>'
       + '<div class="release-info-text"><span class="release-info-label">'+escapeHtml(label)+'</span>'
       + '<span class="release-info-date">'+escapeHtml(ruDate)+'</span></div>'
       + '</div>';
@@ -2942,6 +3029,27 @@
     
     results.sort((a, b) => (a.popularity || 0) - (b.popularity || 0));
     
+    return results;
+  }
+
+  // Поиск актёров/актрис по имени (для переключателя "фильм / актёр" в строке
+  // поиска) — используем отдельный эндпоинт TMDB /search/person, а не общий
+  // /search/multi, т.к. он ищет только по людям и возвращает более точные
+  // совпадения по имени. known_for оставляем как есть — это подсказка под
+  // именем (в чём человек снимался), а не полноценная фильмография (та
+  // загружается отдельно на странице актёра через /person/{id}/combined_credits).
+  async function personSearch(query, key){
+    const data = await tmdbFetch('/search/person?query=' + encodeURIComponent(query), key);
+    let results = (data.results || [])
+      .slice(0, 10)
+      .map(r => ({
+        personId: r.id,
+        name: r.name || '',
+        photo: r.profile_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w185' + r.profile_path) : '',
+        knownFor: (r.known_for || []).map(k => (k.title || k.name || '')).filter(Boolean).slice(0, 3).join(', '),
+        popularity: r.popularity || 0
+      }));
+    results.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
     return results;
   }
 
@@ -3559,23 +3667,48 @@
     return '<div class="empty glass-flat" style="margin:0 16px;">Загрузка…</div>';
   }
 
-  // Актёры и озвучка (для мультфильмов/сериалов в оригинале) приходят одним и тем же полем
-  // credits.cast и у фильмов, и у сериалов — TMDB сам решает, кого туда включать (для анимации
-  // это чаще всего голоса). Как и скриншоты, кэшируем один раз в сам тайтл (m.cast), чтобы не
-  // запрашивать заново при каждом открытии карточки — состав актёров меняется крайне редко.
+  // Актёры и озвучка (для мультфильмов/сериалов в оригинале) — у фильмов приходят
+  // одним полем credits.cast, TMDB сам решает, кого туда включать (для анимации
+  // это чаще всего голоса). А вот у сериалов обычный /tv/{id}/credits отдаёт
+  // только "основной" состав по мнению TMDB и часто пропускает гостевые/
+  // второстепенные роли (из-за этого казалось, что актёров "мало"). Поэтому
+  // для сериалов берём /tv/{id}/aggregate_credits — там состав собран по всем
+  // сезонам и эпизодам, поэтому он гораздо полнее. Как и скриншоты, кэшируем
+  // один раз в сам тайтл (m.cast), чтобы не запрашивать заново при каждом
+  // открытии карточки — состав актёров меняется крайне редко.
+  //
+  // CAST_CACHE_VERSION нужен, чтобы у уже сохранённых ранее фильмов/сериалов
+  // (где m.cast был получен старым способом — с урезанным списком и без
+  // aggregate_credits) состав автоматически считался устаревшим и подтянулся
+  // заново хотя бы один раз, а не оставался "залипшим" в старом виде навсегда
+  // на устройстве/сайте, где это уже было один раз загружено и сохранено.
+  const CAST_CACHE_VERSION = 2;
   async function loadCastForDetail(m){
-    if (!m || !m.tmdbId || m.cast !== undefined) return;
+    if (!m || !m.tmdbId) return;
+    if (m.cast !== undefined && m.castV === CAST_CACHE_VERSION) return;
     const key = 'cast_' + m.mediaType + '_' + m.tmdbId;
     if (state.castLoading[key]) return;
     state.castLoading[key] = true;
     try{
-      const data = await tmdbFetch('/' + m.mediaType + '/' + m.tmdbId + '/credits', state.tmdbKey);
-      m.cast = (data.cast || []).slice(0, 40).map(r => ({
+      const isTv = m.mediaType === 'tv';
+      const endpoint = '/' + m.mediaType + '/' + m.tmdbId + (isTv ? '/aggregate_credits' : '/credits');
+      const data = await tmdbFetch(endpoint, state.tmdbKey);
+      const rawCast = (data.cast || []).slice();
+      // У aggregate_credits порядок не всегда отсортирован по "весу" роли, а у
+      // каждого актёра персонаж лежит в массиве roles (может быть несколько
+      // ролей за сериал) вместо простого поля character — приводим к общему виду
+      // и сортируем по числу эпизодов (total_episode_count), чтобы самые
+      // заметные актёры шли первыми, как и в обычном списке cast у фильмов.
+      if (isTv){
+        rawCast.sort((a, b) => (b.total_episode_count || 0) - (a.total_episode_count || 0));
+      }
+      m.cast = rawCast.slice(0, 100).map(r => ({
         personId: r.id,
         name: r.name || '',
-        character: r.character || '',
+        character: isTv ? ((r.roles && r.roles[0] && r.roles[0].character) || '') : (r.character || ''),
         photo: r.profile_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w185' + r.profile_path) : ''
       }));
+      m.castV = CAST_CACHE_VERSION;
       const isSaved = state.movies.some(x => x.id === m.id);
       if (isSaved) await updateMovie(m);
     }catch(e){
@@ -3594,6 +3727,26 @@
     if (!m) return;
     el.innerHTML = castRowInnerHtml(m);
     bindEvents();
+  }
+
+  // ===== Полный список актёров (сеткой, по 4 в ряд) — открывается тапом на
+  // заголовок "Актёры" на странице фильма/сериала. Использует тот же m.cast,
+  // что и горизонтальный ряд (см. loadCastForDetail) — читаем его через тот же
+  // state.detailId/previewItem, как и обычная страница фильма, отдельного
+  // состояния для этого экрана не нужно. =====
+  function openCastList(){
+    state.scrollPositions[state.view] = document.getElementById('app').scrollTop || 0;
+    pushNav();
+    state.view = 'castList';
+    render();
+    document.getElementById('app').scrollTop = 0;
+  }
+
+  function viewCastList(){
+    const m = state.movies.find(x => x.id === state.detailId) || state.previewItem;
+    const gridHtml = castRowInnerHtml(m || {});
+    return '<div class="subbar"><button class="icon-btn glass-flat" id="backBtn">'+icon('back',18)+'</button><div class="subtitle">Актёры</div></div>'
+      + '<div class="cast-grid">' + gridHtml + '</div>';
   }
 
   // Открывает страницу актёра/актрисы: фото, имя, био и вся фильмография (совмещённая
@@ -3626,7 +3779,12 @@
       const seen = new Set();
       const list = [];
       (credits.cast || []).forEach(r => {
-        if ((r.media_type !== 'movie' && r.media_type !== 'tv') || !r.poster_path) return;
+        // Раньше здесь также требовалось r.poster_path, из-за чего из фильмографии
+        // пропадали все тайтлы без постера в TMDB (частая история для небольших
+        // ролей, малоизвестных проектов, ТВ-фильмов) — хотя сама карточка
+        // (discoverCard) прекрасно показывает и заглушку вместо постера.
+        // Оставляем только фильтр по типу и на дубликаты.
+        if (r.media_type !== 'movie' && r.media_type !== 'tv') return;
         const ck = r.media_type + '_' + r.id;
         if (seen.has(ck)) return;
         seen.add(ck);
@@ -3634,7 +3792,18 @@
         mapped._sourceType = 'tmdb';
         list.push(mapped);
       });
-      list.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      // Сортируем по популярности, а если она у нескольких тайтлов почти
+      // одинаковая или нулевая (частая история для старых/малоизвестных
+      // карточек TMDB), подстраховываемся числом и средней оценкой голосов —
+      // так реально известные фильмы/сериалы актёра надёжно оказываются
+      // выше в списке, а не перемешиваются случайно.
+      list.sort((a, b) => {
+        const pa = a.popularity || 0, pb = b.popularity || 0;
+        if (Math.abs(pb - pa) > 1) return pb - pa;
+        const vcA = a.voteCount || 0, vcB = b.voteCount || 0;
+        if (vcB !== vcA) return vcB - vcA;
+        return (b.voteAverage || 0) - (a.voteAverage || 0);
+      });
       state.actorCache[personId] = {
         name: person.name || (cached && cached.name) || '',
         photo: person.profile_path ? (TMDB_IMG_PROXY_BASE + '/t/p/w300' + person.profile_path) : ((cached && cached.photo) || ''),
@@ -3780,6 +3949,34 @@
     }).join('') + '</div>';
   }
 
+  // Результаты поиска АКТЁРОВ в том же выпадающем списке под строкой поиска —
+  // те же габариты строки (аватар слева, имя + подсказка "известен по" справа),
+  // что и у результатов-фильмов, чтобы список визуально не прыгал при
+  // переключении режима поиска. Круглый аватар вместо постера — чтобы сразу
+  // было видно, что это человек, а не тайтл.
+  function renderActorResults(list){
+    if (!list.length) return '<div style="font-size:12.5px;color:var(--ink-faint);padding:6px 10px;">Никого не нашлось.</div>';
+    return '<div style="display:flex;flex-direction:column;gap:8px;">' + list.map(p => {
+      const avatar = p.photo
+        ? '<img src="'+escapeHtml(tmdbImgSize(p.photo,'w185'))+'" loading="lazy" decoding="async" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 auto;">'
+        : '<div style="width:42px;height:42px;border-radius:50%;background:var(--glass);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--ink-dim);">'+escapeHtml(personInitials(p.name))+'</div>';
+      return '<button type="button" class="choose-btn search-result-glass" data-search-actor="'+p.personId+'" data-search-actor-name="'+escapeHtml(p.name)+'" data-search-actor-photo="'+escapeHtml(p.photo || '')+'" style="padding:10px;text-align:left;display:flex;align-items:center;position:relative;">'
+      + avatar
+      + '<div class="choose-text" style="flex:1;margin-left:12px;"><div class="t1" style="font-size:14px;">'+escapeHtml(p.name)+'</div>'+(p.knownFor ? '<div class="t2">'+escapeHtml(p.knownFor)+'</div>' : '')+'</div>'
+      + '</button>';
+    }).join('') + '</div>';
+  }
+
+  // Открытие актёра прямо из поиска — так же, как previewTmdb() для фильмов,
+  // сначала гасим строку поиска (иначе после возврата назад останется открытый
+  // список результатов), затем переходим на страницу актёра.
+  function openActorFromSearch(personId, name, photo){
+    state.tmdbQuery = '';
+    state.tmdbResults = null;
+    state.actorResults = null;
+    openActor(personId, name, photo);
+  }
+
   // Точечное обновление дропдауна результатов поиска без перерисовки всей страницы.
   // Так input с фокусом не пересоздаётся при каждом кейстроке — фокус и курсор сохраняются,
   // и вкладка не "прыгает" (например, пробел в конце слова случайно активирует другую кнопку из-за потери фокуса).
@@ -3788,6 +3985,11 @@
       btn.onclick = e => {
         if (e.target.closest('[data-quick-fav]')) return;
         previewTmdb(btn.getAttribute('data-tmdb-preview'), btn.getAttribute('data-tmdb-type'));
+      };
+    });
+    container.querySelectorAll('[data-search-actor]').forEach(btn => {
+      btn.onclick = () => {
+        openActorFromSearch(btn.getAttribute('data-search-actor'), btn.getAttribute('data-search-actor-name'), btn.getAttribute('data-search-actor-photo'));
       };
     });
     container.querySelectorAll('[data-quick-fav]').forEach(btn => {
@@ -3872,6 +4074,7 @@
   function exitSearch(){
     state.tmdbQuery = '';
     state.tmdbResults = null;
+    state.actorResults = null;
     searchFocused = false;
     const qInput = document.getElementById('tmdbQueryBottom');
     if (qInput){
@@ -3902,9 +4105,13 @@
       container.className = 'search-results-dropdown';
       bar.parentNode.insertBefore(container, bar);
     }
-    container.innerHTML = state.tmdbResults
-      ? renderTmdbResults(state.tmdbResults)
-      : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>';
+    container.innerHTML = state.searchMode === 'actor'
+      ? (state.actorResults
+          ? renderActorResults(state.actorResults)
+          : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>')
+      : (state.tmdbResults
+          ? renderTmdbResults(state.tmdbResults)
+          : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>');
     bindSearchDropdownEvents(container);
     syncSearchBlur();
     return true;
@@ -4227,16 +4434,27 @@
   function searchBarBottomHtml(){
     let dropdownHtml = '';
     const searching = state.tmdbQuery && state.tmdbQuery.trim();
+    const isActorMode = state.searchMode === 'actor';
     
     if (searching) {
-      dropdownHtml = '<div id="searchResultsDropdownContainer" class="search-results-dropdown">'
-        + (state.tmdbResults ? renderTmdbResults(state.tmdbResults) : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>')
-        + '</div>';
+      const resultsList = isActorMode ? state.actorResults : state.tmdbResults;
+      const resultsHtml = resultsList
+        ? (isActorMode ? renderActorResults(resultsList) : renderTmdbResults(resultsList))
+        : '<div style="font-size:13px;color:var(--ink-faint);padding:8px;text-align:center;">Ищу…</div>';
+      dropdownHtml = '<div id="searchResultsDropdownContainer" class="search-results-dropdown">' + resultsHtml + '</div>';
     }
 
+    // Переключатель "фильм / актёр" — две иконки-кнопки прямо в самой строке
+    // поиска, перед полем ввода. Активный режим подсвечен; смена режима
+    // сбрасывает текущий запрос и результаты (у фильмов и актёров разные
+    // эндпоинты TMDB, оставлять старый текст/список смысла нет).
+    const modeToggleHtml = '<div class="search-mode-toggle">'
+      + '<button type="button" class="search-mode-btn" data-search-mode-toggle title="'+(isActorMode ? 'Сейчас поиск актёров — нажмите для поиска фильмов' : 'Сейчас поиск фильмов — нажмите для поиска актёров')+'">'+icon(isActorMode ? 'user' : 'film', 14)+'</button>'
+      + '</div>';
+
     return dropdownHtml + '<div class="search-bar-bottom"><div class="search-bar-inner'+(searching ? ' expanded' : '')+'">'
-    + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
-    + '<input id="tmdbQueryBottom" placeholder="Найти фильм или сериал…" value="'+escapeHtml(state.tmdbQuery)+'">'
+    + modeToggleHtml
+    + '<input id="tmdbQueryBottom" placeholder="'+(isActorMode ? 'Найти актёра…' : 'Найти фильм или сериал…')+'" value="'+escapeHtml(state.tmdbQuery)+'">'
     + '<button type="button" class="sb-clear" id="tmdbQueryBottomClear" style="'+(state.tmdbQuery ? '' : 'display:none;')+'">'+icon('close',13)+'</button>'
     + '</div></div>';
   }
@@ -4663,7 +4881,7 @@
     // для старых локальных записей без tmdbId, где запросить его попросту не у кого.
     const castSectionHtml = m.tmdbId ? (
       '<div class="section" style="margin-top: 20px; text-align: left; width: 100%;">'
-      + '<div class="section-title" style="padding: 0 16px; margin-bottom: 12px; font-size: 20px;">Актёры</div>'
+      + '<div class="section-title cast-section-title" id="castSectionTitle" style="padding: 0 16px; margin-bottom: 12px; font-size: 20px;">Актёры</div>'
       + '<div class="cast-scroll" id="detailCastBody">' + castRowInnerHtml(m) + '</div>'
       + '</div>'
     ) : '';
@@ -4778,6 +4996,7 @@
     else if (state.view === 'category') html = viewCategory();
     else if (state.view === 'discoverList') html = viewDiscoverList();
     else if (state.view === 'actor') html = viewActor();
+    else if (state.view === 'castList') html = viewCastList();
     else if (state.view === 'account') html = viewAccount();
     const showBottomSearch = state.view === 'search';
     if (showBottomSearch) html += searchBarBottomHtml();
@@ -4839,6 +5058,7 @@
     
     state.tmdbQuery = '';
     state.tmdbResults = null;
+    state.actorResults = null;
 
     state.view = 'detail'; 
     render(); 
@@ -4855,6 +5075,7 @@
     
     state.tmdbQuery = '';
     state.tmdbResults = null;
+    state.actorResults = null;
 
     try{
       const data = await tmdbFetch('/' + mediaType + '/' + tmdbId, state.tmdbKey);
@@ -5911,7 +6132,7 @@
           app.style.transition = '';
           app.style.transform = '';
           app.style.opacity = '';
-          if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose' || state.view === 'actor') {
+          if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose' || state.view === 'actor' || state.view === 'castList') {
             popNav();
           } else if (state.view === 'search') {
             state.view = 'home';
@@ -6077,6 +6298,7 @@
         if (v === 'search'){
           state.tmdbQuery = '';
           state.tmdbResults = null;
+          state.actorResults = null;
           state.banner.index = 0;
         }
         render();
@@ -6118,7 +6340,7 @@
     const backBtn = document.getElementById('backBtn');
     if (backBtn){
       backBtn.onclick = () => {
-        if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose' || state.view === 'actor'){
+        if (state.view === 'detail' || state.view === 'category' || state.view === 'discoverList' || state.view === 'choose' || state.view === 'actor' || state.view === 'castList'){
           popNav();
         }
         render();
@@ -6136,33 +6358,22 @@
         if (tmdbSearchTimer) clearTimeout(tmdbSearchTimer);
         if (!val.trim()){
           state.tmdbResults = null;
+          state.actorResults = null;
           renderSearchDropdown();
           return;
         }
-        tmdbSearchTimer = setTimeout(async () => {
-          const queryAtRequest = val;
-          try{
-            const res = await tmdbSearch(val, state.tmdbKey);
-            if (state.tmdbQuery !== queryAtRequest) return; // пользователь уже печатает дальше — устаревший ответ игнорируем
-            state.tmdbResults = res;
-            renderSearchDropdown();
-          }catch(err){
-            if (state.tmdbQuery !== queryAtRequest) return;
-            state.tmdbResults = [];
-            renderSearchDropdown();
-          }
-        }, 350);
+        const modeAtRequest = state.searchMode;
+        tmdbSearchTimer = setTimeout(() => executeTmdbSearch(val, modeAtRequest), 350);
       };
       qInput.onfocus = () => {
         searchFocused = true;
         syncSearchBlur();
         const inner = qInput.closest('.search-bar-inner');
         if (inner) inner.classList.add('expanded');
-        if (state.tmdbQuery && !state.tmdbResults){
-          tmdbSearch(state.tmdbQuery, state.tmdbKey).then(res => {
-            state.tmdbResults = res;
-            renderSearchDropdown();
-          });
+        if (state.searchMode === 'actor'){
+          if (state.tmdbQuery && !state.actorResults) executeTmdbSearch(state.tmdbQuery, 'actor');
+        } else if (state.tmdbQuery && !state.tmdbResults){
+          executeTmdbSearch(state.tmdbQuery, 'movie');
         }
       };
       qInput.onblur = () => {
@@ -6173,11 +6384,53 @@
       };
     }
 
+    const modeToggleBtn = document.querySelector('[data-search-mode-toggle]');
+    if (modeToggleBtn){
+      let modeToggleTouchedAt = 0;
+      const switchSearchMode = () => {
+        state.searchMode = state.searchMode === 'actor' ? 'movie' : 'actor';
+        // Раньше при смене режима текст запроса сбрасывался — раздражало,
+        // если человек уже что-то напечатал. Теперь текст остаётся, просто
+        // старые результаты (они от другого эндпоинта TMDB) сбрасываем и,
+        // если запрос не пустой, сразу запускаем поиск заново уже в новом режиме.
+        state.tmdbResults = null;
+        state.actorResults = null;
+        render();
+        focusSearchInput();
+        const q = state.tmdbQuery && state.tmdbQuery.trim();
+        if (q){
+          if (tmdbSearchTimer) clearTimeout(tmdbSearchTimer);
+          executeTmdbSearch(q, state.searchMode);
+        }
+      };
+      // На телефоне с открытой клавиатурой обычный click по этой кнопке часто
+      // вообще не долетал: тап сначала гасил фокус инпута (onblur), клавиатура
+      // начинала закрываться, раскладка страницы под пальцем смещалась — и
+      // браузер терял исходную точку тача, так и не досылая click. preventDefault
+      // на mousedown/touchstart не даёт инпуту терять фокус в момент нажатия
+      // (клавиатура не дёргается и раскладка не съезжает), а само переключение
+      // выполняем вручную по touchend — так оно срабатывает с первого тапа даже
+      // при открытой клавиатуре. modeToggleTouchedAt защищает от повторного
+      // срабатывания, если браузер всё же пришлёт следом синтетический click.
+      modeToggleBtn.addEventListener('mousedown', e => e.preventDefault());
+      modeToggleBtn.addEventListener('touchstart', e => { e.preventDefault(); }, {passive:false});
+      modeToggleBtn.addEventListener('touchend', e => {
+        e.preventDefault();
+        modeToggleTouchedAt = Date.now();
+        switchSearchMode();
+      }, {passive:false});
+      modeToggleBtn.onclick = () => {
+        if (Date.now() - modeToggleTouchedAt < 600) return;
+        switchSearchMode();
+      };
+    }
+
     const qClear = document.getElementById('tmdbQueryBottomClear');
     if (qClear){
       qClear.onclick = () => {
         state.tmdbQuery = '';
         state.tmdbResults = null;
+        state.actorResults = null;
         render();
         focusSearchInput();
       };
@@ -6226,6 +6479,9 @@
         openActor(el.getAttribute('data-open-actor'), el.getAttribute('data-actor-name'), el.getAttribute('data-actor-photo'));
       };
     });
+
+    const castSectionTitleEl = document.getElementById('castSectionTitle');
+    if (castSectionTitleEl) castSectionTitleEl.onclick = () => openCastList();
 
     document.querySelectorAll('[data-discover-filter]').forEach(btn => {
       btn.onclick = e => {
