@@ -543,7 +543,7 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
             <button class="btn btn-primary btn-block" id="accRegisterBtn">Создать аккаунт</button>
           </div>
         </div>
-        <p class="subtext" style="margin-top:12px;">Аккаунт и его данные хранятся на этом устройстве. Чтобы продолжить работу под тем же аккаунтом на другом устройстве, используйте экспорт и импорт данных в разделе «Настройки» после входа.</p>
+        <p class="subtext" style="margin-top:12px;" id="accSyncHintLoggedOut">Один и тот же никнейм и PIN на разных устройствах — это один и тот же аккаунт, его задачи, цели и заметки синхронизируются автоматически.</p>
       </div>
 
       <!-- Logged in -->
@@ -551,7 +551,7 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
         <div class="card acc-card" style="margin-top:2px;">
           <div>
             <div class="acc-nick" id="accNickDisplay"></div>
-            <div class="subtext" style="margin-top:2px;">Вы вошли в аккаунт</div>
+            <div class="subtext" style="margin-top:2px;" id="accSyncStatus">Вы вошли в аккаунт</div>
           </div>
           <button class="btn btn-ghost" id="accLogoutBtn">Выйти</button>
         </div>
@@ -663,16 +663,11 @@ const ACCOUNTS_KEY = "daybox_accounts_v1"; // local cache: { [nickLower]: { nick
 const ACTIVE_ACCOUNT_KEY = "daybox_active_account_v1"; // nickLower string, or '' for guest
 
 /* ---------- Cross-device account sync ----------
-   Same idea as in the other app: a public Firebase Realtime Database used
-   purely as a JSON key/value store (no auth, no SDK — just plain REST calls).
-   To turn this on:
-   1. console.firebase.google.com -> Add project -> any name -> create
-   2. Build -> Realtime Database -> Create Database -> start in test mode
-   3. Copy the URL that looks like https://xxxx-default-rtdb.firebaseio.com
-      and paste it below as FIREBASE_DB_URL.
-   Until a real URL is set, the app keeps working exactly as before —
-   accounts/data simply stay local to this device. */
-const FIREBASE_DB_URL = 'https://daybox-sync-default-rtdb.firebaseio.com';
+   Same Firebase Realtime Database already used (and working) in the other
+   app — a public JSON key/value store, no auth, plain REST calls. DayBox
+   writes under its own top-level keys (daybox_accounts/, daybox_states/)
+   so it never touches that other app's data in the same project. */
+const FIREBASE_DB_URL = 'https://kinoblo-default-rtdb.firebaseio.com';
 function syncEnabled(){ return !!FIREBASE_DB_URL; }
 function fbUrl(path){ return FIREBASE_DB_URL.replace(/\/$/, '') + '/' + path + '.json'; }
 async function fbGet(path){
@@ -683,6 +678,19 @@ async function fbGet(path){
     return await res.json();
   }catch(e){ return null; }
 }
+// Same as fbGet, but doesn't blur the line between "the server answered and
+// there's genuinely nothing at this path" and "the request never reached the
+// server at all" (offline, DNS/firewall block, timeout, etc). Plain fbGet
+// returns null either way, which used to make a login on a spotty connection
+// look exactly like "no such account" instead of "couldn't check right now".
+async function fbGetWithStatus(path){
+  if(!syncEnabled()) return { ok:false, networkError:false, data:null };
+  try{
+    const res = await fetch(fbUrl(path));
+    if(!res.ok) return { ok:false, networkError:true, data:null };
+    return { ok:true, networkError:false, data: await res.json() };
+  }catch(e){ return { ok:false, networkError:true, data:null }; }
+}
 async function fbSet(path, data){
   if(!syncEnabled()) return false;
   try{
@@ -690,12 +698,20 @@ async function fbSet(path, data){
     return res.ok;
   }catch(e){ return false; }
 }
-// account record (nick + PIN hash) stored under accounts/<nickLower>
-async function pullAccountFromCloud(nickLower){ return fbGet('accounts/'+nickLower); }
-async function pushAccountToCloud(nickLower, accountData){ return fbSet('accounts/'+nickLower, accountData); }
-// full app state stored under states/<nickLower>
-async function pullStateFromCloud(nickLower){ return fbGet('states/'+nickLower); }
-async function pushStateToCloud(nickLower, stateData){ return fbSet('states/'+nickLower, stateData); }
+// One retry after a short pause — smooths over a single dropped request
+// (e.g. phone briefly switching from wifi to mobile data) instead of just
+// silently failing to sync that edit.
+async function fbSetWithRetry(path, data){
+  if(await fbSet(path, data)) return true;
+  await new Promise(r=>setTimeout(r, 1200));
+  return fbSet(path, data);
+}
+// account record (nick + PIN hash) stored under daybox_accounts/<nickLower>
+async function pullAccountFromCloud(nickLower){ return fbGetWithStatus('daybox_accounts/'+nickLower); }
+async function pushAccountToCloud(nickLower, accountData){ return fbSetWithRetry('daybox_accounts/'+nickLower, accountData); }
+// full app state stored under daybox_states/<nickLower>
+async function pullStateFromCloud(nickLower){ return fbGetWithStatus('daybox_states/'+nickLower); }
+async function pushStateToCloud(nickLower, stateData){ return fbSetWithRetry('daybox_states/'+nickLower, stateData); }
 
 function uuid(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c=='x'?r:(r&0x3|0x8);return v.toString(16);});}
 function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -774,7 +790,8 @@ async function pullCloudStateIntoLocalCache(nickLower){
   // otherwise pulling now would overwrite that edit with the older cloud copy
   // and make it look like the change "didn't sync".
   if(cloudSyncTimeout || cloudPushInFlight) return false;
-  const remote = await pullStateFromCloud(nickLower);
+  const res = await pullStateFromCloud(nickLower);
+  const remote = res.data;
   if(remote){
     let localRaw=null;
     try{ localRaw = JSON.parse(localStorage.getItem('daybox_state_v1::'+nickLower)); }catch(e){}
@@ -1696,7 +1713,10 @@ document.getElementById('nameInput').addEventListener('change', async (e)=>{
     const newKey=val.toLowerCase();
     const accounts=loadAccounts();
     if(newKey!==activeAccount){
-      if(accounts[newKey] || (syncEnabled() && await pullAccountFromCloud(newKey))){ toast('Такой никнейм уже занят'); refreshSettingsUI(); return; }
+      let takenCheck={ok:true,networkError:false,data:null};
+      if(syncEnabled()){ takenCheck=await pullAccountFromCloud(newKey); }
+      if(takenCheck.networkError){ toast('Не удалось проверить никнейм — нет соединения с сервером синхронизации'); refreshSettingsUI(); return; }
+      if(accounts[newKey] || takenCheck.data){ toast('Такой никнейм уже занят'); refreshSettingsUI(); return; }
       const oldKey=activeAccount;
       const acc=accounts[oldKey] || { nick:val, pinHash:'' };
       delete accounts[oldKey];
@@ -1791,9 +1811,23 @@ function refreshAccountUI(){
     const nick=(accounts[activeAccount] && accounts[activeAccount].nick) || activeAccount;
     document.getElementById('accNickDisplay').textContent = nick;
     if(sidebarLabel) sidebarLabel.textContent = nick;
+    refreshSyncStatusUI();
   } else if(sidebarLabel){
     sidebarLabel.textContent = 'Аккаунт';
   }
+}
+// Actually round-trips a value to the cloud DB and back, so the status shown
+// reflects whether sync is really working right now — not just whether a
+// FIREBASE_DB_URL happens to be set.
+let lastSyncCheck = null; // 'ok' | 'error' | null (checking)
+async function refreshSyncStatusUI(){
+  const el = document.getElementById('accSyncStatus');
+  if(!el) return;
+  if(!syncEnabled()){ el.textContent = 'Синхронизация между устройствами отключена'; return; }
+  el.textContent = 'Проверка синхронизации…';
+  const ok = await fbSet('daybox_health/'+activeAccount, Date.now());
+  lastSyncCheck = ok ? 'ok' : 'error';
+  el.textContent = ok ? 'Синхронизация активна ✓' : 'Нет связи с сервером синхронизации — изменения сохраняются только на этом устройстве';
 }
 async function switchAccount(nickLower){
   activeAccount = nickLower;
@@ -1814,8 +1848,9 @@ document.getElementById('accRegisterBtn').addEventListener('click', async ()=>{
   if(accounts[key]){ toast('Такой никнейм уже занят'); return; }
   if(syncEnabled()){
     toast('Проверка никнейма...');
-    const remoteAcc = await pullAccountFromCloud(key);
-    if(remoteAcc){ toast('Такой никнейм уже занят'); return; }
+    const res = await pullAccountFromCloud(key);
+    if(res.networkError){ toast('Нет соединения с сервером синхронизации — попробуйте ещё раз'); return; }
+    if(res.data){ toast('Такой никнейм уже занят'); return; }
   }
   const accountData = { nick, pinHash: simpleHash(pin) };
   accounts[key]=accountData;
@@ -1836,15 +1871,18 @@ document.getElementById('accLoginBtn').addEventListener('click', async ()=>{
   const pin=document.getElementById('accLoginPin').value.trim();
   if(!nick || !validPin(pin)){ toast('Введите никнейм и 4-значный PIN'); return; }
   const key=nick.toLowerCase();
-  let acc=null;
+  let acc=null, hadNetworkError=false;
   if(syncEnabled()){
     toast('Вход...');
-    acc = await pullAccountFromCloud(key); // authoritative copy, works on a brand-new device
+    const res = await pullAccountFromCloud(key); // authoritative copy, works on a brand-new device
+    acc = res.data;
+    hadNetworkError = res.networkError;
   }
   if(!acc){
     const accounts=loadAccounts();
     acc=accounts[key];
   }
+  if(!acc && hadNetworkError){ toast('Нет соединения с сервером синхронизации — попробуйте ещё раз'); return; }
   if(!acc || acc.pinHash!==simpleHash(pin)){ toast('Неверный никнейм или PIN'); return; }
   const accounts=loadAccounts(); accounts[key]=acc; saveAccounts(accounts); // keep a local cache for offline use
   document.getElementById('accLoginNick').value=''; document.getElementById('accLoginPin').value='';
