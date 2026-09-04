@@ -304,7 +304,7 @@ button.settings-row{-webkit-appearance:none;appearance:none;margin:0;cursor:poin
 
 @media(max-width:860px){
   .sidebar{display:none;}
-  main{padding:18px 16px 90px;max-width:100%;}
+  main{padding:calc(env(safe-area-inset-top, 0px) + 18px) 16px 90px;max-width:100%;}
   .mobile-nav{display:flex;position:fixed;bottom:10px;left:10px;right:10px;background:var(--card);-webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);border:1px solid var(--border);border-radius:22px;padding:6px 6px min(8px + env(safe-area-inset-bottom), 14px);align-items:stretch;justify-content:space-around;z-index:80;box-shadow:var(--shadow);}
   .mnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-faint);background:none;border:none;font-size:10.5px;padding:6px 8px;border-radius:10px;flex:1;min-height:50px;line-height:1.1;}
   .mnav-item.active{color:var(--accent);}
@@ -504,6 +504,7 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
       <div class="settings-section">
         <h4>Уведомления</h4>
         <div class="settings-row">Напоминания о задачах <div class="switch" id="toggleReminders"><div class="dot"></div></div></div>
+        <p class="subtext" style="margin-top:6px;">Приходят как настоящие уведомления, пока DayBox открыт — вкладкой в браузере или установленным на главный экран приложением, даже в фоне. Если полностью закрыть браузер/приложение, уведомления не придут.</p>
       </div>
 
       <div class="settings-section">
@@ -595,6 +596,20 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
     <div class="field-row">
       <div class="field"><label for="tDate">Дата</label><input id="tDate" type="date"></div>
       <div class="field"><label for="tTime">Время</label><input id="tTime" type="time"></div>
+    </div>
+    <div class="field" id="tRemindWrap" style="display:none;">
+      <label for="tRemind">Напомнить</label>
+      <select id="tRemind">
+        <option value="">Не напоминать</option>
+        <option value="0">Точно во время события</option>
+        <option value="5">За 5 минут</option>
+        <option value="10">За 10 минут</option>
+        <option value="15">За 15 минут</option>
+        <option value="30">За 30 минут</option>
+        <option value="60">За 1 час</option>
+        <option value="120">За 2 часа</option>
+        <option value="1440">За 1 день</option>
+      </select>
     </div>
     <div class="field-row">
       <div class="field"><label for="tPriority">Приоритет</label>
@@ -1029,6 +1044,11 @@ function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':
 
 /* ---------- Task Modal ---------- */
 let editingTaskId=null;
+function refreshRemindVisibility(){
+  const has = !!document.getElementById('tTime').value;
+  document.getElementById('tRemindWrap').style.display = has ? 'block' : 'none';
+}
+document.getElementById('tTime').addEventListener('change', refreshRemindVisibility);
 function openTaskModal(dateForNew){
   editingTaskId=null;
   document.getElementById('taskModalTitle').textContent='Добавить задачу';
@@ -1036,12 +1056,15 @@ function openTaskModal(dateForNew){
   document.getElementById('tDesc').value='';
   document.getElementById('tDate').value= dateForNew || todayISO();
   document.getElementById('tTime').value='';
+  document.getElementById('tRemind').value='15';
   document.getElementById('tPriority').value='MEDIUM';
   refreshCategorySelects();
   document.getElementById('tCategory').value=state.categories[0];
   document.getElementById('newCatWrap').style.display='none';
   document.getElementById('tNewCat').value='';
+  refreshRemindVisibility();
   openOverlay('taskModalOverlay');
+  maybePromptNotificationPermission();
 }
 function openEditTaskModal(id){
   const t=state.tasks.find(x=>x.id===id); if(!t) return;
@@ -1051,11 +1074,14 @@ function openEditTaskModal(id){
   document.getElementById('tDesc').value=t.description||'';
   document.getElementById('tDate').value=t.date||'';
   document.getElementById('tTime').value=t.time||'';
+  document.getElementById('tRemind').value = (t.remind===null||t.remind===undefined) ? '' : String(t.remind);
   document.getElementById('tPriority').value=t.priority;
   refreshCategorySelects();
   document.getElementById('tCategory').value=t.category;
   document.getElementById('newCatWrap').style.display='none';
+  refreshRemindVisibility();
   openOverlay('taskModalOverlay');
+  maybePromptNotificationPermission();
 }
 document.getElementById('addTaskBtn').addEventListener('click', ()=>openTaskModal());
 document.getElementById('taskCancelBtn').addEventListener('click', ()=>closeOverlay('taskModalOverlay'));
@@ -1069,17 +1095,22 @@ document.getElementById('taskSaveBtn').addEventListener('click', ()=>{
   const newCat=document.getElementById('tNewCat').value.trim();
   let category=document.getElementById('tCategory').value;
   if(newCat){ if(!state.categories.includes(newCat)) state.categories.push(newCat); category=newCat; }
+  const time = document.getElementById('tTime').value || null;
+  const remindRaw = document.getElementById('tRemind').value;
+  const remind = (time && remindRaw!=='') ? Number(remindRaw) : null;
   const data={
     title,
     description:document.getElementById('tDesc').value.trim(),
     date:document.getElementById('tDate').value || null,
-    time:document.getElementById('tTime').value || null,
+    time,
+    remind,
     priority:document.getElementById('tPriority').value,
     category
   };
   if(editingTaskId){
     const t=state.tasks.find(x=>x.id===editingTaskId);
     Object.assign(t,data);
+    forgetTaskNotification(editingTaskId); // edited: allow the reminder to fire again with new data
     toast('Задача обновлена');
   }else{
     state.tasks.push(Object.assign({id:uuid(),completed:false,completedAt:null,xpAwarded:0,createdAt:nowISO()}, data));
@@ -1792,7 +1823,10 @@ document.getElementById('nameInput').addEventListener('change', async (e)=>{
 });
 function initSwitch(id,key){
   const el=document.getElementById(id);
-  el.addEventListener('click', ()=>{ state.settings[key]=!state.settings[key]; save(); refreshSettingsUI(); });
+  el.addEventListener('click', ()=>{
+    state.settings[key]=!state.settings[key]; save(); refreshSettingsUI();
+    if(key==='reminders' && state.settings.reminders) requestNotificationPermission(true);
+  });
 }
 initSwitch('toggleReminders','reminders');
 function refreshSettingsUI(){
@@ -1971,10 +2005,89 @@ function renderAll(){
   refreshSettingsUI();
 }
 
+/* ---------- Task reminders (browser/OS notifications) ----------
+   These fire while DayBox is open — as a foreground or background tab on
+   a computer, or as the installed app on a phone running in the background.
+   Like any website, DayBox cannot wake itself up after it has been fully
+   closed/swiped away with no process running — that would require a push
+   server. Keeping the app open in the background is enough for reminders
+   to arrive on time. */
+let swRegistration=null;
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>{ swRegistration=reg; }).catch(()=>{});
+}
+function notificationsSupported(){ return typeof Notification!=='undefined'; }
+function requestNotificationPermission(showFeedback){
+  if(!notificationsSupported()){
+    if(showFeedback) toast('Этот браузер не поддерживает уведомления');
+    return;
+  }
+  if(Notification.permission==='granted') return;
+  if(Notification.permission==='denied'){
+    if(showFeedback) toast('Уведомления заблокированы в настройках браузера/сайта');
+    return;
+  }
+  Notification.requestPermission().then(p=>{
+    if(showFeedback) toast(p==='granted' ? 'Уведомления включены' : 'Уведомления не разрешены');
+  });
+}
+// Nudge for permission the first time someone actually sets a reminder on a
+// task, rather than immediately on page load (browsers ignore/penalize
+// permission prompts that aren't tied to a user action anyway).
+function maybePromptNotificationPermission(){
+  if(state.settings.reminders && notificationsSupported() && Notification.permission==='default'){
+    requestNotificationPermission(false);
+  }
+}
+const FIRED_KEY='daybox_fired_reminders_v1';
+function loadFired(){ try{ return JSON.parse(localStorage.getItem(FIRED_KEY))||{}; }catch(e){ return {}; } }
+function saveFired(map){ try{ localStorage.setItem(FIRED_KEY, JSON.stringify(map)); }catch(e){} }
+function forgetTaskNotification(taskId){
+  const fired=loadFired();
+  if(fired[taskId]){ delete fired[taskId]; saveFired(fired); }
+}
+function showTaskNotification(t){
+  const title = t.remind===0 ? `Сейчас: ${t.title}` : `Скоро: ${t.title}`;
+  const body = t.time ? `Задача в ${t.time}${t.description?' — '+t.description:''}` : (t.description||'');
+  const opts={ body, tag:'daybox-task-'+t.id, icon:undefined, data:{taskId:t.id} };
+  if(swRegistration && swRegistration.showNotification){
+    swRegistration.showNotification(title, opts).catch(()=>{ try{ new Notification(title, opts); }catch(e){} });
+  } else {
+    try{ new Notification(title, opts); }catch(e){}
+  }
+}
+function checkTaskReminders(){
+  if(!state.settings.reminders || !notificationsSupported() || Notification.permission!=='granted') return;
+  const fired=loadFired();
+  const now=Date.now();
+  let changed=false;
+  state.tasks.forEach(t=>{
+    if(t.completed || !t.date || !t.time || t.remind===null || t.remind===undefined) return;
+    if(fired[t.id]) return;
+    const due=new Date(`${t.date}T${t.time}:00`).getTime();
+    if(isNaN(due)) return;
+    const fireAt = due - t.remind*60000;
+    // Fire once we've reached the moment, but skip stale reminders from
+    // long before the app was last open so re-opening the app doesn't
+    // dump a pile of old notifications at once.
+    if(now>=fireAt && now-fireAt < 15*60000){
+      showTaskNotification(t);
+      fired[t.id]=now;
+      changed=true;
+    } else if(now-fireAt >= 15*60000){
+      fired[t.id]=now; // too late to be useful — mark handled without notifying
+      changed=true;
+    }
+  });
+  if(changed) saveFired(fired);
+}
+setInterval(checkTaskReminders, 20000);
+
 /* ---------- Init ---------- */
 applyTheme();
 goTo('today');
 maybeShowOnboarding();
+checkTaskReminders();
 setInterval(()=>{ purgeExpiredNoDateTasks(); if(currentPage==='today') { renderToday(); } }, 60000); // refresh greeting/overdue/no-date expiry etc
 
 // If we're already logged into an account and cloud sync is configured,
