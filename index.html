@@ -712,6 +712,8 @@ function storeKey(){ return activeAccount ? ('daybox_state_v1::'+activeAccount) 
 function defaultState(){
   return {
     userId: uuid(),
+    updatedAt: 0, // ms timestamp of last local edit — used to stop a cloud poll
+                  // from clobbering a change that hasn't finished uploading yet
     settings:{ name:'', theme:'system', reminders:true, onboarded:false },
     categories:['Личное','Учёба','Работа','Другое'],
     tasks:[], // {id,title,description,date,time,priority,category,completed,completedAt,createdAt,xpAwarded}
@@ -733,9 +735,11 @@ function load(){
 }
 let saveTimeout=null;
 let cloudSyncTimeout=null;
+let cloudPushInFlight=false;
 function save(){
   clearTimeout(saveTimeout);
   saveTimeout=setTimeout(()=>{
+    state.updatedAt = Date.now();
     try{ localStorage.setItem(storeKey(), JSON.stringify(state)); }
     catch(e){ toast('Не удалось сохранить — нет места?'); }
     scheduleCloudSync();
@@ -746,14 +750,37 @@ function save(){
 function scheduleCloudSync(){
   if(!activeAccount || !syncEnabled()) return;
   clearTimeout(cloudSyncTimeout);
-  cloudSyncTimeout=setTimeout(()=>{ pushStateToCloud(activeAccount, state); }, 700);
+  cloudSyncTimeout=setTimeout(doCloudPush, 700);
+}
+async function doCloudPush(){
+  cloudSyncTimeout=null;
+  if(!activeAccount || !syncEnabled()) return;
+  cloudPushInFlight=true;
+  try{ await pushStateToCloud(activeAccount, state); }
+  finally{ cloudPushInFlight=false; }
+}
+// Pushes immediately, skipping the debounce — used when the app is about to
+// be closed/backgrounded so the last edit isn't lost before the 700ms timer fires.
+function flushCloudSyncNow(){
+  if(!activeAccount || !syncEnabled() || !cloudSyncTimeout) return;
+  clearTimeout(cloudSyncTimeout);
+  doCloudPush();
 }
 // Pulls the newest copy of an account's data from the cloud into this
 // device's local cache, so the next load() sees whatever the other device saved.
 async function pullCloudStateIntoLocalCache(nickLower){
   if(!syncEnabled()) return false;
+  // If this device has a local edit that hasn't finished uploading yet, skip —
+  // otherwise pulling now would overwrite that edit with the older cloud copy
+  // and make it look like the change "didn't sync".
+  if(cloudSyncTimeout || cloudPushInFlight) return false;
   const remote = await pullStateFromCloud(nickLower);
   if(remote){
+    let localRaw=null;
+    try{ localRaw = JSON.parse(localStorage.getItem('daybox_state_v1::'+nickLower)); }catch(e){}
+    const remoteTime = remote.updatedAt || 0;
+    const localTime = (localRaw && localRaw.updatedAt) || 0;
+    if(localRaw && remoteTime <= localTime) return false; // local cache is already at least as new
     try{ localStorage.setItem('daybox_state_v1::'+nickLower, JSON.stringify(remote)); }catch(e){}
     return true;
   }
@@ -1879,6 +1906,10 @@ refreshFromCloudOnStartup();
 if(activeAccount && syncEnabled()){
   setInterval(refreshFromCloudOnStartup, 20000);
 }
+// Make sure the very last edit actually reaches the cloud even if the user
+// closes the tab or switches apps before the normal 700ms debounce fires.
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushCloudSyncNow(); });
+window.addEventListener('pagehide', flushCloudSyncNow);
 
 })();
 </script>
