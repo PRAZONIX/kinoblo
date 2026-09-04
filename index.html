@@ -78,8 +78,10 @@ html.dark .glass{ box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.07);
 .theme-switch{display:flex;gap:3px;background:var(--card-2);border-radius:12px;padding:3px;}
 .theme-switch button{flex:1;border:none;background:none;padding:6px 4px;border-radius:9px;font-size:12px;color:var(--text-dim);}
 .theme-switch button.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.theme-switch-compact button{display:flex;align-items:center;justify-content:center;padding:8px;}
+.theme-switch-compact svg{width:16px;height:16px;}
 
-main{flex:1;min-width:0;padding:28px 32px 100px;max-width:900px;}
+main{flex:1;min-width:0;padding:28px 32px 100px;max-width:1220px;margin:0 auto;}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;gap:12px;}
 .topbar .date{color:var(--text-dim);font-size:14px;}
 .topbar-right{display:flex;align-items:center;gap:8px;}
@@ -94,6 +96,12 @@ main{flex:1;min-width:0;padding:28px 32px 100px;max-width:900px;}
 html.dark .card{box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.07);}
 .grid-top{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-bottom:16px;}
 @media(max-width:700px){.grid-top{grid-template-columns:1fr;}}
+.today-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
+.today-aside{display:flex;flex-direction:column;gap:14px;}
+.today-aside .card{padding:16px;}
+.stat-grid.mini{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:0;}
+.stat-grid.mini .stat-card{padding:11px;}
+.stat-grid.mini .stat-num{font-size:18px;}
 
 .progress-num{font-size:34px;font-weight:700;letter-spacing:-0.02em;}
 .progress-sub{color:var(--text-dim);font-size:13px;margin-top:2px;}
@@ -120,6 +128,7 @@ html.dark .card{box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.07);}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px;}
 .section-head h3{font-size:15px;font-weight:700;}
 .filters{display:flex;gap:6px;flex-wrap:wrap;}
+.page-narrow{max-width:640px;margin:0 auto;}
 
 .quick-add{display:flex;gap:8px;margin-bottom:14px;}
 .quick-add input{flex:1;border:1px solid var(--border);background:var(--card);border-radius:14px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;-webkit-backdrop-filter:blur(var(--glass-blur));backdrop-filter:blur(var(--glass-blur));}
@@ -265,6 +274,8 @@ button.settings-row{-webkit-appearance:none;appearance:none;margin:0;cursor:poin
   .mnav-item.active{color:var(--accent);}
   .mnav-item svg{width:19px;height:19px;}
   .grid-top{grid-template-columns:1fr;}
+  .today-layout{display:block;}
+  .today-aside{display:none;}
 }
 @media(max-width:380px){
   .stat-grid{grid-template-columns:1fr 1fr;}
@@ -288,10 +299,13 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         Аккаунт
       </button>
-      <div class="theme-switch" style="margin-top:10px;" role="radiogroup" aria-label="Тема">
-        <button data-theme="light" role="radio">Светлая</button>
-        <button data-theme="dark" role="radio">Тёмная</button>
-        <button data-theme="system" role="radio">Авто</button>
+      <div class="theme-switch theme-switch-compact" style="margin-top:10px;" role="radiogroup" aria-label="Тема">
+        <button data-theme="light" role="radio" aria-label="Светлая тема" title="Светлая">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </button>
+        <button data-theme="dark" role="radio" aria-label="Тёмная тема" title="Тёмная">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -301,11 +315,6 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
       <div>
         <div class="date" id="topDate"></div>
       </div>
-      <div class="topbar-right">
-        <button class="icon-btn" id="searchBtn" aria-label="Поиск (/)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        </button>
-      </div>
     </div>
 
     <!-- TODAY PAGE -->
@@ -313,59 +322,88 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
       <h2 class="greeting" id="greetingText"></h2>
       <p class="subtext" id="greetingSub">Пусть этот день будет продуктивным.</p>
 
-      <div class="grid-top">
-        <div class="card">
-          <p class="subtext" style="margin-bottom:2px;">Прогресс за сегодня</p>
-          <div class="progress-num" id="progressPct">0%</div>
-          <div class="progress-sub" id="progressSub">0 из 0 задач выполнено</div>
-          <div class="bar-track"><div class="bar-fill" id="progressBar" style="width:0%"></div></div>
-        </div>
-        <div class="card">
-          <div class="level-row">
-            <span class="level-badge" id="levelBadge">Уровень 1</span>
-            <span class="xp-txt" id="xpTxt">0 / 100 XP</span>
+      <div class="today-layout">
+        <div class="today-main">
+          <div class="grid-top">
+            <div class="card">
+              <p class="subtext" style="margin-bottom:2px;">Прогресс за сегодня</p>
+              <div class="progress-num" id="progressPct">0%</div>
+              <div class="progress-sub" id="progressSub">0 из 0 задач выполнено</div>
+              <div class="bar-track"><div class="bar-fill" id="progressBar" style="width:0%"></div></div>
+            </div>
+            <div class="card">
+              <div class="level-row">
+                <span class="level-badge" id="levelBadge">Уровень 1</span>
+                <span class="xp-txt" id="xpTxt">0 / 100 XP</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="xpBar" style="width:0%"></div></div>
+              <div class="streak-row"><span id="streakTxt">🔥 0 дней подряд</span></div>
+            </div>
           </div>
-          <div class="bar-track"><div class="bar-fill" id="xpBar" style="width:0%"></div></div>
-          <div class="streak-row"><span id="streakTxt">🔥 0 дней подряд</span></div>
-        </div>
-      </div>
 
-      <div class="section-head">
-        <h3>Задачи на сегодня</h3>
-        <div class="filters" id="taskFilters">
-          <button class="chip active" data-filter="all">Все</button>
-          <button class="chip" data-filter="active">Активные</button>
-          <button class="chip" data-filter="completed">Выполненные</button>
-        </div>
-      </div>
-      <div class="quick-add">
-        <input type="text" id="quickAddInput" placeholder="Что дальше? Enter — добавить" aria-label="Быстрое добавление задачи">
-        <button class="btn btn-primary" id="addTaskBtn">+ Добавить задачу</button>
-      </div>
-      <div class="task-list" id="todayTaskList"></div>
+          <div class="section-head">
+            <h3>Задачи на сегодня</h3>
+            <div class="filters" id="taskFilters">
+              <button class="chip active" data-filter="all">Все</button>
+              <button class="chip" data-filter="active">Активные</button>
+              <button class="chip" data-filter="completed">Выполненные</button>
+            </div>
+          </div>
+          <div class="quick-add">
+            <input type="text" id="quickAddInput" placeholder="Что дальше? Enter — добавить" aria-label="Быстрое добавление задачи">
+            <button class="btn btn-primary" id="addTaskBtn">+ Добавить задачу</button>
+          </div>
+          <div class="task-list" id="todayTaskList"></div>
 
-      <div class="section-head"><h3>Быстрая заметка</h3></div>
-      <div class="card note-box">
-        <textarea id="noteInput" placeholder="Запишите что-нибудь…"></textarea>
-        <div style="margin-top:8px;display:flex;justify-content:flex-end;">
-          <button class="btn btn-primary" id="saveNoteBtn">Сохранить заметку</button>
+          <div class="section-head"><h3>Быстрая заметка</h3></div>
+          <div class="card note-box">
+            <textarea id="noteInput" placeholder="Запишите что-нибудь…"></textarea>
+            <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+              <button class="btn btn-primary" id="saveNoteBtn">Сохранить заметку</button>
+            </div>
+            <div id="recentNotes"></div>
+          </div>
         </div>
-        <div id="recentNotes"></div>
+
+        <aside class="today-aside">
+          <div class="card">
+            <div class="cal-nav">
+              <button class="icon-btn" id="calPrevMini" aria-label="Предыдущий месяц">‹</button>
+              <strong id="calLabelMini"></strong>
+              <button class="icon-btn" id="calNextMini" aria-label="Следующий месяц">›</button>
+            </div>
+            <div class="cal-grid" id="calGridMini"></div>
+          </div>
+          <div class="card">
+            <p class="subtext" style="margin-bottom:10px;">Статистика</p>
+            <div class="stat-grid mini">
+              <div class="stat-card"><div class="stat-num" id="statTodayMini">0</div><div class="stat-lbl">Сегодня</div></div>
+              <div class="stat-card"><div class="stat-num" id="statWeekMini">0</div><div class="stat-lbl">За неделю</div></div>
+              <div class="stat-card"><div class="stat-num" id="statStreakMini">0</div><div class="stat-lbl">Дней подряд</div></div>
+              <div class="stat-card"><div class="stat-num" id="statXpMini">0</div><div class="stat-lbl">Всего XP</div></div>
+            </div>
+            <svg id="weekChartMini" viewBox="0 0 280 100" style="width:100%;height:80px;margin-top:10px;"></svg>
+          </div>
+        </aside>
       </div>
     </section>
 
     <!-- INBOX -->
     <section data-page="inbox">
-      <h2 class="greeting">Входящие</h2>
-      <p class="subtext">Задачи без даты. Назначьте её, когда будете готовы.</p>
-      <div class="task-list" id="inboxList" style="margin-top:18px;"></div>
+      <div class="page-narrow">
+        <h2 class="greeting">Входящие</h2>
+        <p class="subtext">Задачи без даты. Назначьте её, когда будете готовы.</p>
+        <div class="task-list" id="inboxList" style="margin-top:18px;"></div>
+      </div>
     </section>
 
     <!-- UPCOMING -->
     <section data-page="upcoming">
-      <h2 class="greeting">Ближайшее</h2>
-      <p class="subtext">Всё, что впереди, сгруппировано по срокам.</p>
-      <div id="upcomingGroups" style="margin-top:18px;"></div>
+      <div class="page-narrow">
+        <h2 class="greeting">Ближайшее</h2>
+        <p class="subtext">Всё, что впереди, сгруппировано по срокам.</p>
+        <div id="upcomingGroups" style="margin-top:18px;"></div>
+      </div>
     </section>
 
     <!-- CALENDAR -->
@@ -385,11 +423,13 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
 
     <!-- GOALS -->
     <section data-page="goals">
-      <div class="section-head" style="margin-top:0;">
-        <h2 class="greeting" style="margin:0;">Цели</h2>
-        <button class="btn btn-primary" id="addGoalBtn">+ Новая цель</button>
+      <div class="page-narrow">
+        <div class="section-head" style="margin-top:0;">
+          <h2 class="greeting" style="margin:0;">Цели</h2>
+          <button class="btn btn-primary" id="addGoalBtn">+ Новая цель</button>
+        </div>
+        <div id="goalsList" style="margin-top:14px;"></div>
       </div>
-      <div id="goalsList" style="margin-top:14px;"></div>
     </section>
 
     <!-- STATISTICS -->
@@ -741,7 +781,6 @@ document.addEventListener('keydown',(e)=>{
   if(document.querySelector('.overlay.show')) return;
   if(e.key==='n'||e.key==='N'){ e.preventDefault(); openTaskModal(); }
   else if(e.key==='f'||e.key==='F'){ e.preventDefault(); goTo('today'); }
-  else if(e.key==='/'){ e.preventDefault(); openSearch(); }
 });
 
 /* ---------- XP / Level ---------- */
@@ -1181,12 +1220,9 @@ function renderUpcoming(){
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 function renderCalendar(){
   const label=new Date(calYear,calMonth,1).toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
-  document.getElementById('calLabel').textContent=label;
-  const grid=document.getElementById('calGrid');
-  grid.innerHTML='';
-  ['вс','пн','вт','ср','чт','пт','сб'].forEach(d=>{
-    const el=document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
-  });
+  const labelEl=document.getElementById('calLabel'); if(labelEl) labelEl.textContent=label;
+  const labelElMini=document.getElementById('calLabelMini'); if(labelElMini) labelElMini.textContent=label;
+
   const first=new Date(calYear,calMonth,1);
   const startOffset=first.getDay();
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
@@ -1195,16 +1231,25 @@ function renderCalendar(){
   for(let i=startOffset-1;i>=0;i--) cells.push({d:daysInPrev-i, other:true, month:calMonth-1});
   for(let d=1;d<=daysInMonth;d++) cells.push({d, other:false, month:calMonth});
   while(cells.length%7!==0 || cells.length<42) { const nd=cells.length - (startOffset+daysInMonth) + 1; cells.push({d:nd,other:true,month:calMonth+1}); if(cells.length>=42) break;}
-  cells.forEach(c=>{
-    let y=calYear, m=c.month;
-    if(m<0){m=11;y--;} if(m>11){m=0;y++;}
-    const iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(c.d).padStart(2,'0');
-    const hasTask=state.tasks.some(t=>t.date===iso);
-    const el=document.createElement('button');
-    el.className='cal-day'+(c.other?' other':'')+(iso===todayISO()?' today':'')+(iso===calSelectedDate?' sel':'');
-    el.innerHTML=`<span>${c.d}</span>${hasTask?'<span class="dot"></span>':''}`;
-    el.addEventListener('click', ()=>{ calSelectedDate=iso; renderCalendar(); renderCalDay(); });
-    grid.appendChild(el);
+
+  ['calGrid','calGridMini'].forEach(gridId=>{
+    const grid=document.getElementById(gridId);
+    if(!grid) return;
+    grid.innerHTML='';
+    ['вс','пн','вт','ср','чт','пт','сб'].forEach(d=>{
+      const el=document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
+    });
+    cells.forEach(c=>{
+      let y=calYear, m=c.month;
+      if(m<0){m=11;y--;} if(m>11){m=0;y++;}
+      const iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(c.d).padStart(2,'0');
+      const hasTask=state.tasks.some(t=>t.date===iso);
+      const el=document.createElement('button');
+      el.className='cal-day'+(c.other?' other':'')+(iso===todayISO()?' today':'')+(iso===calSelectedDate?' sel':'');
+      el.innerHTML=`<span>${c.d}</span>${hasTask?'<span class="dot"></span>':''}`;
+      el.addEventListener('click', ()=>{ calSelectedDate=iso; renderCalendar(); renderCalDay(); });
+      grid.appendChild(el);
+    });
   });
 }
 function renderCalDay(){
@@ -1222,6 +1267,8 @@ function renderCalDay(){
 }
 document.getElementById('calPrev').addEventListener('click', ()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); });
 document.getElementById('calNext').addEventListener('click', ()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); });
+document.getElementById('calPrevMini').addEventListener('click', ()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); });
+document.getElementById('calNextMini').addEventListener('click', ()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); });
 
 /* ---------- Goals ---------- */
 let editingGoalId=null;
@@ -1310,18 +1357,18 @@ function renderStatistics(){
   const doneWeek=completed.filter(t=>t.completedAt.slice(0,10)>=weekAgoISO).length;
   const doneMonth=completed.filter(t=>t.completedAt.slice(0,10)>=monthAgoISO).length;
 
-  document.getElementById('statToday').textContent=doneToday;
-  document.getElementById('statWeek').textContent=doneWeek;
-  document.getElementById('statMonth').textContent=doneMonth;
-  document.getElementById('statXp').textContent=xpTotalEarned();
-  document.getElementById('statStreak').textContent=currentStreak();
+  const setTxt=(id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  setTxt('statToday',doneToday); setTxt('statTodayMini',doneToday);
+  setTxt('statWeek',doneWeek); setTxt('statWeekMini',doneWeek);
+  setTxt('statMonth',doneMonth);
+  setTxt('statXp',xpTotalEarned()); setTxt('statXpMini',xpTotalEarned());
+  setTxt('statStreak',currentStreak()); setTxt('statStreakMini',currentStreak());
 
   // 7-day chart
   const days=[];
   for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')); }
   const counts=days.map(iso=>completed.filter(t=>t.completedAt.slice(0,10)===iso).length);
   const max=Math.max(1,...counts);
-  const svg=document.getElementById('weekChart');
   const barW=28, gap=12, chartH=80;
   let svgHTML='';
   counts.forEach((c,i)=>{
@@ -1332,12 +1379,11 @@ function renderStatistics(){
     svgHTML+=`<rect x="${x}" y="${y}" width="${barW}" height="${h||2}" rx="5" fill="var(--accent)" opacity="${days[i]===today?1:0.55}"/>
       <text x="${x+barW/2}" y="98" text-anchor="middle" font-size="9" fill="var(--text-faint)">${dow}</text>`;
   });
-  svg.innerHTML=svgHTML;
+  ['weekChart','weekChartMini'].forEach(id=>{ const svg=document.getElementById(id); if(svg) svg.innerHTML=svgHTML; });
 }
 
 /* ---------- Search ---------- */
 function openSearch(){ openOverlay('searchOverlay'); document.getElementById('searchInput').value=''; document.getElementById('searchResults').innerHTML=''; }
-document.getElementById('searchBtn').addEventListener('click', openSearch);
 document.getElementById('searchInput').addEventListener('input', (e)=>{
   const q=e.target.value.trim().toLowerCase();
   const res=document.getElementById('searchResults');
