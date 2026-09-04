@@ -208,9 +208,27 @@ html.dark .swipe-btn{box-shadow:0 2px 10px rgba(0,0,0,.35);}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 
 /* Toasts */
-.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:200;}
-.toast{background:var(--card);color:var(--text);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid var(--border);padding:11px 15px;border-radius:14px;font-size:13px;box-shadow:var(--shadow);animation:toastin .25s cubic-bezier(.2,.9,.3,1.1);max-width:280px;}
+.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:400;}
+.toast{display:flex;align-items:flex-start;gap:10px;background:var(--card);color:var(--text);-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);border:1px solid var(--border);padding:11px 15px;border-radius:14px;font-size:13px;box-shadow:var(--shadow);animation:toastin .25s cubic-bezier(.2,.9,.3,1.1);max-width:280px;}
+.toast-icon{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg, var(--accent), var(--accent-2));flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;margin-top:1px;}
+.toast-text{flex:1;min-width:0;}
+.toast-title{font-weight:700;font-size:12px;margin-bottom:1px;display:flex;justify-content:space-between;gap:8px;color:var(--text);}
+.toast-title .toast-time{font-weight:500;color:var(--text-faint);font-size:10.5px;flex-shrink:0;}
+.toast-msg{font-size:12.5px;color:var(--text-dim);line-height:1.35;}
 @keyframes toastin{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* On phones, notifications behave like real system notifications: they drop
+   down from the top of the screen instead of stacking in the bottom corner. */
+@media(max-width:860px){
+  .toast-wrap{
+    top:calc(env(safe-area-inset-top, 0px) + 10px);
+    bottom:auto;left:50%;right:auto;transform:translateX(-50%);
+    width:calc(100% - 24px);max-width:420px;
+    align-items:stretch;
+  }
+  .toast{max-width:none;width:100%;padding:12px 14px;border-radius:16px;animation:toastin-top .32s cubic-bezier(.2,.9,.3,1.1);}
+  @keyframes toastin-top{from{opacity:0;transform:translateY(-16px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+}
 
 /* Calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
@@ -302,7 +320,7 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
     <div class="sidebar-footer">
       <button class="nav-item" data-nav="account" aria-label="Аккаунт">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Аккаунт
+        <span id="sidebarAccountLabel">Аккаунт</span>
       </button>
       <div class="theme-switch theme-switch-compact" style="margin-top:10px;" role="radiogroup" aria-label="Тема">
         <button data-theme="light" role="radio" aria-label="Светлая тема" title="Светлая">
@@ -352,6 +370,11 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
           </div>
           <div class="task-list" id="todayTaskList"></div>
 
+          <div id="noDateSection" style="display:none;">
+            <div class="section-head"><h3>Без даты</h3></div>
+            <div class="task-list" id="noDateTaskList"></div>
+          </div>
+
           <div class="section-head"><h3>Быстрая заметка</h3></div>
           <div class="card note-box">
             <textarea id="noteInput" placeholder="Запишите что-нибудь…"></textarea>
@@ -386,15 +409,6 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
             <svg id="weekChartMini" viewBox="0 0 280 100" style="width:100%;height:80px;margin-top:10px;"></svg>
           </div>
         </aside>
-      </div>
-    </section>
-
-    <!-- INBOX -->
-    <section data-page="inbox">
-      <div class="page-narrow">
-        <h2 class="greeting">Входящие</h2>
-        <p class="subtext">Задачи без даты. Назначьте её, когда будете готовы.</p>
-        <div class="task-list" id="inboxList" style="margin-top:18px;"></div>
       </div>
     </section>
 
@@ -469,7 +483,8 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
 
       <div class="settings-section">
         <h4>Профиль</h4>
-        <div class="field"><label for="nameInput">Ваше имя</label><input id="nameInput" type="text" placeholder="Александр"></div>
+        <div class="field"><label for="nameInput">Никнейм</label><input id="nameInput" type="text" placeholder="Ваш никнейм" autocomplete="username"></div>
+        <p class="subtext" id="nickHintText" style="margin-top:6px;"></p>
       </div>
 
       <div class="settings-section">
@@ -541,7 +556,6 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
         <div style="display:flex;flex-direction:column;gap:8px;">
           <button class="settings-row link" data-nav="calendar">Календарь <span>›</span></button>
           <button class="settings-row link" data-nav="statistics">Статистика <span>›</span></button>
-          <button class="settings-row link" data-nav="inbox">Входящие <span>›</span></button>
           <button class="settings-row link" data-nav="settings">Настройки <span>›</span></button>
         </div>
       </div>
@@ -690,7 +704,10 @@ function save(){
 function toast(msg){
   const wrap=document.getElementById('toastWrap');
   const el=document.createElement('div');
-  el.className='toast'; el.textContent=msg;
+  el.className='toast';
+  const time=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  el.innerHTML=`<div class="toast-icon">D</div><div class="toast-text"><div class="toast-title"><span>DayBox</span><span class="toast-time">${time}</span></div><div class="toast-msg"></div></div>`;
+  el.querySelector('.toast-msg').textContent=msg;
   wrap.appendChild(el);
   setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 2600);
 }
@@ -718,18 +735,17 @@ document.querySelectorAll('.theme-switch button[data-theme]').forEach(b=>{
 });
 
 /* ---------- Navigation ---------- */
-const PAGES=['today','inbox','upcoming','calendar','goals','statistics','settings','account'];
+const PAGES=['today','upcoming','calendar','goals','statistics','settings','account'];
 const NAV_ICONS={
   today:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
-  inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>',
   upcoming:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
   calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   goals:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
   statistics:'<path d="M3 3v18h18"/><path d="M7 15l4-6 3 3 5-8"/>',
 };
-const NAV_LABELS={today:'Сегодня',inbox:'Входящие',upcoming:'Ближайшее',calendar:'Календарь',goals:'Цели',statistics:'Статистика'};
+const NAV_LABELS={today:'Сегодня',upcoming:'Ближайшее',calendar:'Календарь',goals:'Цели',statistics:'Статистика'};
 const navList=document.getElementById('navList');
-const MAIN_NAV=['today','inbox','upcoming','goals'];
+const MAIN_NAV=['today','upcoming','goals'];
 MAIN_NAV.forEach(p=>{
   const li=document.createElement('li');
   li.innerHTML=`<button class="nav-item" data-nav="${p}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${NAV_ICONS[p]||''}</svg>${NAV_LABELS[p]}</button>`;
@@ -934,6 +950,7 @@ function toggleTask(id){
     t.xpAwarded=amount; // remember exactly what was granted so unchecking can undo it precisely
     addXP(amount);
     recordActivity(todayISO());
+    if(!t.date) toast('Задача без даты выполнена — исчезнет из списка через сутки, если не снять галочку');
   } else {
     // Reverse exactly what was awarded when this task was checked, so toggling
     // a task on/off repeatedly can no longer inflate XP.
@@ -1155,6 +1172,8 @@ function renderToday(){
     bindTaskEvents(wrap);
   }
 
+  renderNoDateTasks();
+
   // notes
   const notes=state.notes.slice().sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,4);
   const notesWrap=document.getElementById('recentNotes');
@@ -1311,16 +1330,34 @@ function bindNoteEvents(container){
   });
 }
 
-/* ---------- Inbox ---------- */
-function renderInbox(){
-  const list=state.tasks.filter(t=>!t.date).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
-  const wrap=document.getElementById('inboxList');
+/* ---------- Tasks without a date ("Без даты" panel on Today) ---------- */
+// A task with no date lives in this panel until it's completed. Once completed
+// it stays visible (crossed out) for 24h so an accidental check can be undone,
+// then it's purged from state entirely.
+const NO_DATE_TTL_MS = 24*60*60*1000;
+function purgeExpiredNoDateTasks(){
+  const now=Date.now();
+  const before=state.tasks.length;
+  state.tasks=state.tasks.filter(t=>{
+    if(t.date || !t.completed || !t.completedAt) return true;
+    return (now - new Date(t.completedAt).getTime()) < NO_DATE_TTL_MS;
+  });
+  if(state.tasks.length!==before) save();
+}
+function renderNoDateTasks(){
+  const now=Date.now();
+  const list=state.tasks.filter(t=>!t.date && (!t.completed || (t.completedAt && (now-new Date(t.completedAt).getTime())<NO_DATE_TTL_MS)));
+  list.sort((a,b)=> (a.completed-b.completed) || b.createdAt.localeCompare(a.createdAt));
+  const section=document.getElementById('noDateSection');
+  const wrap=document.getElementById('noDateTaskList');
   if(list.length===0){
-    wrap.innerHTML=emptyStateHTML('Входящие пусты.','Здесь появляются задачи без даты.', false);
-  } else {
-    wrap.innerHTML=list.map(taskItemHTML).join('');
-    bindTaskEvents(wrap);
+    section.style.display='none';
+    wrap.innerHTML='';
+    return;
   }
+  section.style.display='';
+  wrap.innerHTML=list.map(taskItemHTML).join('');
+  bindTaskEvents(wrap);
 }
 
 /* ---------- Upcoming ---------- */
@@ -1563,7 +1600,35 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
 });
 
 /* ---------- Settings ---------- */
-document.getElementById('nameInput').addEventListener('input',(e)=>{ state.settings.name=e.target.value; save(); renderToday(); });
+// Committed on blur/Enter (not every keystroke) since, for a logged-in account,
+// changing this also renames the account's login nickname and migrates its data.
+document.getElementById('nameInput').addEventListener('change',(e)=>{
+  const val=e.target.value.trim();
+  if(!val){ toast(activeAccount?'Никнейм не может быть пустым':'Введите никнейм'); refreshSettingsUI(); return; }
+  if(activeAccount){
+    const newKey=val.toLowerCase();
+    const accounts=loadAccounts();
+    if(newKey!==activeAccount){
+      if(accounts[newKey]){ toast('Такой никнейм уже занят'); refreshSettingsUI(); return; }
+      const acc=accounts[activeAccount];
+      delete accounts[activeAccount];
+      acc.nick=val;
+      accounts[newKey]=acc;
+      saveAccounts(accounts);
+      try{
+        const oldStoreKey='daybox_state_v1::'+activeAccount, newStoreKey='daybox_state_v1::'+newKey;
+        const raw=localStorage.getItem(oldStoreKey);
+        if(raw!==null){ localStorage.setItem(newStoreKey, raw); localStorage.removeItem(oldStoreKey); }
+      }catch(err){}
+      activeAccount=newKey;
+      localStorage.setItem(ACTIVE_ACCOUNT_KEY, activeAccount);
+    } else if(accounts[activeAccount]){
+      accounts[activeAccount].nick=val; saveAccounts(accounts);
+    }
+  }
+  state.settings.name=val;
+  save(); refreshAccountUI(); renderToday();
+});
 function initSwitch(id,key){
   const el=document.getElementById(id);
   el.addEventListener('click', ()=>{ state.settings[key]=!state.settings[key]; save(); refreshSettingsUI(); });
@@ -1572,6 +1637,10 @@ initSwitch('toggleReminders','reminders');
 function refreshSettingsUI(){
   document.getElementById('nameInput').value=state.settings.name||'';
   document.getElementById('toggleReminders').classList.toggle('on', !!state.settings.reminders);
+  const hint=document.getElementById('nickHintText');
+  if(hint) hint.textContent = activeAccount
+    ? 'Это также ваш никнейм для входа в аккаунт — при изменении он обновится и здесь, и на экране входа.'
+    : 'Войдите в аккаунт, чтобы никнейм сохранялся между устройствами.';
 }
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
@@ -1619,9 +1688,14 @@ function refreshAccountUI(){
   const loggedIn=!!activeAccount;
   document.getElementById('accAuthBox').style.display = loggedIn ? 'none' : '';
   document.getElementById('accProfileBox').style.display = loggedIn ? '' : 'none';
+  const sidebarLabel=document.getElementById('sidebarAccountLabel');
   if(loggedIn){
     const accounts=loadAccounts();
-    document.getElementById('accNickDisplay').textContent = (accounts[activeAccount] && accounts[activeAccount].nick) || activeAccount;
+    const nick=(accounts[activeAccount] && accounts[activeAccount].nick) || activeAccount;
+    document.getElementById('accNickDisplay').textContent = nick;
+    if(sidebarLabel) sidebarLabel.textContent = nick;
+  } else if(sidebarLabel){
+    sidebarLabel.textContent = 'Аккаунт';
   }
 }
 function switchAccount(nickLower){
@@ -1644,6 +1718,10 @@ document.getElementById('accRegisterBtn').addEventListener('click', ()=>{
   saveAccounts(accounts);
   document.getElementById('accRegNick').value=''; document.getElementById('accRegPin').value=''; document.getElementById('accRegPin2').value='';
   switchAccount(key);
+  // The nickname used to sign up becomes the display name automatically —
+  // no separate "name" field to fill in in Settings.
+  state.settings.name = nick;
+  save();
   toast('Аккаунт создан, вы вошли');
   goTo('today');
 });
@@ -1680,9 +1758,9 @@ document.getElementById('obDone').addEventListener('click', ()=>{ state.settings
 
 /* ---------- Render all ---------- */
 function renderAll(){
+  purgeExpiredNoDateTasks();
   refreshCategorySelects();
   renderToday();
-  renderInbox();
   renderUpcoming();
   renderCalendar();
   renderCalDay();
@@ -1695,7 +1773,7 @@ function renderAll(){
 applyTheme();
 goTo('today');
 maybeShowOnboarding();
-setInterval(()=>{ if(currentPage==='today') { renderToday(); } }, 60000); // refresh greeting/overdue etc
+setInterval(()=>{ purgeExpiredNoDateTasks(); if(currentPage==='today') { renderToday(); } }, 60000); // refresh greeting/overdue/no-date expiry etc
 
 })();
 </script>
