@@ -88,6 +88,10 @@ main{flex:1;min-width:0;padding:28px 32px 100px;max-width:1220px;margin:0 auto;}
 .icon-btn{width:36px;height:36px;border-radius:12px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--text-dim);transition:background var(--dur),color var(--dur);-webkit-backdrop-filter:blur(var(--glass-blur));backdrop-filter:blur(var(--glass-blur));}
 .icon-btn:hover{color:var(--text);}
 .icon-btn svg{width:16px;height:16px;}
+.icon-sm{width:28px;height:28px;flex-shrink:0;border:none;border-radius:9px;background:var(--card-2);display:flex;align-items:center;justify-content:center;color:var(--text-dim);transition:background var(--dur),color var(--dur);}
+.icon-sm svg{width:14px;height:14px;flex-shrink:0;}
+.icon-sm:hover{background:var(--border-soft);color:var(--text);}
+.icon-sm[data-action="deletegoal"]:hover{background:var(--danger-soft);color:var(--danger);}
 
 .greeting{font-size:25px;font-weight:700;margin-bottom:4px;}
 .subtext{color:var(--text-dim);font-size:14px;margin-bottom:22px;}
@@ -655,8 +659,44 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
 "use strict";
 
 /* ---------- Storage ---------- */
-const ACCOUNTS_KEY = "daybox_accounts_v1"; // { [nickLower]: { nick, pinHash } }
+const ACCOUNTS_KEY = "daybox_accounts_v1"; // local cache: { [nickLower]: { nick, pinHash } }
 const ACTIVE_ACCOUNT_KEY = "daybox_active_account_v1"; // nickLower string, or '' for guest
+
+/* ---------- Cross-device account sync ----------
+   Same idea as in the other app: a public Firebase Realtime Database used
+   purely as a JSON key/value store (no auth, no SDK — just plain REST calls).
+   To turn this on:
+   1. console.firebase.google.com -> Add project -> any name -> create
+   2. Build -> Realtime Database -> Create Database -> start in test mode
+   3. Copy the URL that looks like https://xxxx-default-rtdb.firebaseio.com
+      and paste it below as FIREBASE_DB_URL.
+   Until a real URL is set, the app keeps working exactly as before —
+   accounts/data simply stay local to this device. */
+const FIREBASE_DB_URL = 'https://daybox-sync-default-rtdb.firebaseio.com';
+function syncEnabled(){ return !!FIREBASE_DB_URL; }
+function fbUrl(path){ return FIREBASE_DB_URL.replace(/\/$/, '') + '/' + path + '.json'; }
+async function fbGet(path){
+  if(!syncEnabled()) return null;
+  try{
+    const res = await fetch(fbUrl(path));
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(e){ return null; }
+}
+async function fbSet(path, data){
+  if(!syncEnabled()) return false;
+  try{
+    const res = await fetch(fbUrl(path), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    return res.ok;
+  }catch(e){ return false; }
+}
+// account record (nick + PIN hash) stored under accounts/<nickLower>
+async function pullAccountFromCloud(nickLower){ return fbGet('accounts/'+nickLower); }
+async function pushAccountToCloud(nickLower, accountData){ return fbSet('accounts/'+nickLower, accountData); }
+// full app state stored under states/<nickLower>
+async function pullStateFromCloud(nickLower){ return fbGet('states/'+nickLower); }
+async function pushStateToCloud(nickLower, stateData){ return fbSet('states/'+nickLower, stateData); }
+
 function uuid(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c=='x'?r:(r&0x3|0x8);return v.toString(16);});}
 function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function nowISO(){return new Date().toISOString();}
@@ -692,12 +732,32 @@ function load(){
   }catch(e){ return defaultState(); }
 }
 let saveTimeout=null;
+let cloudSyncTimeout=null;
 function save(){
   clearTimeout(saveTimeout);
   saveTimeout=setTimeout(()=>{
     try{ localStorage.setItem(storeKey(), JSON.stringify(state)); }
     catch(e){ toast('Не удалось сохранить — нет места?'); }
+    scheduleCloudSync();
   }, 80);
+}
+// Pushes the current state to the cloud a moment after the last change, so
+// rapid edits (typing, dragging) don't spam the network with one request each.
+function scheduleCloudSync(){
+  if(!activeAccount || !syncEnabled()) return;
+  clearTimeout(cloudSyncTimeout);
+  cloudSyncTimeout=setTimeout(()=>{ pushStateToCloud(activeAccount, state); }, 700);
+}
+// Pulls the newest copy of an account's data from the cloud into this
+// device's local cache, so the next load() sees whatever the other device saved.
+async function pullCloudStateIntoLocalCache(nickLower){
+  if(!syncEnabled()) return false;
+  const remote = await pullStateFromCloud(nickLower);
+  if(remote){
+    try{ localStorage.setItem('daybox_state_v1::'+nickLower, JSON.stringify(remote)); }catch(e){}
+    return true;
+  }
+  return false;
 }
 
 /* ---------- Toasts ---------- */
@@ -1602,28 +1662,36 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
 /* ---------- Settings ---------- */
 // Committed on blur/Enter (not every keystroke) since, for a logged-in account,
 // changing this also renames the account's login nickname and migrates its data.
-document.getElementById('nameInput').addEventListener('change',(e)=>{
+document.getElementById('nameInput').addEventListener('change', async (e)=>{
   const val=e.target.value.trim();
   if(!val){ toast(activeAccount?'Никнейм не может быть пустым':'Введите никнейм'); refreshSettingsUI(); return; }
   if(activeAccount){
     const newKey=val.toLowerCase();
     const accounts=loadAccounts();
     if(newKey!==activeAccount){
-      if(accounts[newKey]){ toast('Такой никнейм уже занят'); refreshSettingsUI(); return; }
-      const acc=accounts[activeAccount];
-      delete accounts[activeAccount];
+      if(accounts[newKey] || (syncEnabled() && await pullAccountFromCloud(newKey))){ toast('Такой никнейм уже занят'); refreshSettingsUI(); return; }
+      const oldKey=activeAccount;
+      const acc=accounts[oldKey] || { nick:val, pinHash:'' };
+      delete accounts[oldKey];
       acc.nick=val;
       accounts[newKey]=acc;
       saveAccounts(accounts);
       try{
-        const oldStoreKey='daybox_state_v1::'+activeAccount, newStoreKey='daybox_state_v1::'+newKey;
+        const oldStoreKey='daybox_state_v1::'+oldKey, newStoreKey='daybox_state_v1::'+newKey;
         const raw=localStorage.getItem(oldStoreKey);
         if(raw!==null){ localStorage.setItem(newStoreKey, raw); localStorage.removeItem(oldStoreKey); }
       }catch(err){}
       activeAccount=newKey;
       localStorage.setItem(ACTIVE_ACCOUNT_KEY, activeAccount);
+      if(syncEnabled()){
+        await pushAccountToCloud(newKey, acc);
+        await fbSet('accounts/'+oldKey, null); // free up the old nickname in the cloud too
+        await pushStateToCloud(newKey, state);
+        await fbSet('states/'+oldKey, null);
+      }
     } else if(accounts[activeAccount]){
       accounts[activeAccount].nick=val; saveAccounts(accounts);
+      if(syncEnabled()) pushAccountToCloud(activeAccount, accounts[activeAccount]);
     }
   }
   state.settings.name=val;
@@ -1638,9 +1706,11 @@ function refreshSettingsUI(){
   document.getElementById('nameInput').value=state.settings.name||'';
   document.getElementById('toggleReminders').classList.toggle('on', !!state.settings.reminders);
   const hint=document.getElementById('nickHintText');
-  if(hint) hint.textContent = activeAccount
-    ? 'Это также ваш никнейм для входа в аккаунт — при изменении он обновится и здесь, и на экране входа.'
-    : 'Войдите в аккаунт, чтобы никнейм сохранялся между устройствами.';
+  if(hint){
+    if(activeAccount && syncEnabled()) hint.textContent = 'Это также ваш никнейм для входа — данные аккаунта синхронизируются между устройствами, где вы входите под этим никнеймом и PIN.';
+    else if(activeAccount) hint.textContent = 'Это также ваш никнейм для входа в аккаунт — при изменении он обновится и здесь, и на экране входа.';
+    else hint.textContent = 'Войдите в аккаунт, чтобы никнейм и данные сохранялись между устройствами.';
+  }
 }
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
@@ -1698,43 +1768,60 @@ function refreshAccountUI(){
     sidebarLabel.textContent = 'Аккаунт';
   }
 }
-function switchAccount(nickLower){
+async function switchAccount(nickLower){
   activeAccount = nickLower;
   localStorage.setItem(ACTIVE_ACCOUNT_KEY, activeAccount);
+  if(syncEnabled()) await pullCloudStateIntoLocalCache(nickLower);
   state = load();
   applyTheme(); refreshAccountUI(); renderAll();
 }
-document.getElementById('accRegisterBtn').addEventListener('click', ()=>{
+document.getElementById('accRegisterBtn').addEventListener('click', async ()=>{
   const nick=document.getElementById('accRegNick').value.trim();
   const pin=document.getElementById('accRegPin').value.trim();
   const pin2=document.getElementById('accRegPin2').value.trim();
   if(!nick){ toast('Введите никнейм'); return; }
   if(!validPin(pin)){ toast('PIN должен состоять из 4 цифр'); return; }
   if(pin!==pin2){ toast('PIN-коды не совпадают'); return; }
-  const accounts=loadAccounts();
   const key=nick.toLowerCase();
+  const accounts=loadAccounts();
   if(accounts[key]){ toast('Такой никнейм уже занят'); return; }
-  accounts[key]={ nick, pinHash: simpleHash(pin) };
+  if(syncEnabled()){
+    toast('Проверка никнейма...');
+    const remoteAcc = await pullAccountFromCloud(key);
+    if(remoteAcc){ toast('Такой никнейм уже занят'); return; }
+  }
+  const accountData = { nick, pinHash: simpleHash(pin) };
+  accounts[key]=accountData;
   saveAccounts(accounts);
+  if(syncEnabled()) await pushAccountToCloud(key, accountData);
   document.getElementById('accRegNick').value=''; document.getElementById('accRegPin').value=''; document.getElementById('accRegPin2').value='';
-  switchAccount(key);
+  await switchAccount(key);
   // The nickname used to sign up becomes the display name automatically —
   // no separate "name" field to fill in in Settings.
   state.settings.name = nick;
   save();
-  toast('Аккаунт создан, вы вошли');
+  if(syncEnabled()) await pushStateToCloud(key, state);
+  toast(syncEnabled() ? 'Аккаунт создан — данные будут синхронизироваться между устройствами' : 'Аккаунт создан, вы вошли');
   goTo('today');
 });
-document.getElementById('accLoginBtn').addEventListener('click', ()=>{
+document.getElementById('accLoginBtn').addEventListener('click', async ()=>{
   const nick=document.getElementById('accLoginNick').value.trim();
   const pin=document.getElementById('accLoginPin').value.trim();
   if(!nick || !validPin(pin)){ toast('Введите никнейм и 4-значный PIN'); return; }
-  const accounts=loadAccounts();
   const key=nick.toLowerCase();
-  const acc=accounts[key];
+  let acc=null;
+  if(syncEnabled()){
+    toast('Вход...');
+    acc = await pullAccountFromCloud(key); // authoritative copy, works on a brand-new device
+  }
+  if(!acc){
+    const accounts=loadAccounts();
+    acc=accounts[key];
+  }
   if(!acc || acc.pinHash!==simpleHash(pin)){ toast('Неверный никнейм или PIN'); return; }
+  const accounts=loadAccounts(); accounts[key]=acc; saveAccounts(accounts); // keep a local cache for offline use
   document.getElementById('accLoginNick').value=''; document.getElementById('accLoginPin').value='';
-  switchAccount(key);
+  await switchAccount(key);
   toast('Вы вошли в аккаунт');
   goTo('today');
 });
@@ -1774,6 +1861,24 @@ applyTheme();
 goTo('today');
 maybeShowOnboarding();
 setInterval(()=>{ purgeExpiredNoDateTasks(); if(currentPage==='today') { renderToday(); } }, 60000); // refresh greeting/overdue/no-date expiry etc
+
+// If we're already logged into an account and cloud sync is configured,
+// grab whatever the most recent device saved as soon as the app opens —
+// this is what makes "log in on device A, open the app on device B" work.
+async function refreshFromCloudOnStartup(){
+  if(!activeAccount || !syncEnabled()) return;
+  const changed = await pullCloudStateIntoLocalCache(activeAccount);
+  if(changed){
+    state = load();
+    applyTheme(); renderAll();
+  }
+}
+refreshFromCloudOnStartup();
+// Keep polling in the background so switching between two open devices
+// (e.g. phone + laptop) picks up changes without needing a manual reload.
+if(activeAccount && syncEnabled()){
+  setInterval(refreshFromCloudOnStartup, 20000);
+}
 
 })();
 </script>
