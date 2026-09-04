@@ -161,7 +161,7 @@ html.dark .swipe-btn{box-shadow:0 2px 10px rgba(0,0,0,.35);}
 .swipe-btn.edit:hover,.swipe-btn.edit:active{filter:brightness(1.08);}
 .swipe-btn.delete{background:var(--danger);color:#fff;}
 .swipe-btn.delete:hover,.swipe-btn.delete:active{filter:brightness(1.08);}
-.task{position:relative;z-index:1;touch-action:pan-y;display:flex;align-items:flex-start;gap:11px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 14px;transition:transform .32s cubic-bezier(.2,.9,.3,1.1),background var(--dur);-webkit-backdrop-filter:blur(var(--glass-blur));backdrop-filter:blur(var(--glass-blur));user-select:none;cursor:pointer;}
+.task{position:relative;z-index:1;touch-action:pan-y;display:flex;align-items:flex-start;gap:11px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 14px;transition:transform .32s cubic-bezier(.2,.9,.3,1.1),background var(--dur);-webkit-backdrop-filter:blur(var(--glass-blur));backdrop-filter:blur(var(--glass-blur));user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:pointer;}
 .task:active{filter:brightness(.97);}
 .task.dragging{transition:none;}
 .task.done{opacity:.5;}
@@ -180,6 +180,21 @@ html.dark .swipe-btn{box-shadow:0 2px 10px rgba(0,0,0,.35);}
 .badge.cat{background:var(--card-2);color:var(--text-dim);}
 .badge.overdue{background:var(--warn-soft);color:var(--warn);}
 .task-time{font-size:12px;color:var(--text-faint);}
+.task-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:8px;align-self:center;}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:10px;white-space:nowrap;line-height:1;}
+.chip svg{width:12px;height:12px;flex-shrink:0;}
+.chip-time{background:var(--accent-soft);color:var(--accent-text);}
+.chip-remind{background:var(--warn-soft);color:var(--warn);}
+
+/* Long-press / hover task preview */
+.task-preview{position:fixed;z-index:500;max-width:300px;min-width:220px;background:var(--card);-webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:none;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;animation:pop .18s cubic-bezier(.2,.9,.3,1.1);}
+.task-preview.show{display:block;}
+.task-preview .tp-title{font-size:14.5px;font-weight:700;margin-bottom:6px;}
+.task-preview .tp-desc{font-size:12.5px;color:var(--text-dim);margin-bottom:10px;line-height:1.4;white-space:pre-wrap;}
+.task-preview .tp-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);margin-bottom:5px;}
+.task-preview .tp-row:last-child{margin-bottom:0;}
+.task-preview .tp-row svg{width:13px;height:13px;flex-shrink:0;opacity:.8;}
+.task-preview .tp-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
 .move-today-btn{border:none;background:var(--accent-soft);color:var(--accent-text);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;cursor:pointer;}
 
 
@@ -191,7 +206,7 @@ html.dark .swipe-btn{box-shadow:0 2px 10px rgba(0,0,0,.35);}
 .note-box textarea:focus{border-color:var(--accent);}
 #recentNotes{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
 .note-swipe{position:relative;border-radius:12px;overflow:hidden;}
-.note-item{position:relative;z-index:1;touch-action:pan-y;background:var(--card-2);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--text-dim);transition:transform .32s cubic-bezier(.2,.9,.3,1.1);user-select:none;}
+.note-item{position:relative;z-index:1;touch-action:pan-y;background:var(--card-2);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--text-dim);transition:transform .32s cubic-bezier(.2,.9,.3,1.1);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;}
 .note-item.dragging{transition:none;}
 .note-item time{display:block;font-size:11px;color:var(--text-faint);margin-top:4px;}
 .note-text{color:var(--text-dim);white-space:pre-wrap;word-break:break-word;}
@@ -678,6 +693,7 @@ button:focus-visible,input:focus-visible,.task:focus-within,.nav-item:focus-visi
 </div>
 
 <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+<div class="task-preview" id="taskPreview"></div>
 
 <script>
 (function(){
@@ -1171,6 +1187,34 @@ function isOverdue(t){
   if(t.completed || !t.date) return false;
   return t.date < todayISO();
 }
+const ICON_CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>';
+const ICON_BELL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6Z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>';
+// How long until a task's reminder notification will fire, rounded to the
+// single largest unit that applies (days > hours > minutes > seconds) so it
+// never shows something like "26 hours" — it shows "1 d" instead.
+function reminderCountdown(t){
+  if(t.completed || !t.date || !t.time || t.remind===null || t.remind===undefined) return null;
+  const due=new Date(`${t.date}T${t.time}:00`).getTime();
+  if(isNaN(due)) return null;
+  const fireAt = due - t.remind*60000;
+  const diff = fireAt - Date.now();
+  if(diff<=0) return null;
+  const day=86400000, hour=3600000, min=60000;
+  let value, unit;
+  if(diff>=day){ value=Math.round(diff/day); unit='д.'; }
+  else if(diff>=hour){ value=Math.round(diff/hour); unit='ч.'; }
+  else if(diff>=min){ value=Math.round(diff/min); unit='м.'; }
+  else { value=Math.round(diff/1000); unit='с.'; }
+  return {value:Math.max(1,value), unit};
+}
+function taskSideChipsHTML(t){
+  const rc=reminderCountdown(t);
+  const hideTimeChip = rc && t.remind===0; // reminder fires exactly at the event — no need for two identical times
+  return `<div class="task-side">
+    ${(t.time && !hideTimeChip)?`<span class="chip chip-time">${ICON_CLOCK}${t.time}</span>`:''}
+    ${rc?`<span class="chip chip-remind">${ICON_BELL}${rc.value}${rc.unit}</span>`:''}
+  </div>`;
+}
 function taskItemHTML(t){
   const overdue=isOverdue(t);
   const btnStyle='opacity:0;transform:scale(.3) rotate(-16deg);pointer-events:none;';
@@ -1186,16 +1230,17 @@ function taskItemHTML(t){
         <div class="task-meta">
           <span class="badge ${t.priority}">${({LOW:'Низкий',MEDIUM:'Средний',HIGH:'Высокий'})[t.priority]}</span>
           <span class="badge cat">${escapeHtml(t.category)}</span>
-          ${t.time?`<span class="task-time">${t.time}</span>`:''}
           ${overdue?`<span class="badge overdue">Просрочено</span><button class="move-today-btn" data-action="movetoday">На сегодня →</button>`:''}
         </div>
       </div>
+      ${taskSideChipsHTML(t)}
     </div>
   </div>`;
 }
 function bindTaskEvents(container){
   container.querySelectorAll('.task-swipe').forEach(swipeEl=>{
     const id=swipeEl.dataset.id;
+    const t=state.tasks.find(x=>x.id===id);
     const content=swipeEl.querySelector('.task');
     const editBtn=swipeEl.querySelector('.left-actions .swipe-btn');
     const delBtn=swipeEl.querySelector('.right-actions .swipe-btn');
@@ -1211,6 +1256,8 @@ function bindTaskEvents(container){
 
     const REVEAL=64, THRESHOLD=30, COMMIT=112, MAXDRAG=136;
     let startX=0,startY=0,curX=0,dragging=false,decided=false,horizontal=false,pointerId=null;
+    let previewTimer=null, previewOpen=false, suppressClickToggle=false;
+    function cancelPreviewTimer(){ clearTimeout(previewTimer); previewTimer=null; }
 
     function styleBtn(btn,p,armed,animate){
       btn.style.transition = animate ? '' : 'none';
@@ -1266,6 +1313,15 @@ function bindTaskEvents(container){
       startX=e.clientX; startY=e.clientY;
       document.querySelectorAll('.task-swipe[data-open]').forEach(o=>{ if(o!==swipeEl && o._closeSwipe) o._closeSwipe(); });
       try{ content.setPointerCapture(e.pointerId); }catch(err){}
+      // Touch/pen: holding still (no swipe/scroll) for a moment reveals the
+      // full task details. Mouse users get the same info via hover instead
+      // (see mouseenter below), since a mouse doesn't really have "holding".
+      if(e.pointerType==='touch' || e.pointerType==='pen'){
+        cancelPreviewTimer();
+        previewTimer=setTimeout(()=>{
+          if(!decided){ previewOpen=true; openTaskPreview(t, content); }
+        }, 450);
+      }
     });
     content.addEventListener('pointermove',(e)=>{
       if(!dragging || e.pointerId!==pointerId) return;
@@ -1273,6 +1329,7 @@ function bindTaskEvents(container){
       if(!decided){
         if(Math.abs(dx)<6 && Math.abs(dy)<6) return;
         decided=true; horizontal=Math.abs(dx)>Math.abs(dy);
+        cancelPreviewTimer(); // any real movement cancels the long-press preview
         if(horizontal) content.classList.add('dragging');
       }
       if(!horizontal) return;
@@ -1283,6 +1340,14 @@ function bindTaskEvents(container){
       applyState(x,false);
     });
     function endDrag(e){
+      cancelPreviewTimer();
+      if(previewOpen){
+        closeTaskPreview(); previewOpen=false;
+        // Only swallow the click that follows on touch/pen — that "click" is
+        // really just the finger lifting off after a long-press. A mouse
+        // click after hovering should still toggle the task normally.
+        if(e && (e.pointerType==='touch' || e.pointerType==='pen')) suppressClickToggle=true;
+      }
       if(!dragging) return;
       dragging=false;
       if(!horizontal) return;
@@ -1295,8 +1360,21 @@ function bindTaskEvents(container){
     content.addEventListener('pointerup', endDrag);
     content.addEventListener('pointercancel', endDrag);
 
+    // Desktop/mouse: holding the cursor over the task (without clicking)
+    // reveals the same details preview as a long-press does on touch.
+    content.addEventListener('mouseenter', ()=>{
+      if(window.matchMedia('(pointer: coarse)').matches) return; // avoid double-firing alongside touch
+      cancelPreviewTimer();
+      previewTimer=setTimeout(()=>{ previewOpen=true; openTaskPreview(t, content); }, 350);
+    });
+    content.addEventListener('mouseleave', ()=>{
+      cancelPreviewTimer();
+      if(previewOpen){ closeTaskPreview(); previewOpen=false; }
+    });
+
     // Tap anywhere on the task panel (not just the checkbox) to toggle it done/undone.
     content.addEventListener('click',(e)=>{
+      if(suppressClickToggle){ suppressClickToggle=false; return; } // that "click" was really the release of a long-press
       if(e.target.closest('[data-action="toggle"]') || e.target.closest('[data-action="movetoday"]')) return;
       if(horizontal) return; // that click was really the end of a swipe, not a tap
       if(swipeEl.dataset.open){ close(); return; } // tapping an open panel just closes it
@@ -1305,6 +1383,50 @@ function bindTaskEvents(container){
   });
 }
 function closeSwipe(swipeEl){ if(swipeEl && swipeEl._closeSwipe) swipeEl._closeSwipe(); }
+
+/* ---------- Task preview (long-press / hover) ---------- */
+function formatTaskDateHuman(dateISO){
+  if(!dateISO) return '';
+  const d=new Date(dateISO+'T00:00:00');
+  if(isNaN(d)) return dateISO;
+  return d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+}
+function openTaskPreview(t, anchorEl){
+  if(!t) return;
+  const el=document.getElementById('taskPreview');
+  const overdue=isOverdue(t);
+  const rc=reminderCountdown(t);
+  const hideTimeChip = rc && t.remind===0;
+  const rows=[];
+  if(t.date) rows.push(`<div class="tp-row">${ICON_CLOCK}${escapeHtml(formatTaskDateHuman(t.date))}${t.time?', '+escapeHtml(t.time):''}</div>`);
+  if(overdue) rows.push(`<div class="tp-row" style="color:var(--danger);">Просрочено</div>`);
+  el.innerHTML = `
+    <div class="tp-title">${escapeHtml(t.title)}</div>
+    ${t.description?`<div class="tp-desc">${escapeHtml(t.description)}</div>`:''}
+    ${rows.join('')}
+    <div class="tp-chips">
+      ${(t.time && !hideTimeChip)?`<span class="chip chip-time">${ICON_CLOCK}${t.time}</span>`:''}
+      ${rc?`<span class="chip chip-remind">${ICON_BELL}${rc.value}${rc.unit}</span>`:''}
+    </div>
+  `;
+  el.classList.add('show');
+  // Position near the task, clamped to stay fully on-screen.
+  const r=anchorEl.getBoundingClientRect();
+  el.style.left='0px'; el.style.top='0px'; // reset before measuring
+  const pw=el.offsetWidth, ph=el.offsetHeight;
+  let left=r.left;
+  let top=r.bottom+8;
+  if(top+ph>window.innerHeight-8) top=r.top-ph-8;
+  if(top<8) top=8;
+  if(left+pw>window.innerWidth-8) left=window.innerWidth-pw-8;
+  if(left<8) left=8;
+  el.style.left=left+'px';
+  el.style.top=top+'px';
+}
+function closeTaskPreview(){
+  document.getElementById('taskPreview').classList.remove('show');
+}
+
 document.addEventListener('click',(e)=>{
   if(!e.target.closest('.task-swipe')){
     document.querySelectorAll('.task-swipe[data-open]').forEach(o=>{ if(o._closeSwipe) o._closeSwipe(); });
