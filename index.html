@@ -782,26 +782,62 @@ function flushCloudSyncNow(){
   clearTimeout(cloudSyncTimeout);
   doCloudPush();
 }
+// Shared guard used both by the periodic pull and by the live stream below:
+// only accept an incoming copy of the state if it's actually newer than
+// what's cached locally, and only if this device doesn't have an edit of
+// its own still waiting to go out — otherwise an incoming update could
+// silently revert something you just did.
+function acceptRemoteState(nickLower, remote){
+  if(!remote) return false;
+  if(cloudSyncTimeout || cloudPushInFlight) return false;
+  let localRaw=null;
+  try{ localRaw = JSON.parse(localStorage.getItem('daybox_state_v1::'+nickLower)); }catch(e){}
+  const remoteTime = remote.updatedAt || 0;
+  const localTime = (localRaw && localRaw.updatedAt) || 0;
+  if(localRaw && remoteTime <= localTime) return false; // local cache is already at least as new
+  try{ localStorage.setItem('daybox_state_v1::'+nickLower, JSON.stringify(remote)); }catch(e){}
+  return true;
+}
 // Pulls the newest copy of an account's data from the cloud into this
 // device's local cache, so the next load() sees whatever the other device saved.
 async function pullCloudStateIntoLocalCache(nickLower){
   if(!syncEnabled()) return false;
-  // If this device has a local edit that hasn't finished uploading yet, skip —
-  // otherwise pulling now would overwrite that edit with the older cloud copy
-  // and make it look like the change "didn't sync".
   if(cloudSyncTimeout || cloudPushInFlight) return false;
   const res = await pullStateFromCloud(nickLower);
-  const remote = res.data;
-  if(remote){
-    let localRaw=null;
-    try{ localRaw = JSON.parse(localStorage.getItem('daybox_state_v1::'+nickLower)); }catch(e){}
-    const remoteTime = remote.updatedAt || 0;
-    const localTime = (localRaw && localRaw.updatedAt) || 0;
-    if(localRaw && remoteTime <= localTime) return false; // local cache is already at least as new
-    try{ localStorage.setItem('daybox_state_v1::'+nickLower, JSON.stringify(remote)); }catch(e){}
-    return true;
-  }
-  return false;
+  return acceptRemoteState(nickLower, res.data);
+}
+// Live updates: Firebase Realtime Database streams changes over Server-Sent
+// Events on a plain GET request — EventSource sends the right Accept header
+// itself, no SDK needed. This is what lets a change made on one device show
+// up on another within about a second, instead of waiting on a timer or
+// requiring the person to reload the page.
+let stateStream=null;
+function startStateStream(nickLower){
+  stopStateStream();
+  if(!syncEnabled() || !nickLower || typeof EventSource==='undefined') return;
+  try{
+    const es = new EventSource(fbUrl('daybox_states/'+nickLower));
+    stateStream = es;
+    const onMessage = (ev)=>{
+      if(nickLower!==activeAccount) return; // a stream for an account we've since left
+      let payload;
+      try{ payload=JSON.parse(ev.data); }catch(e){ return; }
+      // We only ever write this path with a single full PUT, so every real
+      // change (including the very first event right after connecting, which
+      // sends the current value) arrives with path "/".
+      if(payload.path!=='/') return;
+      if(acceptRemoteState(nickLower, payload.data)){
+        state = load();
+        applyTheme(); renderAll();
+      }
+    };
+    es.addEventListener('put', onMessage);
+    es.addEventListener('patch', onMessage);
+    es.onerror = ()=>{ /* EventSource reconnects on its own with backoff */ };
+  }catch(e){ stateStream=null; }
+}
+function stopStateStream(){
+  if(stateStream){ try{ stateStream.close(); }catch(e){} stateStream=null; }
 }
 
 /* ---------- Toasts ---------- */
@@ -1835,6 +1871,7 @@ async function switchAccount(nickLower){
   if(syncEnabled()) await pullCloudStateIntoLocalCache(nickLower);
   state = load();
   applyTheme(); refreshAccountUI(); renderAll();
+  startStateStream(nickLower);
 }
 document.getElementById('accRegisterBtn').addEventListener('click', async ()=>{
   const nick=document.getElementById('accRegNick').value.trim();
@@ -1894,6 +1931,7 @@ document.getElementById('accLogoutBtn').addEventListener('click', ()=>{
   askConfirm('Выйти из аккаунта?','Данные аккаунта останутся на этом устройстве — вы сможете снова войти в любой момент.', ()=>{
     activeAccount='';
     localStorage.setItem(ACTIVE_ACCOUNT_KEY, '');
+    stopStateStream();
     state=load();
     applyTheme(); refreshAccountUI(); renderAll();
     toast('Вы вышли из аккаунта');
@@ -1939,14 +1977,25 @@ async function refreshFromCloudOnStartup(){
   }
 }
 refreshFromCloudOnStartup();
-// Keep polling in the background so switching between two open devices
-// (e.g. phone + laptop) picks up changes without needing a manual reload.
 if(activeAccount && syncEnabled()){
-  setInterval(refreshFromCloudOnStartup, 20000);
+  startStateStream(activeAccount);
 }
-// Make sure the very last edit actually reaches the cloud even if the user
-// closes the tab or switches apps before the normal 700ms debounce fires.
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushCloudSyncNow(); });
+// Safety net in case the live stream silently stalls (some browsers suspend
+// long-lived connections in the background) — much less frequent than
+// before since the stream is now doing the real-time work.
+if(activeAccount && syncEnabled()){
+  setInterval(refreshFromCloudOnStartup, 45000);
+}
+// Mobile browsers often pause/kill background network connections; when the
+// app comes back to the foreground, reconnect the stream and catch up
+// immediately rather than waiting for the safety-net timer.
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && activeAccount && syncEnabled()){
+    startStateStream(activeAccount);
+    refreshFromCloudOnStartup();
+  }
+  if(document.visibilityState==='hidden') flushCloudSyncNow();
+});
 window.addEventListener('pagehide', flushCloudSyncNow);
 
 })();
